@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# コンペ配布物(ライセンス上、再配布禁止。scripts/やdocsの手順で復元する)
+data/
+submission/cg/
+
+# 生成物
+*.tar.gz
+result*.html
+
+# ローカル設定
+.claude/settings.local.json
