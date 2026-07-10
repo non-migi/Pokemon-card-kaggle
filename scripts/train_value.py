@@ -63,7 +63,7 @@ def evaluate(X, y, w, b, mu, sd):
     ranks[order] = np.arange(1, len(pp) + 1)
     n1, n0 = (yy == 1).sum(), (yy == 0).sum()
     auc = (ranks[yy == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0)
-    acc = ((p > 0.5) == (yy > 0.5)).mean() if len(yy) else 0.0
+    acc = ((pp > 0.5) == (yy > 0.5)).mean() if len(yy) else 0.0
     return ll, auc, acc
 
 

@@ -8,17 +8,23 @@
 勝敗(勝ち1/分け0.5/負け0)を候補ごとに平均。
 """
 
+import os
 import random
 import time
 
 from cg.api import search_begin, search_step, search_end
 
 from . import heuristics
+from . import value
 from .belief import sample_world
 
+# 価値関数によるロールアウト打ち切り(0=無効)。
+# v0(LR, AUC0.73)は終局プレイアウトに45.5%で敗北(2026-07-11)→ デフォルト無効。
+# より強いモデル(非線形+特徴量拡充)ができたら再評価する
+ROLLOUT_TRUNC_STEPS = int(os.environ.get("PTCG_ROLLOUT_TRUNC", "0"))
 ROLLOUT_MAX_STEPS = 400
 MIN_WORLDS = 2
-MAX_WORLDS = 24
+MAX_WORLDS = 64
 EST_ROLLOUT_SEC = 0.010  # 実測8ms/ロールアウト + Pythonオーバーヘッド
 MAX_CANDIDATES = 16
 
@@ -27,9 +33,16 @@ SEARCHABLE_SINGLE = {heuristics.ST_MAIN, heuristics.ST_ATTACK, heuristics.ST_CAR
 
 
 def _rollout_value(st, my_real_index: int) -> float:
-    """終局までヒューリスティックで両者をプレイし、自分視点の価値を返す。"""
+    """ヒューリスティックで両者をプレイし、自分視点の価値を返す。
+
+    価値関数が有効なら ROLLOUT_TRUNC_STEPS 手で打ち切って勝率評価
+    (短いロールアウト=同じ時間でより多くの世界を引ける)。
+    無効なら終局までプレイ。
+    """
+    use_value = value.ENABLED and ROLLOUT_TRUNC_STEPS > 0
+    limit = ROLLOUT_TRUNC_STEPS if use_value else ROLLOUT_MAX_STEPS
     steps = 0
-    while st.observation.current.result < 0 and steps < ROLLOUT_MAX_STEPS:
+    while st.observation.current.result < 0 and steps < limit:
         obs = st.observation
         try:
             act = heuristics.choose(obs)
@@ -39,15 +52,19 @@ def _rollout_value(st, my_real_index: int) -> float:
             act = list(range(k))
         st = search_step(st.searchId, act)
         steps += 1
-    r = st.observation.current.result
+    cur = st.observation.current
+    r = cur.result
     if r == my_real_index:
         return 1.0
     if r == 1 - my_real_index:
         return 0.0
     if r >= 0:  # 引き分け
         return 0.5
-    # 打ち切り: サイド差で概算
-    cur = st.observation.current
+    # 未決着: 価値関数(有効時) or サイド差の概算
+    if use_value:
+        p = value.win_prob(cur, my_real_index)
+        if p is not None:
+            return p
     diff = len(cur.players[1 - my_real_index].prize) - len(cur.players[my_real_index].prize)
     return max(0.0, min(1.0, 0.5 + diff * 0.08))
 

@@ -13,10 +13,12 @@ from ptcg import heuristics
 from ptcg import search as ptcg_search
 
 # ---- 時間管理 ----
+# エピソード実測(2026-07-10)で1試合10〜75秒しか使っていなかったため大幅増強。
+# 残り時間を線形に配分: budget = usable/50(上限8秒)。usableが減るほど自然に絞られる
 TOTAL_OVERAGE_SEC = 600.0
-RESERVE_SEC = 90.0            # 終盤・非常用に残す
-EXPECTED_SEARCH_MOVES = 60.0  # 1試合あたりの探索対象手数の見込み
-MAX_MOVE_SEC = float(os.environ.get("PTCG_MAX_MOVE_SEC", "2.0"))
+RESERVE_SEC = 60.0            # 終盤・非常用に残す
+BUDGET_DIVISOR = 50.0
+MAX_MOVE_SEC = float(os.environ.get("PTCG_MAX_MOVE_SEC", "8.0"))
 
 _spent = 0.0
 
@@ -47,7 +49,7 @@ def _budget(obs_dict) -> float:
     usable = remaining - RESERVE_SEC
     if usable <= 0:
         return 0.0
-    return max(0.0, min(MAX_MOVE_SEC, usable / EXPECTED_SEARCH_MOVES * 4))
+    return max(0.0, min(MAX_MOVE_SEC, usable / BUDGET_DIVISOR))
 
 
 def agent(obs_dict: dict) -> list[int]:

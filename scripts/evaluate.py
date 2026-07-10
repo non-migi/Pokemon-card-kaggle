@@ -24,13 +24,19 @@ def _load_agent(spec: str):
         return spec
     path = os.path.abspath(spec)
     dirp = os.path.dirname(path)
-    if dirp not in sys.path:
-        sys.path.insert(0, dirp)
+    sys.path.insert(0, dirp)
     name = f"agent_module_{abs(hash(path))}"
     module_spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(module_spec)
     sys.modules[name] = mod
     module_spec.loader.exec_module(mod)
+    # 重要: エージェントごとに ptcg/cg パッケージを分離する。
+    # sys.modulesに残すと次のエージェントが同名パッケージを共有してしまい、
+    # 「新 vs 旧」のつもりが「新 vs 新」になる(2026-07-11に発覚したバグ)。
+    for key in list(sys.modules):
+        if key == "ptcg" or key.startswith("ptcg.") or key == "cg" or key.startswith("cg."):
+            del sys.modules[key]
+    sys.path.remove(dirp)
     return mod.agent
 
 
