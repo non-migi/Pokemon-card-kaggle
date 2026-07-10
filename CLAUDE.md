@@ -9,6 +9,7 @@ Kaggleコンペで上位入賞を狙う。**AI主導開発・ポケカのドメ�
 - `docs/architecture.md` — ランタイム/オフラインの設計
 - `docs/development.md` — 開発ループ・提出手順・落とし穴
 - `docs/experiments.md` — 実験ログ(**変更したら必ず追記**)
+- `docs/versions.md` — バージョン履歴の一覧表(**提出したら必ず1行追加+詳細節を書く**)
 
 ## よく使うコマンド
 
