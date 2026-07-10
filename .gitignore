@@ -13,3 +13,4 @@ result*.html
 
 # ローカル設定
 .claude/settings.local.json
+replays/
