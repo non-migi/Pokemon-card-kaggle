@@ -66,9 +66,12 @@ kaggle competitions submissions -c pokemon-tcg-ai-battle | head -4
 - **CLI提出の500エラー**: 実は届いてERRORになっていることがある(枠を消費)。リトライ前に`submissions`で確認
 - **enum追加**: SelectContext等はコンペ期間中に増えると公式明言。未知intで落ちない実装を維持
 
-## レート確認
+## レート・実戦成績の確認
 
 ```bash
-kaggle competitions submissions -c pokemon-tcg-ai-battle   # 自分の提出とスコア
+kaggle competitions submissions -c pokemon-tcg-ai-battle   # 自分の提出とレート
 kaggle competitions leaderboard -c pokemon-tcg-ai-battle --show | head -20
+.venv/bin/python scripts/ladder_stats.py                   # 提出ごとのLB対戦数・勝率(リプレイ集計)
 ```
+
+結果は `docs/versions.md` の表に観測日付きで反映する。レートと勝率は乖離しうる(マッチメイキング相手の強さで補正されるため)。
