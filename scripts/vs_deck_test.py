@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 OPP_DECK_PATH = sys.argv[1] if len(sys.argv) > 1 else None
 N = int(sys.argv[2]) if len(sys.argv) > 2 else 100
 MODE = sys.argv[3] if len(sys.argv) > 3 else "search"  # search / heuristic
+MY_DECK_PATH = sys.argv[4] if len(sys.argv) > 4 else os.path.join(ROOT, "submission", "deck.csv")
 
 
 def _init():
@@ -26,14 +27,14 @@ def _init():
 
 
 def _play(args):
-    swap, opp_deck_path, mode = args
+    swap, opp_deck_path, mode, my_deck_path = args
     import deck_lib
     from kaggle_environments import make
     from cg.api import to_observation_class
     from ptcg import heuristics
     from ptcg import search as psearch
 
-    my_deck = deck_lib.load_deck(os.path.join(ROOT, "submission", "deck.csv"))
+    my_deck = deck_lib.load_deck(my_deck_path)
     opp_deck = deck_lib.load_deck(opp_deck_path)
 
     def heuristic_agent_of(deck):
@@ -74,10 +75,11 @@ def _play(args):
 
 
 def main():
-    tasks = [(i % 2 == 1, OPP_DECK_PATH, MODE) for i in range(N)]
+    tasks = [(i % 2 == 1, OPP_DECK_PATH, MODE, MY_DECK_PATH) for i in range(N)]
     with ProcessPoolExecutor(max_workers=8, initializer=_init) as ex:
         res = list(ex.map(_play, tasks, chunksize=2))
-    print(f"mode={MODE} vs {os.path.basename(OPP_DECK_PATH)}: {sum(res) / len(res) * 100:.1f}% ({N}戦)")
+    print(f"mode={MODE} my={os.path.basename(MY_DECK_PATH)} vs {os.path.basename(OPP_DECK_PATH)}: "
+          f"{sum(res) / len(res) * 100:.1f}% ({N}戦)")
 
 
 if __name__ == "__main__":
