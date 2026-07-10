@@ -171,15 +171,6 @@ def score_card(obs, opt, context) -> float:
         return (p.maxHp - p.hp) if p else 0
     cid = resolve_card_id(obs, opt)
     v = card_value(cid) if cid is not None else 50.0
-    # 人間レビューH4(2026-07-10): 相手の残りサイド≦献上枚数のex/メガを前に出すと
-    # 倒された瞬間に負け。バトル場に出す選択では大幅減点
-    if cid is not None and context in (1, 3, 4):  # SETUP_ACTIVE / SWITCH / TO_ACTIVE
-        try:
-            opp_prizes = len(obs.current.players[1 - obs.current.yourIndex].prize)
-            if prize_give(cid) >= opp_prizes:
-                v -= 500
-        except (AttributeError, TypeError, IndexError):
-            pass
     return -v if context in CTX_BAD_FOR_ME else v
 
 
