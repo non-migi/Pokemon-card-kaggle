@@ -109,6 +109,7 @@ python3.12 -m venv .venv
 ├── README.md            # このファイル(概要・ロードマップ)
 ├── CLAUDE.md            # AI開発セッション用の要点(コマンド・禁則)
 ├── docs/
+│   ├── plan.md          # 締切までの全体計画(週次スケジュール・判断ゲート)
 │   ├── versions.md      # バージョン履歴(変更点・デッキ・戦略・レートの一覧表)
 │   ├── observation.md   # エージェントAPI仕様(obs構造・公式探索API)
 │   ├── architecture.md  # ランタイム/オフラインの設計

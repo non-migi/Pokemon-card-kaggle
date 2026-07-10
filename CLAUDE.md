@@ -5,6 +5,7 @@ Kaggleコンペで上位入賞を狙う。**AI主導開発・ポケカのドメ�
 ## 必読ドキュメント
 
 - `README.md` — コンペ概要・ロードマップ(Phase 0-4)・現在地
+- `docs/plan.md` — 締切までの週次計画と判断ゲート(**週次でレビュー・更新**)
 - `docs/observation.md` — エージェントAPI仕様(obs構造・探索API)
 - `docs/architecture.md` — ランタイム/オフラインの設計
 - `docs/development.md` — 開発ループ・提出手順・落とし穴
