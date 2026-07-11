@@ -339,7 +339,7 @@ function renderNotes(){
 }
 function copyNotes(){
   const head = document.title;
-  const body = notes.map(n => `- ターン${n.turn}(場面${n.frame+1}/${DATA.length}): ${n.text}`).join('\n');
+  const body = notes.map(n => `- ターン${n.turn}(場面${n.frame+1}/${DATA.length}): ${n.text}`).join('\\n');
   const txt = `【リプレイ感想】${head}\n${body || '(メモなし)'}`;
   const done = () => { const b = document.getElementById('copybtn'); b.textContent = '✅ コピーしました'; setTimeout(()=>b.textContent='📋 感想をまとめてコピー', 1600); };
   if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done); }
