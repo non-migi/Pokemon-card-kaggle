@@ -22,16 +22,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 EMB_DIM = 16
-HID = 128
 OUT = 64
 
 
 class TwoTower(nn.Module):
-    def __init__(self, n_vocab, n_state, n_option):
+    def __init__(self, n_vocab, n_state, n_option, hid=128):
         super().__init__()
         self.emb = nn.Embedding(n_vocab + 1, EMB_DIM)
-        self.state = nn.Sequential(nn.Linear(n_state, HID), nn.ReLU(), nn.Linear(HID, OUT))
-        self.option = nn.Sequential(nn.Linear(n_option + EMB_DIM, HID), nn.ReLU(), nn.Linear(HID, OUT))
+        self.state = nn.Sequential(nn.Linear(n_state, hid), nn.ReLU(), nn.Linear(hid, OUT))
+        self.option = nn.Sequential(nn.Linear(n_option + EMB_DIM, hid), nn.ReLU(), nn.Linear(hid, OUT))
 
     def forward(self, s, o, c, mask):
         sv = self.state(s)
@@ -61,6 +60,7 @@ def main():
     ap.add_argument("--bs", type=int, default=512)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--name", required=True)
+    ap.add_argument("--hid", type=int, default=128)
     args = ap.parse_args()
 
     out_dir = os.path.join(ROOT, "models", args.name)
@@ -77,7 +77,7 @@ def main():
     print(f"shards: train={len(train_shards)} holdout=1 vocab={len(vocab)}")
 
     dev = "mps" if torch.backends.mps.is_available() else "cpu"
-    model = TwoTower(len(vocab), meta["n_state"], meta["n_option"]).to(dev)
+    model = TwoTower(len(vocab), meta["n_state"], meta["n_option"], hid=args.hid).to(dev)
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     for ep in range(args.epochs):
@@ -114,7 +114,7 @@ def main():
         f.write(f"POLICY_FEATURE_VERSION = {meta['feature_version']}\n")
         f.write(f"CARD_VOCAB = {vocab}\n")
     with open(os.path.join(out_dir, "META.json"), "w") as f:
-        json.dump({"model": args.name, "trained": datetime.date.today().isoformat(),
+        json.dump({"model": args.name, "hid": args.hid, "trained": datetime.date.today().isoformat(),
                    "feat_dir": args.feat, "sources": meta.get("sources"),
                    "epochs": args.epochs}, f, ensure_ascii=False, indent=1)
     print(f"exported -> models/{args.name}/")

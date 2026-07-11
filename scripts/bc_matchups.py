@@ -14,7 +14,7 @@ def _init():
     logging.disable(logging.WARNING)
     # BCモデル入りのptcgが必要なため、srcではなくビルド済みディレクトリを使う
     # (src/ptcgはモデル非同梱 — models/はビルド時に注入される設計)
-    agent_dir = os.path.join(ROOT, "build", "v3.0g")
+    agent_dir = os.path.join(ROOT, "build", os.environ.get("BC_BUILD", "v3.2g"))
     if not os.path.exists(agent_dir):
         raise SystemExit("先に .venv/bin/python -m ptcglab.build v3.0g --no-tar を実行")
     sys.path.insert(0, agent_dir)
@@ -59,10 +59,10 @@ def _play(args):
     return {1: 1.0, 0: 0.5, -1: 0.0}.get(r if r is not None else -1, 0.0)
 
 
-MY = {"BCフーディン": "decks/meta/meta_00.csv", "BCオーロンゲ": "decks/meta/meta_01.csv"}
+MY = {"BCブリジュラス": "decks/meta/meta_07.csv", "BCオーロンゲ": "decks/meta/meta_01.csv"}
 OPP = {"フーディン": "decks/meta/meta_00.csv", "オーロンゲ": "decks/meta/meta_01.csv",
-       "ガルーラ": "decks/meta/meta_02.csv", "ルカリオ": "decks/meta/meta_06.csv",
-       "サンプル": "decks/sample.csv"}
+       "ブリジュラス": "decks/meta/meta_07.csv", "ルカリオ": "decks/meta/meta_06.csv",
+       "ガルーラ": "decks/meta/meta_02.csv"}
 
 if __name__ == "__main__":
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 200
