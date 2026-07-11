@@ -37,6 +37,62 @@
 - **enumはintで比較**(コンペ中の追加に耐える)/ Kaggleローダーは`exec(code,{})`(`__file__`無し、最後のcallableがagent)
 - **BCはデッキとセット**: 方策は訓練分布内のデッキでのみ強い。デッキ変更時は再評価必須
 
+---
+
+# 目標アーキテクチャ(2026-07-12設計、AI管理性の改善)
+
+## 動機(実際に踏んだ摩擦)
+
+1. エージェント変種がscratchpad(揮発)に散在し再現不能 → 毎回の考古学
+2. 環境変数設定が同一プロセスの両エージェントに漏れる(2回事故)
+3. scripts/17本に対戦ハーネスが重複コピー → pickle事故・モジュール共有バグの温床
+4. 測定結果が散文にしかなく機械参照不能 → 再測定の無駄
+5. 学習モデルが提出物を直接上書き → 「提出済みのモデルはどれ」問題
+
+## 目標構造
+
+```
+├── src/
+│   ├── main.py            エントリ(同梱の agent_config.json を読む。環境変数は廃止)
+│   └── ptcg/              ランタイムパッケージ(現 submission/ptcg)
+├── agents/                エージェント定義 = JSONのみ(コードのコピーを持たない)
+│   └── v3.0g.json         {"algo":"bc","deck":"decks/meta/meta_01.csv","model":"bc_v0","label":"..."}
+├── models/                学習成果物のレジストリ(上書きしない)
+│   └── bc_v0/             policy_params.npz + policy_vocab.py + META.json(データ・精度・日付)
+├── ptcglab/               オフライン共通ライブラリ(pip installしない、sys.path参照)
+│   ├── arena.py           対戦ランナー(モジュール分離ロード・並列・Wilson CI・結果ledger追記)
+│   ├── build.py           agents/*.json → build/<name>/ を組立て→ローダー検証→tar.gz
+│   ├── kaggle_io.py       CLIラッパ(submissions/episodes/replay/scrape)
+│   └── stats.py           集計ユーティリティ
+├── scripts/               薄いCLI(ptcglabを呼ぶだけ)。分析系ノートブック的スクリプトはそのまま
+├── results/               測定ledger(arena が自動追記するJSONL: 日時,agentA,agentB,n,勝率,CI,環境)
+├── decks/ docs/ data/ replays/  (現状維持)
+└── build/                 生成物(git管理外)
+```
+
+## 設計のポイント
+
+- **エージェント=設定、コード=単一**: 変種はJSONで宣言し、`build.py`が src+models+deck から組み立てる。
+  過去のどのバージョンも `agents/vX.json` から1コマンドで再現可能(scratchpad考古学の廃止)
+- **設定は同梱ファイル**: `agent_config.json`をビルド時に埋め込み、main.pyが読む。
+  ローカルA/Bはビルド済みディレクトリ同士で行うため、プロセス内で設定が混ざる事故が構造的に消える
+- **arenaの一本化**: モジュール分離ロード・並列実行・CI計算・敗因集計を1実装に集約。
+  実験スクリプトはハーネスを再発明しない(バグの温床を除去)
+- **結果ledger**: すべての対戦測定が results/*.jsonl に自動追記される。
+  将来のセッションが「その比較は07-12に済んでいて52%だった」を機械的に引ける
+- **モデルレジストリ**: 学習は models/bc_vN/ に書き、提出物へはビルド時にコピー。上書き事故の根絶
+
+## 移行計画(段階的・各段でローダー検証)
+
+1. ptcglab/arena.py + build.py + agents/*.json(現行 v3.0g/v3.0a/v2.1 を定義)— 既存scriptsは当面併存
+2. src/ へ submission/ を移設、main.py を agent_config.json 読み込みに変更
+3. train_bc.py の出力先を models/ に変更
+4. evaluate/vs_deck_test/bc_matchups/deck_tournament を arena ベースに置換(旧版は削除)
+5. CLAUDE.md / development.md のコマンド集を更新
+
+リスク管理: 提出tarの内部構造(main.py+cg/+ptcg/+deck.csv)は不変。各段で `build.py --validate` が
+ファイルパスロード両席テストを通すことを確認してから次へ進む。
+
 ### 設計原則
 
 - **落ちない**: 例外・未知enum・時間切れは必ずヒューリスティックか先頭選択にフォールバック。INVALIDは即負け
