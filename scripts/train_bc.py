@@ -31,24 +31,29 @@ OUT = 64
 MAX_OPTS = 24
 
 
-def load_decisions(path, limit=None):
-    """jsonl.gz → (state_feats, [opt_feats], [card_vocab_idx], label) のリスト。2パス: 語彙→特徴量。"""
-    print("pass1: カード語彙を構築...")
+def _iter_lines(paths):
+    for path in paths:
+        with gzip.open(path, "rt") as f:
+            yield from f
+
+
+def load_decisions(paths, limit=None):
+    """jsonl.gz(複数可) → (state_feats, [opt_feats], [card_vocab_idx], label)。2パス: 語彙→特徴量。"""
+    print(f"pass1: カード語彙を構築... ({len(paths)}ファイル)")
     card_count = Counter()
     n = 0
-    with gzip.open(path, "rt") as f:
-        for line in f:
-            d = json.loads(line)
-            sel = d["sel"]
-            if sel.get("maxCount") != 1 or len(sel.get("option") or []) < 2:
-                continue
-            n += 1
-            for opt in sel["option"][:MAX_OPTS]:
-                _, cid = PF.option_features(sel, d["cur"], opt)
-                if cid is not None:
-                    card_count[cid] += 1
-            if limit and n >= limit:
-                break
+    for line in _iter_lines(paths):
+        d = json.loads(line)
+        sel = d["sel"]
+        if sel.get("maxCount") != 1 or len(sel.get("option") or []) < 2:
+            continue
+        n += 1
+        for opt in sel["option"][:MAX_OPTS]:
+            _, cid = PF.option_features(sel, d["cur"], opt)
+            if cid is not None:
+                card_count[cid] += 1
+        if limit and n >= limit:
+            break
     vocab = [cid for cid, _ in card_count.most_common(300)]
     cid2idx = {cid: i + 1 for i, cid in enumerate(vocab)}  # 0=UNK/None
     print(f"  対象決定数={n} 語彙={len(vocab)}")
@@ -56,30 +61,29 @@ def load_decisions(path, limit=None):
     print("pass2: 特徴量を構築...")
     S, O, C, Y, NOPT = [], [], [], [], []
     n = 0
-    with gzip.open(path, "rt") as f:
-        for line in f:
-            d = json.loads(line)
-            sel, cur, act = d["sel"], d["cur"], d["act"]
-            opts = sel.get("option") or []
-            if sel.get("maxCount") != 1 or len(opts) < 2 or len(act) != 1:
-                continue
-            label = act[0]
-            if not (0 <= label < min(len(opts), MAX_OPTS)):
-                continue
-            sf = PF.state_features(sel, cur)
-            of, ci = [], []
-            for opt in opts[:MAX_OPTS]:
-                feats, cid = PF.option_features(sel, cur, opt)
-                of.append(feats)
-                ci.append(cid2idx.get(cid, 0))
-            S.append(sf)
-            O.append(of)
-            C.append(ci)
-            Y.append(label)
-            NOPT.append(len(of))
-            n += 1
-            if limit and n >= limit:
-                break
+    for line in _iter_lines(paths):
+        d = json.loads(line)
+        sel, cur, act = d["sel"], d["cur"], d["act"]
+        opts = sel.get("option") or []
+        if sel.get("maxCount") != 1 or len(opts) < 2 or len(act) != 1:
+            continue
+        label = act[0]
+        if not (0 <= label < min(len(opts), MAX_OPTS)):
+            continue
+        sf = PF.state_features(sel, cur)
+        of, ci = [], []
+        for opt in opts[:MAX_OPTS]:
+            feats, cid = PF.option_features(sel, cur, opt)
+            of.append(feats)
+            ci.append(cid2idx.get(cid, 0))
+        S.append(sf)
+        O.append(of)
+        C.append(ci)
+        Y.append(label)
+        NOPT.append(len(of))
+        n += 1
+        if limit and n >= limit:
+            break
     print(f"  学習サンプル={n}")
     return S, O, C, Y, NOPT, vocab
 
@@ -100,7 +104,7 @@ class TwoTower(nn.Module):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data/bc/pairs_0709.jsonl.gz")
+    ap.add_argument("--data", nargs="+", default=["data/bc/pairs_0709.jsonl.gz"])
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--bs", type=int, default=512)
