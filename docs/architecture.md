@@ -1,35 +1,41 @@
-# アーキテクチャ設計
+# アーキテクチャ設計(2026-07-12更新: BC世代)
 
 ## 全体像
 
 ```
-┌─ オフライン(このリポジトリ) ─────────────────────────────┐
-│  scripts/evaluate.py   並列A/B対戦 + Wilson CI(改善判定のゲート) │
-│  scripts/diagnose.py   敗因・ターン数の集計                       │
-│  (予定) デッキ総当たりトーナメント / 自己対戦データ生成 / 学習     │
+┌─ オフライン(このリポジトリ) ──────────────────────────────┐
+│  学習:   bc_extract.py(公式トップエピソード→意思決定ペア)          │
+│          train_bc.py(2タワーランカー、torch/MPS→numpyエクスポート)  │
+│  評価:   evaluate.py(並列A/B+Wilson CI) bc_matchups.py(デッキ表)│
+│  分析:   ladder_stats.py / meta_scrape.py / band_meta.py /         │
+│          diagnose.py / render_replay_jp.py(日本語リプレイ)          │
+│  デッキ: deck_lib.py / deck_opt.py / deck_tournament.py             │
 └──────────────────────────────────────────────┘
-                 │ 検証済みのロジックだけを反映
+                 │ 検証済みのロジック・学習済みパラメータだけを反映
                  ▼
 ┌─ ランタイム(submission/ = Kaggleに提出) ───────────────────┐
-│  main.py     エントリポイント(薄く保つ。最後の関数が agent)        │
-│  deck.csv    デッキ(60行のカードID)                              │
-│  ptcg/       自作パッケージ(Phase 2以降。下記コンポーネント)       │
-│  cg/         公式ライブラリ(git管理外。配布物から復元)             │
+│  main.py     意思決定カスケード(ALGO: 探索→BC→ヒューリスティック)  │
+│  deck.csv    デッキ(60行のカードID)— BC方策とセットで選ぶ          │
+│  ptcg/       自作パッケージ(下記)+ policy_params.npz(150KB)      │
+│  cg/         公式ライブラリ(git管理外。配布物から復元)              │
 └──────────────────────────────────────────────┘
 ```
 
-## ランタイムの設計(Phase 2以降の計画)
+## ランタイムの構成
 
-`ptcg/` パッケージとして実装し、main.py からimportする
-(Kaggleローダーはエージェントのディレクトリをsys.pathに入れるので複数ファイル提出が可能):
+| モジュール | 責務 | 状態 |
+|---|---|---|
+| `ptcg/policy.py` + `policy_features.py` | **BC方策(現主力)**。2タワー(state塔×option塔の内積)のnumpy推論。単数選択を全てカバー、1決定<1ms | v3.0〜 |
+| `ptcg/heuristics.py` | 優先度ヒューリスティック。BC対象外(複数選択)とフォールバック、探索のロールアウト方策 | 全世代 |
+| `ptcg/search.py` | 決定化フラットMC探索(公式search API)。ALGO=bc_searchで先頭段 | v2.0〜 |
+| `ptcg/belief.py` + `meta_decks.py` | 相手デッキ推定(可視カード×メタライブラリ照合、ミラーフォールバック) | v2.1〜 |
+| `ptcg/value.py` + `features.py` | 盤面勝率の学習器(現在は無効。ロールアウト打ち切りでの再利用待ち) | 棄却v0 |
+| main.py の時間管理 | 残り時間の線形配分(BCはほぼ消費しないため実質探索用) | — |
 
-| モジュール | 責務 |
-|---|---|
-| `ptcg/belief.py` | 隠れ情報の追跡・サンプリング。自分のデッキリストは既知なので、logs(DRAW/MOVE_CARD)から自分の山札・サイドはほぼ確定できる。相手はカードプール/メタデッキ分布からサンプリング |
-| `ptcg/heuristics.py` | v1のスコアリング(探索の事前分布・フォールバックとして残す) |
-| `ptcg/value.py` | 盤面評価関数。まず手書き特徴量(サイド差・盤面HP合計・エネルギー枚数・手札枚数)、Phase 3で学習済みモデル(numpy推論)に置換 |
-| `ptcg/search.py` | 決定化探索。`cg.api.search_begin/search_step` で仮想対局。v2.0=1手読み(各合法手→数手ロールアウト→value平均)、v2.1=MCTS |
-| `ptcg/timebudget.py` | 時間管理。`remainingOverageTime`(600秒/試合)を残りターン見込みで割って1手の探索予算を決める。予算超過時はheuristicsへフォールバック |
+### 設計原則(不変)
+- **落ちない**: どの段も例外・分布外で下段にフォールバック。INVALIDは即負け
+- **enumはintで比較**(コンペ中の追加に耐える)/ Kaggleローダーは`exec(code,{})`(`__file__`無し、最後のcallableがagent)
+- **BCはデッキとセット**: 方策は訓練分布内のデッキでのみ強い。デッキ変更時は再評価必須
 
 ### 設計原則
 

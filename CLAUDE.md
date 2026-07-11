@@ -15,11 +15,16 @@ Kaggleコンペで上位入賞を狙う。**AI主導開発・ポケカのドメ�
 ## よく使うコマンド
 
 ```bash
-.venv/bin/python scripts/evaluate.py submission/main.py --vs first -n 300 -j 8  # A/B評価
-.venv/bin/python scripts/diagnose.py 60 first                                   # 敗因集計
-.venv/bin/python scripts/package.py v2.0                                        # 提出前検証+tar作成
-kaggle competitions submissions -c pokemon-tcg-ai-battle | head -4              # 提出状況/レート
+.venv/bin/python scripts/evaluate.py submission/main.py --vs <dir>/main.py -n 300 -j 8  # A/B評価
+.venv/bin/python scripts/ladder_stats.py                                        # LB実戦成績(リプレイ集計)
+.venv/bin/python scripts/bc_extract.py <エピソードdir> --out data/bc/X.jsonl.gz  # BC教師データ抽出
+.venv/bin/python scripts/train_bc.py --data data/bc/X.jsonl.gz --epochs 5       # BC学習→params出力
+.venv/bin/python scripts/bc_matchups.py 200                                     # BC×デッキのマッチアップ表
+.venv/bin/python scripts/package.py vX.Y                                        # 提出前検証+tar作成
+kaggle competitions submissions -c pokemon-tcg-ai-battle | head -5              # 提出状況/レート
 ```
+
+主力はBC方策(ptcg/policy.py)。`PTCG_ALGO`環境変数で bc / search / bc_search を切替(A/Bは環境変数でなくコピーにハードコード — 同一プロセスで両者に効いてしまうため)。
 
 ## 絶対に守ること
 
