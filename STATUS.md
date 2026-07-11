@@ -21,7 +21,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **v3.2g/v3.1aの80戦観測**: 平衡レートと軸デッキの判定(850+に届くか)
+1. **v3.2g/v3.1aの80戦観測**: 予測=v3.1a(フーディン)が公開Archaludonボット群(850-1000帯の45%)を
+   狩って追い抜く。確認できたら軸デッキ=フーディンで確定
+1b. 公開950+ボットをローカル常設ガントレットに追加済み(scratchpad/kernels/roman/selected_agent_build。
+   再現: kaggle kernels pull romanrozen/strong-start-baseline-agent-v10-lb-950 → run → cg差し替え+deckパス修正)
 2. データ拡張は完了(bc_v2=10日分)。フーディン側は頭打ち(52.1% ns)→ 次はモデル容量拡大
    (HID 128→256等)・特徴量v2・multi-select対応のいずれかをA/Bで
 3. その先: BC×探索の統合 or RL自己対戦(docs/plan.md G3、8/3期限)
