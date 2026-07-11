@@ -217,6 +217,15 @@ overflow-y:auto;padding:14px;display:grid;grid-template-columns:200px 1fr;gap:12
 .mv{border-top:1px solid #e0ddd2;padding:6px 0} .mv b{font-size:13px}
 .mv .cost{color:#7a6a2f;font-size:11px;margin-left:6px} .mv .dmg{color:#a33;font-weight:700;margin-left:6px}
 .mv p{margin:2px 0 0;font-size:12px;line-height:1.5}
+.notesbox{margin-top:12px;border-top:2px solid #d8d5cc;padding-top:8px}
+.notesbox textarea{width:100%;box-sizing:border-box;font-family:inherit;font-size:12.5px;border:1px solid #c9c6bb;
+border-radius:6px;padding:6px 8px;resize:vertical;background:#fff}
+.notebtns{display:flex;gap:6px;margin:6px 0}
+.notebtns button{flex:1;padding:5px 4px;border-radius:6px;border:1px solid #b9b6ab;background:#fff;font-size:12px}
+.notebtns button:hover{background:#eef3ee}
+.noteitem{background:#f2f0e8;border-radius:6px;padding:6px 9px;margin:5px 0;font-size:12px;position:relative}
+.noteitem .where{color:#2f6f4f;font-weight:700;cursor:pointer;text-decoration:underline}
+.noteitem .del{position:absolute;right:6px;top:4px;cursor:pointer;color:#a33;font-weight:700}
 @media(max-width:1000px){.wrap{grid-template-columns:1fr}}
 </style></head><body>
 <header><b>__TITLE__</b>
@@ -224,7 +233,16 @@ overflow-y:auto;padding:14px;display:grid;grid-template-columns:200px 1fr;gap:12
 <input id="frame" type="range" min="0" max="__MAXF__" value="0" oninput="show(+this.value)">
 <span id="pos" style="color:#f0eee6"></span><span class="meta">←→キー / カードクリックで効果</span></header>
 <div class="wrap"><div class="mat" id="board"></div>
-<div class="logs"><div class="selbox" id="selbox"></div><h3>この場面までの出来事</h3><div id="loglines"></div></div></div>
+<div class="logs"><div class="selbox" id="selbox"></div><h3>この場面までの出来事</h3><div id="loglines"></div>
+<div class="notesbox">
+  <h3>📝 感想メモ(この場面に紐づきます)</h3>
+  <textarea id="noteinput" rows="3" placeholder="例: この場面で逃げないのは変。ベンチのマシマシラにエネを貼るべきでは"></textarea>
+  <div class="notebtns">
+    <button onclick="addNote()">＋ この場面にメモ</button>
+    <button onclick="copyNotes()" id="copybtn">📋 感想をまとめてコピー</button>
+  </div>
+  <div id="notelist"></div>
+</div></div></div>
 <div class="modal" id="modal" onclick="this.style.display='none'"><div class="box" id="modalbox"></div></div>
 <script>
 const DATA=__DATA__;const JP=__JPDB__;const ATK=__ATKJP__;const TEAMS=__TEAMS__;const MYSEAT=__MYSEAT__;
@@ -300,6 +318,34 @@ function openCard(id){const c=JP[id];if(!c)return;const mb=document.getElementBy
  c.moves.map(m=>`<div class="mv"><b>${m.cat?'['+m.cat+'] ':''}${m.name||'効果'}</b>${m.cost?`<span class="cost">${m.cost}</span>`:''}${m.dmg?`<span class="dmg">${m.dmg}</span>`:''}<p>${m.text}</p></div>`).join('')+`</div>`;
  document.getElementById('modal').style.display='flex'}
 show(0);
+/* ---- 感想メモ ---- */
+const NKEY = 'ptcg-notes-' + location.pathname.split('/').pop();
+let notes = [];
+try{ notes = JSON.parse(localStorage.getItem(NKEY) || '[]'); }catch(e){}
+function saveNotes(){ localStorage.setItem(NKEY, JSON.stringify(notes)); renderNotes(); }
+function addNote(){
+  const t = document.getElementById('noteinput').value.trim();
+  if(!t) return;
+  notes.push({frame: cur, turn: DATA[cur].turn, text: t});
+  document.getElementById('noteinput').value = '';
+  saveNotes();
+}
+function delNote(i){ notes.splice(i,1); saveNotes(); }
+function renderNotes(){
+  document.getElementById('notelist').innerHTML = notes.map((n,i) =>
+    `<div class="noteitem"><span class="where" onclick="show(${n.frame})">ターン${n.turn}・場面${n.frame+1}</span>
+     <span class="del" onclick="delNote(${i})">×</span><br>${n.text.replace(/</g,'&lt;')}</div>`).join('')
+    || '<span class="meta">メモはまだありません</span>';
+}
+function copyNotes(){
+  const head = document.title;
+  const body = notes.map(n => `- ターン${n.turn}(場面${n.frame+1}/${DATA.length}): ${n.text}`).join('\n');
+  const txt = `【リプレイ感想】${head}\n${body || '(メモなし)'}`;
+  const done = () => { const b = document.getElementById('copybtn'); b.textContent = '✅ コピーしました'; setTimeout(()=>b.textContent='📋 感想をまとめてコピー', 1600); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done); }
+  else { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
+}
+renderNotes();
 </script></body></html>"""
 
 
@@ -313,7 +359,21 @@ def find_replay(arg: str) -> str:
     raise SystemExit(f"リプレイが見つからない: {arg}(kaggle competitions replay {arg} で取得可能)")
 
 
-def render(path: str, jp_db: dict, atk_jp: dict) -> str:
+ARCH_RULES = [("フーディン型", "フーディン"), ("オーロンゲ型", "マリィのオーロンゲex"),
+              ("ガルーラ型", "メガガルーラex"), ("ブリジュラス型", "ブリジュラスex"),
+              ("ルカリオ型", "メガルカリオex"), ("イワパレス型", "イワパレス"),
+              ("初期デッキ型", "メガユキノオーex"), ("スターミー型", "メガスターミーex")]
+
+
+def archetype(deck, jp_db) -> str:
+    names = {jp_db.get(cid, {}).get("name", "") for cid in deck}
+    for label, key in ARCH_RULES:
+        if key in names:
+            return label
+    return "その他"
+
+
+def render(path: str, jp_db: dict, atk_jp: dict, outdir: str = None, prefix: str = "") -> str:
     d = json.load(open(path))
     frames = [slim_frame(f) for f in d["steps"][0][0]["visualize"]]
     teams = d.get("info", {}).get("TeamNames", ["P0", "P1"])
@@ -336,7 +396,16 @@ def render(path: str, jp_db: dict, atk_jp: dict) -> str:
             .replace("__REASONJP__", json.dumps(RESULT_REASON_JP, ensure_ascii=False))
             .replace("__IMGMAP__", json.dumps(image_map(ids)))
             .replace("__ECOL__", json.dumps(ENERGY_COLOR, ensure_ascii=False)))
-    out = os.path.join(ROOT, "replays", f"ep{ep}_jp.html")
+    # 説明的なファイル名: 勝敗_自デッキ_vs_相手デッキ_ep番号
+    try:
+        my_deck = d["steps"][1][my_seat].get("action") or []
+        opp_deck = d["steps"][1][1 - my_seat].get("action") or []
+        my_arch = archetype(my_deck, jp_db)
+        opp_arch = archetype(opp_deck, jp_db)
+    except Exception:
+        my_arch = opp_arch = "不明"
+    fname = f"{prefix}{res}_{my_arch}_vs_{opp_arch}_ep{ep}.html"
+    out = os.path.join(outdir or os.path.join(ROOT, "replays"), fname)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:
         f.write(page)
@@ -344,10 +413,20 @@ def render(path: str, jp_db: dict, atk_jp: dict) -> str:
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("episodes", nargs="+", help="エピソードID or replay.jsonパス")
+    ap.add_argument("--outdir", default=None, help="出力フォルダ(既定: replays/)")
+    ap.add_argument("--prefix", default="", help="ファイル名の接頭辞(例: A_ガルーラ検証_)")
+    args = ap.parse_args()
     jp_db = load_jp_db()
     atk_jp = load_attack_jp(jp_db)
-    for arg in sys.argv[1:]:
-        out = render(find_replay(arg), jp_db, atk_jp)
+    outdir = None
+    if args.outdir:
+        outdir = args.outdir if os.path.isabs(args.outdir) else os.path.join(ROOT, args.outdir)
+    for i, arg in enumerate(args.episodes):
+        prefix = args.prefix
+        out = render(find_replay(arg), jp_db, atk_jp, outdir=outdir, prefix=prefix)
         print("->", out)
 
 
