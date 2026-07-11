@@ -20,7 +20,7 @@ from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
-sys.path.insert(0, os.path.join(ROOT, "submission"))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 
 CACHE = os.path.expanduser("~/.cache/ptcg-replays")
 BANDS = [(550, 700), (700, 850), (850, 1000), (1000, 1400)]

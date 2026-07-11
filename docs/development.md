@@ -17,19 +17,18 @@ kaggle competitions download -c pokemon-tcg-ai-battle-challenge-strategy -p data
 (cd data/simulation && unzip -q *.zip && rm *.zip)
 (cd data/strategy && unzip -q *.zip && rm *.zip)
 
-# 4. 公式ライブラリを提出ディレクトリに復元(git管理外のため)
-cp -r "data/simulation/sample_submission/sample_submission/cg" submission/
+# 4. 公式ライブラリをsrc/に復元(git管理外のため)
+cp -r "data/simulation/sample_submission/sample_submission/cg" src/
 ```
 
 ## 日常の開発ループ
 
 ```bash
-# 動作確認(20戦)
-.venv/bin/python scripts/run_match.py 20
+# エージェントの組立て+検証(agents/<name>.json から)
+.venv/bin/python -m ptcglab.build v3.0g --no-tar
 
-# A/B評価: 変更が本物か必ずここで判定(300戦以上、CIで判断)
-.venv/bin/python scripts/evaluate.py submission/main.py --vs random -n 300 -j 8
-.venv/bin/python scripts/evaluate.py submission/main.py --vs first -n 300 -j 8
+# A/B評価: 変更が本物か必ずここで判定(結果は results/arena.jsonl に自動記録)
+.venv/bin/python scripts/evaluate.py build/<新> --vs build/<旧> -n 200 -j 8 --note "説明"
 
 # 敗因の内訳(reason: 1=サイド 2=山札切れ 3=ポケモン無し 4=効果)
 .venv/bin/python scripts/diagnose.py 60 first
@@ -44,19 +43,19 @@ cp -r "data/simulation/sample_submission/sample_submission/cg" submission/
 ## 提出手順
 
 ```bash
-# 1. パッケージ+ローダー互換検証(必須!)
-.venv/bin/python scripts/package.py
+# 1. 組立て+ローダー互換検証+tar(必須! agents/<name>.json を定義してから)
+.venv/bin/python -m ptcglab.build <name>
 
-# 2. 提出
-kaggle competitions submit -c pokemon-tcg-ai-battle -f submission-vX.Y.tar.gz -m "説明"
+# 2. 提出(前に submissions で枠と「最新2提出」の状況を確認)
+kaggle competitions submit -c pokemon-tcg-ai-battle -f build/<name>.tar.gz -m "説明"
 
-# 3. 検証結果の確認(PENDING → COMPLETE/ERROR)
-kaggle competitions submissions -c pokemon-tcg-ai-battle | head -4
+# 3. 検証結果の確認(PENDING → COMPLETE/ERROR)→ versions.md と STATUS.md を更新
+kaggle competitions submissions -c pokemon-tcg-ai-battle | head -5
 ```
 
 ### 提出前チェックリスト
 
-- [ ] `scripts/package.py` が通る(**ファイルパスロード検証込み**。importベースの評価だけでは不十分)
+- [ ] `ptcglab.build` の検証が通る(**ファイルパスロード検証込み**。importベースの評価だけでは不十分)
 - [ ] evaluate.py で旧版に有意勝ち越し
 - [ ] 1手あたりの最悪時間を確認(600秒/試合を超えない設計か)
 

@@ -10,7 +10,7 @@ import random
 import sys
 import time
 
-sys.path.insert(0, "submission")
+sys.path.insert(0, "src")
 
 from kaggle_environments import make
 from cg.api import to_observation_class, search_begin, search_step, search_end

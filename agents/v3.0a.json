@@ -1,0 +1,6 @@
+{
+  "label": "BC方策 + フーディン型(2026-07-12提出 sub 54556785)",
+  "deck": "decks/meta/meta_00.csv",
+  "model": "bc_v0",
+  "config": {"algo": "bc"}
+}

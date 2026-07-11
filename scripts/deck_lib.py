@@ -9,7 +9,7 @@ import random
 import sys
 from collections import Counter
 
-sys.path.insert(0, "submission")
+sys.path.insert(0, "src")
 
 from cg.api import all_card_data, all_attack
 

@@ -6,10 +6,10 @@ reason: 1=サイド取り切り 2=山札切れ 3=バトル場に出せるポケ�
 import sys
 from collections import Counter
 
-sys.path.insert(0, "submission")
+sys.path.insert(0, "src")
 
 from kaggle_environments import make
-import main as my  # submission/main.py
+import main as my  # src/main.py
 
 
 def run(n: int, opponent: str) -> None:

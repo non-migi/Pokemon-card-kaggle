@@ -14,14 +14,14 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 OPP_DECK_PATH = sys.argv[1] if len(sys.argv) > 1 else None
 N = int(sys.argv[2]) if len(sys.argv) > 2 else 100
 MODE = sys.argv[3] if len(sys.argv) > 3 else "search"  # search / heuristic
-MY_DECK_PATH = sys.argv[4] if len(sys.argv) > 4 else os.path.join(ROOT, "submission", "deck.csv")
+MY_DECK_PATH = sys.argv[4] if len(sys.argv) > 4 else os.path.join(ROOT, "decks", "sample.csv")
 
 
 def _init():
     import logging
 
     logging.disable(logging.WARNING)
-    sub = os.path.join(ROOT, "submission")
+    sub = os.path.join(ROOT, "src")
     if sub not in sys.path:
         sys.path.insert(0, sub)
 

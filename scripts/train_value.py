@@ -16,7 +16,7 @@ import sys
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, "submission"))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 
 
 def load(data_dir: str):
@@ -96,7 +96,7 @@ def main():
     ll, auc, acc = evaluate(X[hold], y[hold], w, b, mu, sd)
     print(f"holdout: logloss={ll:.4f} AUC={auc:.4f} acc={acc:.4f}")
 
-    out = os.path.join(ROOT, "submission", "ptcg", "value_params.py")
+    out = os.path.join(ROOT, "src", "ptcg", "value_params.py")
     export(w, b, mu, sd, out)
     print(f"exported -> {out}")
 

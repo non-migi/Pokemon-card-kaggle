@@ -35,7 +35,7 @@ def _init_worker():
     import logging
 
     logging.disable(logging.WARNING)
-    sub = os.path.join(ROOT, "submission")
+    sub = os.path.join(ROOT, "src")
     if sub not in sys.path:
         sys.path.insert(0, sub)
     _worker_ready = True
@@ -103,7 +103,7 @@ def main():
 
     rng = random.Random(args.seed)
     os.makedirs(POP_DIR, exist_ok=True)
-    sample_deck = deck_lib.load_deck(os.path.join(ROOT, "submission", "deck.csv"))
+    sample_deck = deck_lib.load_deck(os.path.join(ROOT, "decks", "sample.csv"))
 
     if args.resume and os.path.exists(os.path.join(POP_DIR, "deck_00.csv")):
         pop = []

@@ -1,0 +1,9 @@
+{
+  "model": "bc_v0",
+  "trained": "2026-07-12",
+  "data": "Daily Top Episodes 2026-07-09 (4,870試合, 勝者側323,147決定)",
+  "arch": "2タワーランカー (state 101→128→64, option 45+emb16→128→64, dot)",
+  "holdout_top1": 0.609,
+  "epochs": 5,
+  "notes": "初代BC。単数選択のみ。v3.0g/v3.0aで提出"
+}

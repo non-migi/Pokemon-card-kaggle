@@ -3,14 +3,15 @@
 __pycache__/
 *.pyc
 
-# コンペ配布物(ライセンス上、再配布禁止。scripts/やdocsの手順で復元する)
+# コンペ配布物(ライセンス上、再配布禁止。docs/development.mdの手順で復元)
 data/
-submission/cg/
+src/cg/
 
 # 生成物
+build/
 *.tar.gz
 result*.html
+replays/
 
 # ローカル設定
 .claude/settings.local.json
-replays/

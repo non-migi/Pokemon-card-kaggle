@@ -1,0 +1,6 @@
+{
+  "label": "v2.1相当: 決定化探索 + サンプルデッキ(旧世代ベースライン)",
+  "deck": "decks/sample.csv",
+  "model": null,
+  "config": {"algo": "search", "max_move_sec": 2.0}
+}

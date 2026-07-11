@@ -16,7 +16,7 @@ Kaggleコンペ「Pokémon TCG AI Battle Challenge」で上位入賞を目指す
 
 | 部門 | 内容 | 締切 (UTC) | 参加状況 |
 |---|---|---|---|
-| [Simulation](https://www.kaggle.com/competitions/pokemon-tcg-ai-battle) | エージェント提出→24時間自動対戦。レーティングでLB順位変動。賞金なし(Knowledge) | **2026-08-16 23:59** | **未参加(要Webでルール同意)** |
+| [Simulation](https://www.kaggle.com/competitions/pokemon-tcg-ai-battle) | エージェント提出→24時間自動対戦。レーティングでLB順位変動。賞金なし(Knowledge) | **2026-08-16 23:59** | 参加済み(提出稼働中) |
 | [Strategy](https://www.kaggle.com/competitions/pokemon-tcg-ai-battle-challenge-strategy) | 対戦成績+技術レポート審査。賞金総額 $240,000。上位8チームがファイナル進出 | **2026-09-13 23:59** | 参加済み |
 
 - ファイナル: 2026年9月以降に日本で開催、YouTube配信予定
@@ -85,7 +85,7 @@ python3.12 -m venv .venv
 
 - v2世代で「**デッキの強さはプレイヤーの質とセット**」を発見(LB王者のフーディン型は、うちの探索AIでは操縦不能=総当たり最下位)
 - 公式の**Daily Top Episodesデータセット**(レート1000+の実プレイ)から勝者の意思決定を模倣学習し、この問題を解決。BC+フーディン型は旧最強(v2.1)に86%勝ち
-- 探索・belief・ヒューリスティックはフォールバック・部品として残存(`PTCG_ALGO`で切替可能)
+- 探索・belief・ヒューリスティックはフォールバック・部品として残存(agents/*.jsonの`algo`で構成)
 
 ### 今後の主要マイルストーン(ゲート判定はdocs/plan.md)
 
@@ -98,28 +98,19 @@ python3.12 -m venv .venv
 ## リポジトリ構成
 
 ```
-├── README.md            # このファイル(概要・ロードマップ)
-├── CLAUDE.md            # AI開発セッション用の要点(コマンド・禁則)
-├── docs/
-│   ├── plan.md          # 締切までの全体計画(週次スケジュール・判断ゲート)
-│   ├── versions.md      # バージョン履歴(変更点・デッキ・戦略・レートの一覧表)
-│   ├── observation.md   # エージェントAPI仕様(obs構造・公式探索API)
-│   ├── architecture.md  # ランタイム/オフラインの設計
-│   ├── development.md   # セットアップ・開発ループ・提出手順・落とし穴
-│   └── experiments.md   # 実験ログ(Strategyレポートの素材)
-├── submission/          # 提出物(main.py + deck.csv。cg/はgit外→development.mdで復元)
-├── scripts/
-│   ├── evaluate.py      # 並列A/B対戦 + Wilson CI
-│   ├── diagnose.py      # 敗因・ターン数集計
-│   ├── package.py       # 提出前検証(ローダー互換)+ tar.gz作成
-│   └── run_match.py     # 動作確認
-└── data/                # コンペ配布物(git外。カードCSV・エンジンC++・サンプル)
+├── AGENTS.md            全AIエージェント共通の作業マニュアル(必読)
+├── STATUS.md            現在の状態と次のアクション(セッション開始時に読む/終了時に更新)
+├── docs/                計画(plan)・履歴(versions)・実験(experiments)・設計(architecture)ほか
+├── src/                 ランタイム(main.py + ptcg/)。cg/はコンペ配布物(git外)
+├── agents/              エージェント定義(JSON)。ビルドは `python -m ptcglab.build <name>`
+├── models/              学習済みモデルのレジストリ(上書き禁止)
+├── ptcglab/             オフライン共通ライブラリ(arena=対戦評価, build=組立て)
+├── scripts/             CLI・分析ツール
+├── results/             測定台帳(arena.jsonl)
+├── decks/               デッキCSV(sample / meta/ / 候補)
+└── data/                コンペ配布物・学習データ(git外。復元はdocs/development.md)
 ```
 
-※ `data/` と `submission/cg/` はコンペ配布物(再配布禁止)のためgit管理外。クローン後は `docs/development.md` の手順で復元する。
+## 運用ルール
 
-## リスク・注意点
-
-- 提出環境の制約(CPU/GPU、メモリ、追加パッケージ可否)は未確認 → Simulation部門参加後にOverview/Rulesで確認
-- 持ち時間600秒/試合。重い推論は失格リスク。ローカルで時間計測を常にログする
-- 提出1日5回制限 → ローカル評価基盤の精度が生命線
+作業マニュアルは **AGENTS.md**、現在の状態は **STATUS.md**、計画とリスクは **docs/plan.md** を参照。

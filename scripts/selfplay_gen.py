@@ -24,7 +24,7 @@ def _init():
     import logging
 
     logging.disable(logging.WARNING)
-    sub = os.path.join(ROOT, "submission")
+    sub = os.path.join(ROOT, "src")
     if sub not in sys.path:
         sys.path.insert(0, sub)
 
@@ -38,7 +38,7 @@ def _play_batch(args):
     from ptcg.features import extract
 
     rng = random.Random(seed)
-    decks = [deck_lib.load_deck(os.path.join(ROOT, "submission", "deck.csv"))]
+    decks = [deck_lib.load_deck(os.path.join(ROOT, "decks", "sample.csv"))]
     for i in range(6):
         p = os.path.join(ROOT, "decks", "meta", f"meta_{i:02d}.csv")
         if os.path.exists(p):

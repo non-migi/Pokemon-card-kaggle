@@ -1,10 +1,16 @@
-"""エージェント v2.0: 決定化フラットモンテカルロ探索 + ヒューリスティックフォールバック。
+"""エージェントのエントリポイント。
 
+意思決定カスケード(agent_config.jsonの"algo"で構成): search → bc → heuristics
 構成は ptcg/ パッケージ参照(docs/architecture.md)。
-注意: Kaggleローダーは exec(code, {}) でロードする(__file__無し)。
-      このファイルの最後に定義されるcallableが agent として使われる。
+
+注意:
+- Kaggleローダーは exec(code, {}) でロードする(__file__無し)。
+  このファイルの最後に定義されるcallableが agent として使われる。
+- 設定は同梱の agent_config.json から読む。環境変数は使わない —
+  ローカルA/Bで同一プロセスの対戦相手に設定が漏れる事故を防ぐため。
 """
 
+import json
 import os
 import time
 
@@ -13,27 +19,42 @@ from ptcg import heuristics
 from ptcg import policy
 from ptcg import search as ptcg_search
 
-# 意思決定アルゴリズム: bc(BC方策のみ) / search(探索のみ) / bc_search(探索→BC→ヒューリスティック)
-ALGO = os.environ.get("PTCG_ALGO", "bc_search")
 
-# ---- 時間管理 ----
-# エピソード実測(2026-07-10)で1試合10〜75秒しか使っていなかったため大幅増強。
-# 残り時間を線形に配分: budget = usable/50(上限8秒)。usableが減るほど自然に絞られる
+def _agent_dir() -> str:
+    # cgパッケージの位置からエージェントディレクトリを特定(__file__は使えない)
+    import cg
+
+    return os.path.dirname(os.path.dirname(os.path.abspath(cg.__file__)))
+
+
+def _load_config() -> dict:
+    for base in (_agent_dir(), ".", "/kaggle_simulations/agent"):
+        p = os.path.join(base, "agent_config.json")
+        if os.path.exists(p):
+            try:
+                with open(p) as f:
+                    return json.load(f)
+            except Exception:
+                pass
+    return {}
+
+
+CONFIG = _load_config()
+# bc(BC方策のみ) / search(探索のみ) / bc_search(探索→BC→ヒューリスティック)
+ALGO = CONFIG.get("algo", "bc")
+
+# ---- 時間管理(探索使用時のみ意味を持つ) ----
 TOTAL_OVERAGE_SEC = 600.0
-RESERVE_SEC = 60.0            # 終盤・非常用に残す
+RESERVE_SEC = 60.0
 BUDGET_DIVISOR = 50.0
-MAX_MOVE_SEC = float(os.environ.get("PTCG_MAX_MOVE_SEC", "8.0"))
+MAX_MOVE_SEC = float(CONFIG.get("max_move_sec", 8.0))
 
 _spent = 0.0
 
 
 def read_deck_csv() -> list[int]:
-    # cgパッケージの位置から提出ディレクトリを特定(__file__は使えない)
-    import cg
-
-    agent_dir = os.path.dirname(os.path.dirname(os.path.abspath(cg.__file__)))
     candidates = [
-        os.path.join(agent_dir, "deck.csv"),
+        os.path.join(_agent_dir(), "deck.csv"),
         "deck.csv",
         "/kaggle_simulations/agent/deck.csv",
     ]
@@ -47,7 +68,6 @@ DECK = read_deck_csv()
 
 
 def _budget(obs_dict) -> float:
-    """この1手に使う探索予算(秒)。"""
     reported = obs_dict.get("remainingOverageTime", TOTAL_OVERAGE_SEC)
     remaining = min(float(reported), TOTAL_OVERAGE_SEC - _spent)
     usable = remaining - RESERVE_SEC

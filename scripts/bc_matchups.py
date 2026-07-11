@@ -12,15 +12,24 @@ def _init():
     import logging
 
     logging.disable(logging.WARNING)
-    sys.path.insert(0, os.path.join(ROOT, "submission"))
+    # BCモデル入りのptcgが必要なため、srcではなくビルド済みディレクトリを使う
+    # (src/ptcgはモデル非同梱 — models/はビルド時に注入される設計)
+    agent_dir = os.path.join(ROOT, "build", "v3.0g")
+    if not os.path.exists(agent_dir):
+        raise SystemExit("先に .venv/bin/python -m ptcglab.build v3.0g --no-tar を実行")
+    sys.path.insert(0, agent_dir)
 
 
 def _play(args):
     my_deck_path, opp_deck_path, swap = args
+    # 重要: ptcgを先にimportする(deck_libがsrcをsys.path先頭に挿すため、
+    # 後からだとモデル非同梱のsrc/ptcgに化ける)
+    from ptcg import heuristics, policy
+
+    assert policy.ENABLED, "BCモデルがロードされていない(build/v3.0gを確認)"
     import deck_lib
     from kaggle_environments import make
     from cg.api import to_observation_class
-    from ptcg import heuristics, policy
 
     my_deck = deck_lib.load_deck(os.path.join(ROOT, my_deck_path))
     opp_deck = deck_lib.load_deck(os.path.join(ROOT, opp_deck_path))
@@ -53,7 +62,7 @@ def _play(args):
 MY = {"BCフーディン": "decks/meta/meta_00.csv", "BCオーロンゲ": "decks/meta/meta_01.csv"}
 OPP = {"フーディン": "decks/meta/meta_00.csv", "オーロンゲ": "decks/meta/meta_01.csv",
        "ガルーラ": "decks/meta/meta_02.csv", "ルカリオ": "decks/meta/meta_06.csv",
-       "サンプル": "submission/deck.csv"}
+       "サンプル": "decks/sample.csv"}
 
 if __name__ == "__main__":
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 200

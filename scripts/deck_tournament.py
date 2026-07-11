@@ -1,7 +1,7 @@
 """デッキ総当たりトーナメント(ヒューリスティックagent操縦)。
 
 使い方:
-    .venv/bin/python scripts/deck_tournament.py decks/meta/*.csv submission/deck.csv --pairs 30 -j 8
+    .venv/bin/python scripts/deck_tournament.py decks/meta/*.csv decks/sample.csv --pairs 30 -j 8
 """
 
 import argparse
@@ -19,7 +19,7 @@ def _init():
     import logging
 
     logging.disable(logging.WARNING)
-    sub = os.path.join(ROOT, "submission")
+    sub = os.path.join(ROOT, "src")
     if sub not in sys.path:
         sys.path.insert(0, sub)
 
