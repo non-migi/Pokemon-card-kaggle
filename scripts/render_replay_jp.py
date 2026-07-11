@@ -114,6 +114,7 @@ def slim_frame(f):
             "hand": slim_cards(p.get("hand")),
             "prize": slim_cards(p.get("prize")),
             "discard": slim_cards(p.get("discard")),
+            "deck": slim_cards(p.get("deck")),
             "deckCount": p.get("deckCount", 0),
             "cond": [n for n, k in [("どく", "poisoned"), ("やけど", "burned"), ("ねむり", "asleep"),
                                      ("マヒ", "paralyzed"), ("こんらん", "confused")] if p.get(k)],
@@ -131,7 +132,7 @@ def collect_ids(frames) -> set:
     ids = set()
     for f in frames:
         for p in f["players"]:
-            for z in ("hand", "prize", "discard"):
+            for z in ("hand", "prize", "discard", "deck"):
                 ids.update(c["id"] for c in p[z] if c)
             for z in ("active", "bench"):
                 for pk in p[z]:
@@ -261,10 +262,10 @@ function pkCard(p,big){if(!p)return `<div class="back${big?'':''}"></div>`;
 function handRow(cards){if(!cards.length)return '<div class="hand"><span class="meta">手札なし</span></div>';
  return `<div class="hand">${cards.map(c=>c?`<div class="card" onclick="openCard(${c.id})">${imgTag(c.id)}</div>`:'<div class="back small"></div>').join('')}</div>`}
 function prizeGrid(prize){return `<div class="prizes">${prize.map(c=>c?`<div class="card" onclick="openCard(${c.id})">${imgTag(c.id)}</div>`:'<div class="back"></div>').join('')}</div><div class="zlbl">サイド ${prize.length}</div>`}
-function stacks(p){const top=p.discard.length?p.discard[p.discard.length-1]:null;
- return `<div class="stack"><div class="back"></div><span class="cnt">${p.deckCount}</span><div class="zlbl">山札</div></div>
- <div class="stack">${top?`<div class="card" style="width:56px" onclick="openCard(${top.id})">${imgTag(top.id)}</div>`:'<div class="back" style="opacity:.25"></div>'}
- <div class="zlbl">トラッシュ ${p.discard.length}</div></div>`}
+function stacks(p,idx){const top=p.discard.length?p.discard[p.discard.length-1]:null;
+ return `<div class="stack" onclick="openZone(${idx},'deck')" title="クリックで中身を見る"><div class="back"></div><span class="cnt">${p.deckCount}</span><div class="zlbl">山札 🔍</div></div>
+ <div class="stack" onclick="openZone(${idx},'discard')" title="クリックで中身を見る">${top?`<div class="card" style="width:56px">${imgTag(top.id)}</div>`:'<div class="back" style="opacity:.25"></div>'}
+ <div class="zlbl">トラッシュ ${p.discard.length} 🔍</div></div>`}
 function sideArea(f,idx,isTop){const p=f.players[idx];const seat=idx===MYSEAT?'me':'op';
  const label=`<span class="pname ${seat}">${TEAMS[idx]}${idx===MYSEAT?'(自軍)':''}</span>`+
    (p.cond.length?`<span class="cond">${p.cond.join('・')}</span>`:'');
@@ -275,7 +276,7 @@ function sideArea(f,idx,isTop){const p=f.players[idx];const seat=idx===MYSEAT?'m
  return `<div class="parea">
    <div>${prizeGrid(p.prize)}</div>
    <div class="centercol">${isTop?'':label}${inner.join('')}${isTop?label:''}</div>
-   <div style="display:flex;flex-direction:column;gap:4px">${stacks(p)}</div></div>`}
+   <div style="display:flex;flex-direction:column;gap:4px">${stacks(p,idx)}</div></div>`}
 function show(i){cur=Math.max(0,Math.min(i,DATA.length-1));const f=DATA[cur];
  document.getElementById('frame').value=cur;
  document.getElementById('pos').textContent=`${cur+1}/${DATA.length} ターン${f.turn}`;
@@ -317,6 +318,20 @@ function openCard(id){const c=JP[id];if(!c)return;const mb=document.getElementBy
  <div class="kind">${c.kind}${c.rule?' / '+c.rule:''}${c.hp?' / HP'+c.hp:''}${c.type?' / '+c.type:''}${c.pre?' / 進化前:'+c.pre:''}${c.weak?' / 弱点:'+c.weak:''}${c.retreat!==''?' / にげる:'+c.retreat:''}</div>`+
  c.moves.map(m=>`<div class="mv"><b>${m.cat?'['+m.cat+'] ':''}${m.name||'効果'}</b>${m.cost?`<span class="cost">${m.cost}</span>`:''}${m.dmg?`<span class="dmg">${m.dmg}</span>`:''}<p>${m.text}</p></div>`).join('')+`</div>`;
  document.getElementById('modal').style.display='flex'}
+function openZone(idx, zone){
+  const f = DATA[cur]; const p = f.players[idx];
+  const cards = zone === 'deck' ? (p.deck || []) : (p.discard || []);
+  const title = (idx === MYSEAT ? '自軍' : '相手') + 'の' + (zone === 'deck' ? '山札(全知視点)' : 'トラッシュ');
+  const counts = {};
+  cards.forEach(c => { if(c) counts[c.id] = (counts[c.id] || 0) + 1; });
+  const items = Object.entries(counts).sort((a,b) => b[1] - a[1]).map(([id, n]) =>
+    `<div class="card" style="width:70px;display:inline-block;margin:3px;vertical-align:top" onclick="event.stopPropagation();openCard(${id})">
+       ${imgTag(+id)}<div style="text-align:center;font-size:11px;color:#333;font-weight:700">×${n}</div></div>`).join('');
+  const mb = document.getElementById('modalbox');
+  mb.innerHTML = `<div style="grid-column:1/-1"><h2>${title} — ${cards.length}枚</h2>
+    <div style="max-height:64vh;overflow-y:auto">${items || '<span class="meta">なし</span>'}</div></div>`;
+  document.getElementById('modal').style.display = 'flex';
+}
 show(0);
 /* ---- 感想メモ ---- */
 const NKEY = 'ptcg-notes-' + location.pathname.split('/').pop();
