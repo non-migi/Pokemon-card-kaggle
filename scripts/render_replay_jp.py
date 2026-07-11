@@ -1,16 +1,22 @@
-"""リプレイを日本語の初心者向けHTMLビューアに変換する。
+"""リプレイを「実物のプレイマット風」日本語HTMLビューアに変換する。
 
 使い方:
     .venv/bin/python scripts/render_replay_jp.py 85103065 [85047638 ...]
     (エピソードIDまたはreplay.jsonのパス。出力は replays/epXXXX_jp.html)
 
 特徴:
-- 盤面(バトル場/ベンチ/手札/サイド/トラッシュ)を日本語カード名で表示、HPバー付き
-- カードをクリックすると日本語の効果テキスト(ワザ・特性・サポート効果)をポップアップ
-- イベントログを日本語の文章で表示
-- 全情報視点(両者の手札・サイドも見える)— 学習用
+- 実際の対戦配置(バトル場中央・ベンチ・サイド・山札/トラッシュ・手札)を再現
+- 公式カード画像(コンペ配布PDFから抽出、data/card_images/)を使用。HPバー・エネルギー・ダメカン表示
+- カードをクリックすると拡大画像+日本語の効果テキスト
+- イベントログを日本語の文章で表示。全情報視点(両者の手札も見える)
+
+⚠ ライセンス注意: カード画像はコンペ限定利用の「Pokémon Elements」。
+   生成HTML(replays/、git管理外)を公開・再配布しないこと。Writeupにも載せない。
+
+前提: .venv/bin/python scripts/extract_card_images.py を一度実行しておく
 """
 
+import base64
 import csv
 import glob
 import html
@@ -21,20 +27,21 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
+IMG_DIR = os.path.join(ROOT, "data/card_images")
 SEARCH_DIRS = [
     os.path.expanduser("~/.cache/ptcg-replays"),
-    "/private/tmp/claude-501/-Users-non-git-Pokemon-card-kaggle/b1969d4e-1f95-4647-9a92-c80a416a00ba/scratchpad/meta",
-    "/private/tmp/claude-501/-Users-non-git-Pokemon-card-kaggle/b1969d4e-1f95-4647-9a92-c80a416a00ba/scratchpad/episodes",
 ]
 
 AREA_JP = {1: "山札", 2: "手札", 3: "トラッシュ", 4: "バトル場", 5: "ベンチ", 6: "サイド",
            7: "スタジアム", 8: "エネルギー", 9: "どうぐ", 10: "進化元", 11: "プレイヤー", 12: "公開"}
 ENERGY_JP = {0: "無", 1: "草", 2: "炎", 3: "水", 4: "雷", 5: "超", 6: "闘", 7: "悪", 8: "鋼", 9: "竜", 10: "虹", 11: "R"}
+ENERGY_COLOR = {"草": "#4a9e4a", "炎": "#d9573b", "水": "#3b7fd9", "雷": "#d9b93b", "超": "#9b59b6",
+                "闘": "#b06a3b", "悪": "#4a4a5e", "鋼": "#8a9aa5", "竜": "#c9a227", "無": "#a8a29a",
+                "虹": "#d96ab0", "R": "#666"}
 RESULT_REASON_JP = {1: "サイドを取り切った", 2: "山札切れ", 3: "バトル場に出せるポケモンがいない", 4: "カードの効果"}
 
 
 def load_jp_db() -> dict:
-    """カードID → 日本語カード情報(名前・HP・ワザ/効果一覧)。"""
     db = {}
     with open(os.path.join(ROOT, "data/strategy/JP_Card_Data.csv")) as f:
         for r in csv.DictReader(f):
@@ -63,7 +70,6 @@ def load_jp_db() -> dict:
 
 
 def load_attack_jp(jp_db) -> dict:
-    """attackId → 日本語ワザ名(EN CSVとJP CSVの行整列 + engineのattack名で対応付け)。"""
     from cg.api import all_attack, all_card_data
 
     en_rows = {}
@@ -91,8 +97,7 @@ def slim_pokemon(p):
         return None
     return {"id": p["id"], "name": p["name"], "hp": p["hp"], "maxHp": p["maxHp"],
             "ene": [ENERGY_JP.get(e, "?") for e in p.get("energies", [])],
-            "tools": [{"id": t["id"], "name": t["name"]} for t in p.get("tools", [])],
-            "pre": len(p.get("preEvolution", []))}
+            "tools": [{"id": t["id"], "name": t["name"]} for t in p.get("tools", [])]}
 
 
 def slim_cards(cards):
@@ -118,8 +123,7 @@ def slim_frame(f):
         "turn": cur.get("turn", 0), "who": cur.get("yourIndex", 0),
         "stadium": slim_cards(cur.get("stadium")),
         "players": players, "logs": f.get("logs", []),
-        "selCtx": sel.get("context", ""), "selType": sel.get("type", ""),
-        "chosen": f.get("selected"),
+        "selCtx": sel.get("context", ""), "chosen": f.get("selected"),
     }
 
 
@@ -142,69 +146,128 @@ def collect_ids(frames) -> set:
     return ids
 
 
+def image_map(ids) -> dict:
+    out = {}
+    for cid in ids:
+        p = os.path.join(IMG_DIR, f"{cid}.jpg")
+        if os.path.exists(p):
+            with open(p, "rb") as f:
+                out[cid] = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
+    return out
+
+
 TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 <title>__TITLE__</title>
 <style>
-:root{--bg:#f5f4ef;--card:#fff;--line:#d8d5cc;--tx:#2b2a26;--sub:#6f6c63;--me:#2f6f4f;--op:#8a3b3b;--hl:#f0ede2}
-body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
-header{display:flex;gap:12px;align-items:center;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
-header b{font-size:15px} button{font-size:14px;padding:4px 12px;cursor:pointer}
-#frame{width:260px} .wrap{display:grid;grid-template-columns:1fr 340px;gap:10px;padding:10px;max-width:1400px;margin:0 auto}
-.board{display:flex;flex-direction:column;gap:8px}
-.side{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px}
-.side h3{margin:0 0 6px;font-size:13px} .side.me h3{color:var(--me)} .side.op h3{color:var(--op)}
-.zonerow{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;margin:4px 0}
-.zlabel{font-size:11px;color:var(--sub);width:58px;flex-shrink:0;padding-top:6px}
-.pk{border:1.5px solid var(--line);border-radius:6px;padding:5px 7px;min-width:120px;cursor:pointer;background:var(--hl)}
-.pk.active{border-color:#b98c2c;background:#fdf6e0}
-.pk .nm{font-weight:600;font-size:13px} .pk .hp{font-size:11px;color:var(--sub)}
-.hpbar{height:5px;background:#e3e0d6;border-radius:3px;margin:3px 0}
-.hpbar i{display:block;height:100%;border-radius:3px;background:#4d9c6c}
-.hpbar i.low{background:#c94f42} .hpbar i.mid{background:#d99a2b}
-.chip{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin:1px;font-size:12px;background:#fff;cursor:pointer}
-.ene{display:inline-block;width:16px;height:16px;border-radius:50%;background:#dceafc;border:1px solid #9db8d8;font-size:10px;text-align:center;line-height:16px;margin-right:2px}
-.meta{font-size:12px;color:var(--sub)}
-.logs{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-y:auto;max-height:calc(100vh - 90px)}
-.logs h3{margin:0 0 6px;font-size:13px}
-.logs .ln{padding:2px 0;border-bottom:1px dashed #eceae2;font-size:13px}
-.logs .p0{color:var(--me)} .logs .p1{color:var(--op)}
-.selbox{background:#eef3ee;border-radius:6px;padding:6px 8px;margin-bottom:8px;font-size:12px}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10;align-items:center;justify-content:center}
-.modal .box{background:#fff;border-radius:10px;max-width:520px;width:92%;max-height:80vh;overflow-y:auto;padding:16px}
-.modal h2{margin:0 0 4px;font-size:17px} .modal .kind{font-size:12px;color:var(--sub);margin-bottom:8px}
-.mv{border-top:1px solid var(--line);padding:7px 0} .mv b{font-size:14px}
-.mv .cost{color:#7a6a2f;font-size:12px;margin-left:6px} .mv .dmg{color:#a33;font-weight:700;margin-left:6px}
-.mv p{margin:3px 0 0;font-size:13px;line-height:1.5}
-@media(prefers-color-scheme:dark){:root{--bg:#191813;--card:#23221c;--line:#3a382f;--tx:#e8e6dd;--sub:#a09d90;--hl:#2b2a22}
-.chip{background:#2e2d25}.pk.active{background:#332c14}.modal .box{background:#26251e}.selbox{background:#233026}.hpbar{background:#3a382f}}
+:root{--mat:#2e6b4f;--mat2:#275d44;--line:#1d4634;--tx:#e9e6dc;--panel:#f5f4ef;--ptx:#2b2a26;--sub:#6f6c63;
+--me:#7fd6a8;--op:#e89a9a;--gold:#e8c86a}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#1b1a17;color:var(--tx);font-size:13px}
+header{display:flex;gap:10px;align-items:center;padding:7px 12px;background:#26251f;border-bottom:1px solid #3a382f;
+position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header b{font-size:14px;color:#f0eee6} button{font-size:13px;padding:3px 10px;cursor:pointer}
+#frame{width:230px} .meta{font-size:11px;color:#9a978c}
+.wrap{display:grid;grid-template-columns:1fr 330px;gap:8px;padding:8px;max-width:1500px;margin:0 auto}
+.mat{background:linear-gradient(175deg,var(--mat) 0%,var(--mat2) 100%);border-radius:12px;padding:8px 10px;
+border:2px solid var(--line)}
+.parea{display:grid;grid-template-columns:64px 1fr 64px;gap:6px;align-items:start;padding:4px 0}
+.pname{font-size:12px;font-weight:700;padding:1px 8px;border-radius:4px;display:inline-block}
+.pname.me{background:#1d4634;color:var(--me)} .pname.op{background:#4a2626;color:var(--op)}
+.centercol{display:flex;flex-direction:column;gap:5px;align-items:center}
+.row{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;min-height:20px}
+.card{position:relative;width:76px;cursor:pointer;flex-shrink:0}
+.card img{width:100%;border-radius:4px;display:block;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.card.big{width:104px}
+.card .hpb{position:absolute;left:2px;right:2px;bottom:20px;height:5px;background:rgba(0,0,0,.55);border-radius:3px}
+.card .hpb i{display:block;height:100%;border-radius:3px;background:#5ad08a}
+.card .hpb i.mid{background:#e0b040} .card .hpb i.low{background:#e05545}
+.card .hpt{position:absolute;right:2px;top:2px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;
+padding:0 4px;border-radius:3px;font-weight:700}
+.card .enes{position:absolute;left:2px;bottom:2px;display:flex;gap:1px;flex-wrap:wrap;max-width:72px}
+.ene{width:14px;height:14px;border-radius:50%;font-size:9px;color:#fff;text-align:center;line-height:14px;
+border:1px solid rgba(255,255,255,.6);font-weight:700}
+.card .tool{position:absolute;right:2px;bottom:20px;background:rgba(30,30,60,.85);color:#cfe;font-size:9px;
+padding:0 3px;border-radius:3px}
+.back{width:76px;aspect-ratio:63/88;border-radius:4px;background:repeating-linear-gradient(45deg,#33507e,#33507e 6px,#2a4066 6px,#2a4066 12px);
+border:1px solid #223354;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.back.small{width:44px}
+.stack{position:relative;width:56px;text-align:center}
+.stack .back{width:56px;margin:0 auto}
+.stack .cnt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);
+color:#fff;border-radius:10px;padding:1px 7px;font-size:12px;font-weight:700}
+.zlbl{font-size:10px;color:rgba(255,255,255,.75);text-align:center;margin-top:2px}
+.hand{display:flex;justify-content:center;margin:2px 0}
+.hand .card{width:52px;margin:0 -7px;transition:margin .1s}
+.hand .card:hover{margin:0 2px;z-index:2}
+.prizes{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.prizes .card,.prizes .back{width:28px}
+.midbar{display:flex;align-items:center;justify-content:center;gap:14px;padding:3px 0;border-top:1px dashed rgba(255,255,255,.25);
+border-bottom:1px dashed rgba(255,255,255,.25);margin:2px 0}
+.cond{background:#7e3030;color:#ffd7d7;font-size:10px;border-radius:3px;padding:0 5px;margin-left:4px}
+.logs{background:var(--panel);color:var(--ptx);border:1px solid #d8d5cc;border-radius:10px;padding:9px;
+overflow-y:auto;max-height:calc(100vh - 80px)}
+.logs h3{margin:0 0 5px;font-size:12px} .logs .ln{padding:2px 0;border-bottom:1px dashed #e5e2d8;font-size:12.5px;line-height:1.45}
+.logs .p0{color:#2f6f4f;font-weight:700} .logs .p1{color:#8a3b3b;font-weight:700}
+.selbox{background:#eef3ee;border-radius:6px;padding:5px 8px;margin-bottom:7px;font-size:11.5px;color:#2b3a2e}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10;align-items:center;justify-content:center}
+.modal .box{background:#fbfaf6;color:var(--ptx);border-radius:12px;max-width:640px;width:94%;max-height:86vh;
+overflow-y:auto;padding:14px;display:grid;grid-template-columns:200px 1fr;gap:12px}
+.modal img{width:200px;border-radius:8px}
+.modal h2{margin:0 0 4px;font-size:16px} .modal .kind{font-size:11px;color:var(--sub);margin-bottom:6px}
+.mv{border-top:1px solid #e0ddd2;padding:6px 0} .mv b{font-size:13px}
+.mv .cost{color:#7a6a2f;font-size:11px;margin-left:6px} .mv .dmg{color:#a33;font-weight:700;margin-left:6px}
+.mv p{margin:2px 0 0;font-size:12px;line-height:1.5}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}}
 </style></head><body>
 <header><b>__TITLE__</b>
 <button onclick="go(-1)">◀ 前</button><button onclick="go(1)">次 ▶</button>
 <input id="frame" type="range" min="0" max="__MAXF__" value="0" oninput="show(+this.value)">
-<span id="pos"></span><span class="meta">←→キーでも操作可 / カードをクリックで効果表示</span></header>
-<div class="wrap"><div class="board" id="board"></div>
+<span id="pos" style="color:#f0eee6"></span><span class="meta">←→キー / カードクリックで効果</span></header>
+<div class="wrap"><div class="mat" id="board"></div>
 <div class="logs"><div class="selbox" id="selbox"></div><h3>この場面までの出来事</h3><div id="loglines"></div></div></div>
 <div class="modal" id="modal" onclick="this.style.display='none'"><div class="box" id="modalbox"></div></div>
 <script>
 const DATA=__DATA__;const JP=__JPDB__;const ATK=__ATKJP__;const TEAMS=__TEAMS__;const MYSEAT=__MYSEAT__;
-const AREA=__AREAJP__;const REASON=__REASONJP__;
+const AREA=__AREAJP__;const REASON=__REASONJP__;const IMG=__IMGMAP__;const ECOL=__ECOL__;
 let cur=0;
-function jp(id){return (JP[id]&&JP[id].name)||("card#"+id)}
-function pkBox(p,act){if(!p)return '<div class="pk">(裏向き)</div>';
+const jp=id=>(JP[id]&&JP[id].name)||("card#"+id);
+function imgTag(id){return IMG[id]?`<img src="${IMG[id]}" alt="${jp(id)}">`:`<div class="back"></div>`}
+function eneChips(p){return p.ene.map(e=>`<span class="ene" style="background:${ECOL[e]||'#888'}">${e}</span>`).join('')}
+function pkCard(p,big){if(!p)return `<div class="back${big?'':''}"></div>`;
  const r=p.hp/Math.max(p.maxHp,1);const cls=r<=0.3?'low':(r<=0.6?'mid':'');
- return `<div class="pk ${act?'active':''}" onclick="openCard(${p.id});event.stopPropagation()">
- <div class="nm">${jp(p.id)}</div><div class="hp">HP ${p.hp}/${p.maxHp}</div>
- <div class="hpbar"><i class="${cls}" style="width:${Math.max(r*100,2)}%"></i></div>
- <div>${p.ene.map(e=>`<span class="ene">${e}</span>`).join('')}${p.tools.map(t=>`<span class="chip">${jp(t.id)}</span>`).join('')}</div></div>`}
-function chips(cards,hidden){return cards.map(c=>c?`<span class="chip" onclick="openCard(${c.id})">${jp(c.id)}</span>`:`<span class="chip">裏</span>`).join('')||'<span class="meta">なし</span>'}
-function sideHtml(p,idx){const seatCls=idx===MYSEAT?'me':'op';const label=TEAMS[idx]+(idx===MYSEAT?'(自軍)':'');
- return `<div class="side ${seatCls}"><h3>${label} — サイド残り${p.prize.length} / 山札${p.deckCount}枚 ${p.cond.length?'【'+p.cond.join('・')+'】':''}</h3>
- <div class="zonerow"><span class="zlabel">バトル場</span>${p.active.map(x=>pkBox(x,true)).join('')||'<span class="meta">なし</span>'}</div>
- <div class="zonerow"><span class="zlabel">ベンチ</span>${p.bench.map(x=>pkBox(x,false)).join('')||'<span class="meta">なし</span>'}</div>
- <div class="zonerow"><span class="zlabel">手札(${p.hand.length})</span><div>${chips(p.hand)}</div></div>
- <div class="zonerow"><span class="zlabel">サイド</span><div>${chips(p.prize)}</div></div>
- <div class="zonerow"><span class="zlabel">トラッシュ(${p.discard.length})</span><div>${chips(p.discard.slice(-14))}</div></div></div>`}
-function logJp(l){const P=`<b class="p${l.playerIndex}">${l.playerIndex===MYSEAT?'自':'相'}</b>`;const n=id=>jp(id);
+ return `<div class="card ${big?'big':''}" onclick="openCard(${p.id});event.stopPropagation()">
+ ${imgTag(p.id)}<span class="hpt">${p.hp}</span>
+ <div class="hpb"><i class="${cls}" style="width:${Math.max(r*100,3)}%"></i></div>
+ <div class="enes">${eneChips(p)}</div>
+ ${p.tools.length?`<span class="tool">${p.tools.map(t=>jp(t.id)).join('/')}</span>`:''}</div>`}
+function handRow(cards){if(!cards.length)return '<div class="hand"><span class="meta">手札なし</span></div>';
+ return `<div class="hand">${cards.map(c=>c?`<div class="card" onclick="openCard(${c.id})">${imgTag(c.id)}</div>`:'<div class="back small"></div>').join('')}</div>`}
+function prizeGrid(prize){return `<div class="prizes">${prize.map(c=>c?`<div class="card" onclick="openCard(${c.id})">${imgTag(c.id)}</div>`:'<div class="back"></div>').join('')}</div><div class="zlbl">サイド ${prize.length}</div>`}
+function stacks(p){const top=p.discard.length?p.discard[p.discard.length-1]:null;
+ return `<div class="stack"><div class="back"></div><span class="cnt">${p.deckCount}</span><div class="zlbl">山札</div></div>
+ <div class="stack">${top?`<div class="card" style="width:56px" onclick="openCard(${top.id})">${imgTag(top.id)}</div>`:'<div class="back" style="opacity:.25"></div>'}
+ <div class="zlbl">トラッシュ ${p.discard.length}</div></div>`}
+function sideArea(f,idx,isTop){const p=f.players[idx];const seat=idx===MYSEAT?'me':'op';
+ const label=`<span class="pname ${seat}">${TEAMS[idx]}${idx===MYSEAT?'(自軍)':''}</span>`+
+   (p.cond.length?`<span class="cond">${p.cond.join('・')}</span>`:'');
+ const active=`<div class="row">${p.active.map(x=>pkCard(x,true)).join('')||'<span class="meta">バトル場なし</span>'}</div>`;
+ const bench=`<div class="row">${p.bench.map(x=>pkCard(x,false)).join('')||'<span class="meta" style="color:rgba(255,255,255,.5)">ベンチなし</span>'}</div><div class="zlbl">ベンチ</div>`;
+ const hand=handRow(p.hand);
+ const inner=isTop?[hand,bench,active]:[active,bench,hand];
+ return `<div class="parea">
+   <div>${prizeGrid(p.prize)}</div>
+   <div class="centercol">${isTop?'':label}${inner.join('')}${isTop?label:''}</div>
+   <div style="display:flex;flex-direction:column;gap:4px">${stacks(p)}</div></div>`}
+function show(i){cur=Math.max(0,Math.min(i,DATA.length-1));const f=DATA[cur];
+ document.getElementById('frame').value=cur;
+ document.getElementById('pos').textContent=`${cur+1}/${DATA.length} ターン${f.turn}`;
+ const top=1-MYSEAT;
+ const stad=f.stadium.length&&f.stadium[0]?`<div class="card" style="width:56px" onclick="openCard(${f.stadium[0].id})">${imgTag(f.stadium[0].id)}</div><span class="zlbl">スタジアム: ${jp(f.stadium[0].id)}</span>`:'<span class="meta" style="color:rgba(255,255,255,.5)">スタジアムなし</span>';
+ document.getElementById('board').innerHTML=sideArea(f,top,true)+`<div class="midbar">${stad}</div>`+sideArea(f,MYSEAT,false);
+ const who=f.who===MYSEAT?'自軍':'相手';
+ document.getElementById('selbox').innerHTML=`<b>${who}の選択場面</b>: ${f.selCtx||''}${f.chosen?` → 選択 [${f.chosen}]`:''}`;
+ document.getElementById('loglines').innerHTML=f.logs.map(logJp).filter(x=>x).map(x=>`<div class="ln">${x}</div>`).join('')||'<span class="meta">(出来事なし)</span>'}
+function logJp(l){const P=`<b class="p${l.playerIndex}">${l.playerIndex===MYSEAT?'自':'相'}</b>`;const n=jp;
  switch(l.type){
  case 'TurnStart':return `━━ ターン開始 (${P})`;case 'TurnEnd':return `${P} 番を終えた`;
  case 'Shuffle':return `${P} 山札を切った`;case 'Draw':return `${P} ${n(l.cardId)}を引いた`;
@@ -229,22 +292,12 @@ function logJp(l){const P=`<b class="p${l.playerIndex}">${l.playerIndex===MYSEAT
  case 'Result':return `🏁 <b>${l.result===2?'引き分け':TEAMS[l.result]+' の勝ち'}</b>(${REASON[l.reason]||''})`;
  case 'HasBasicPokemon':return l.hasBasicPokemon?null:`${P} 手札にたねポケモンがない(引き直し)`;
  default:return null}}
-function show(i){cur=Math.max(0,Math.min(i,DATA.length-1));const f=DATA[cur];
- document.getElementById('frame').value=cur;
- document.getElementById('pos').textContent=`${cur+1}/${DATA.length} ターン${f.turn}`;
- const top=1-MYSEAT;
- let b=sideHtml(f.players[top],top);
- if(f.stadium.length&&f.stadium[0])b+=`<div class="side"><h3>スタジアム</h3>${chips(f.stadium)}</div>`;
- b+=sideHtml(f.players[MYSEAT],MYSEAT);
- document.getElementById('board').innerHTML=b;
- const who=f.who===MYSEAT?'自軍':'相手';
- document.getElementById('selbox').innerHTML=`<b>${who}の選択場面</b>: ${f.selCtx||f.selType||''}${f.chosen?` → 選択 [${f.chosen}]`:''}`;
- document.getElementById('loglines').innerHTML=f.logs.map(logJp).filter(x=>x).map(x=>`<div class="ln">${x}</div>`).join('')||'<span class="meta">(出来事なし)</span>'}
 function go(d){show(cur+d)}
 document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')go(-1);if(e.key==='ArrowRight')go(1)});
 function openCard(id){const c=JP[id];if(!c)return;const mb=document.getElementById('modalbox');
- mb.innerHTML=`<h2>${c.name}</h2><div class="kind">${c.kind}${c.rule?' / '+c.rule:''}${c.hp?' / HP'+c.hp:''}${c.type?' / '+c.type:''}${c.pre?' / 進化前:'+c.pre:''}${c.weak?' / 弱点:'+c.weak:''}${c.retreat!==''?' / にげる:'+c.retreat:''}</div>`+
- c.moves.map(m=>`<div class="mv"><b>${m.cat?'['+m.cat+'] ':''}${m.name||'効果'}</b>${m.cost?`<span class="cost">${m.cost}</span>`:''}${m.dmg?`<span class="dmg">${m.dmg}</span>`:''}<p>${m.text}</p></div>`).join('');
+ mb.innerHTML=`<div>${IMG[id]?`<img src="${IMG[id]}">`:''}</div><div><h2>${c.name}</h2>
+ <div class="kind">${c.kind}${c.rule?' / '+c.rule:''}${c.hp?' / HP'+c.hp:''}${c.type?' / '+c.type:''}${c.pre?' / 進化前:'+c.pre:''}${c.weak?' / 弱点:'+c.weak:''}${c.retreat!==''?' / にげる:'+c.retreat:''}</div>`+
+ c.moves.map(m=>`<div class="mv"><b>${m.cat?'['+m.cat+'] ':''}${m.name||'効果'}</b>${m.cost?`<span class="cost">${m.cost}</span>`:''}${m.dmg?`<span class="dmg">${m.dmg}</span>`:''}<p>${m.text}</p></div>`).join('')+`</div>`;
  document.getElementById('modal').style.display='flex'}
 show(0);
 </script></body></html>"""
@@ -280,7 +333,9 @@ def render(path: str, jp_db: dict, atk_jp: dict) -> str:
             .replace("__TEAMS__", json.dumps(teams, ensure_ascii=False))
             .replace("__MYSEAT__", str(my_seat))
             .replace("__AREAJP__", json.dumps(AREA_JP, ensure_ascii=False))
-            .replace("__REASONJP__", json.dumps(RESULT_REASON_JP, ensure_ascii=False)))
+            .replace("__REASONJP__", json.dumps(RESULT_REASON_JP, ensure_ascii=False))
+            .replace("__IMGMAP__", json.dumps(image_map(ids)))
+            .replace("__ECOL__", json.dumps(ENERGY_COLOR, ensure_ascii=False)))
     out = os.path.join(ROOT, "replays", f"ep{ep}_jp.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:

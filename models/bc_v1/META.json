@@ -1,0 +1,10 @@
+{
+ "model": "bc_v1",
+ "trained": "2026-07-11",
+ "data": [
+  "data/bc/pairs_0709.jsonl.gz",
+  "data/bc/pairs_0710.jsonl.gz"
+ ],
+ "samples": 650419,
+ "epochs": 10
+}
