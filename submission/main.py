@@ -10,7 +10,11 @@ import time
 
 from cg.api import to_observation_class
 from ptcg import heuristics
+from ptcg import policy
 from ptcg import search as ptcg_search
+
+# 意思決定アルゴリズム: bc(BC方策のみ) / search(探索のみ) / bc_search(探索→BC→ヒューリスティック)
+ALGO = os.environ.get("PTCG_ALGO", "bc_search")
 
 # ---- 時間管理 ----
 # エピソード実測(2026-07-10)で1試合10〜75秒しか使っていなかったため大幅増強。
@@ -60,14 +64,21 @@ def agent(obs_dict: dict) -> list[int]:
 
     t0 = time.time()
     act = None
-    try:
-        budget = _budget(obs_dict)
-        if budget > 0:
-            act = ptcg_search.decide(obs, DECK, budget)
-    except Exception:
-        act = None  # 探索の失敗は必ずヒューリスティックで救済
-    finally:
-        _spent += time.time() - t0
+    if "search" in ALGO:
+        try:
+            budget = _budget(obs_dict)
+            if budget > 0:
+                act = ptcg_search.decide(obs, DECK, budget)
+        except Exception:
+            act = None  # 探索の失敗は必ず下段で救済
+        finally:
+            _spent += time.time() - t0
+
+    if act is None and "bc" in ALGO:
+        try:
+            act = policy.choose(obs_dict)
+        except Exception:
+            act = None
 
     if act is None:
         try:
