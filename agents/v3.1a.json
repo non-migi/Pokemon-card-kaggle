@@ -1,0 +1,6 @@
+{
+  "label": "bc_v1(75万手・10ep) + フーディン型",
+  "deck": "decks/meta/meta_00.csv",
+  "model": "bc_v1",
+  "config": {"algo": "bc"}
+}
