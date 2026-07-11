@@ -59,6 +59,20 @@ kaggle competitions submissions -c pokemon-tcg-ai-battle | head -5
 - [ ] evaluate.py で旧版に有意勝ち越し
 - [ ] 1手あたりの最悪時間を確認(600秒/試合を超えない設計か)
 
+## 本番環境との同等性(Docker検討の結論、2026-07-12調査)
+
+- **Mac勢がDockerを使っていた理由は歴史的なもの**: 6/30更新まではエンジンにmacOS/ARM64バイナリが
+  無く、Linux x86_64のDocker/エミュレーションが必須だった。現在は`libcg.dylib`が公式提供され、
+  ネイティブMacで動作(うちは最初からこの恩恵を受けている)
+- **バージョン整合**: ローカルのkaggle-environments 1.32.0(7/8リリース)は6/30エンジン更新後の
+  最新公開版で、ラダーと整合していると考えてよい。バージョン更新の告知(Discussionの
+  Announcement)は週次で監視し、新版が出たら`pip install -U kaggle-environments`で追随する
+- **結論: 日常開発にDockerは不要**(ネイティブが高速で並列自己対戦に有利)。
+  本番同等性の確認が必要な場面(最終フリーズ前など)は、Dockerより正確な手段がある:
+  **Kaggleノートブック上で提出tarをロードして両席検証**(本物のKaggleイメージ+Linux x86_64)。
+  なお提出後の検証エピソード(vs自分)が通ること自体が最低限の本番検証になっている
+- ローカルLinuxがどうしても必要になったら `brew install colima docker` で可能(Docker Desktop不要)
+
 ### 既知の落とし穴
 
 - **Kaggleローダーは`exec(code, {})`**: `__file__`/`__name__`が無い。「最後に定義されたcallable」がagentになるので、main.pyの最後の関数は必ず`agent`
