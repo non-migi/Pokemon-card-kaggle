@@ -1,0 +1,1 @@
+{"label": "v4.1a(フーディン+探索+multi-select)のローカル評価用(1手1秒)", "deck": "decks/meta/meta_00.csv", "model": "bc_v2", "config": {"algo": "bcs", "max_move_sec": 1.0}}
