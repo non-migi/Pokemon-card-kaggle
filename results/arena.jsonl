@@ -10,3 +10,5 @@
 {"ts": "2026-07-12T10:28:49", "a": "build/v4.0a-eval", "b": "build/v3.2a", "n": 150, "winrate": 0.57, "ci95": [0.49, 0.6465], "sec": 1046.0, "note": "G3路線A初回: BC×探索(1s) vs BC単体、bc_v2+フーディン"}
 {"ts": "2026-07-12T10:50:04", "a": "build/v4.0a-eval", "b": "build/v3.2a", "n": 250, "winrate": 0.588, "ci95": [0.5261, 0.6472], "sec": 1154.3, "note": "G3: BC×探索 vs BC単体(追加250戦)"}
 {"ts": "2026-07-12T10:59:14", "a": "build/v4.0a-eval", "b": "../../../../private/tmp/claude-501/-Users-non-git-Pokemon-card-kaggle/b1969d4e-1f95-4647-9a92-c80a416a00ba/scratchpad/kernels/roman/selected_agent_build", "n": 150, "winrate": 0.6867, "ci95": [0.6086, 0.7555], "sec": 549.7, "note": "G3: BC×探索 vs 公開950+ボット(BC単体は69.2%)"}
+{"ts": "2026-07-12T15:06:01", "a": "build/v4.0g-eval", "b": "build/v3.2g", "n": 200, "winrate": 0.565, "ci95": [0.4957, 0.6318], "sec": 556.6, "note": "G3をオーロンゲに展開: BC×探索(1s) vs 純BC、同モデルbc_v2同デッキ。BCが最弱だったデッキで探索が効くか"}
+{"ts": "2026-07-12T15:15:34", "a": "build/v4.0g-eval", "b": "build/v3.2g", "n": 200, "winrate": 0.5525, "ci95": [0.4832, 0.6198], "sec": 558.7, "note": "G3オーロンゲ展開: 追加200戦(初回56.5%と合算して有意性判定)"}
