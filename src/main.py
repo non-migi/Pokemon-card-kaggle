@@ -15,6 +15,7 @@ import os
 import time
 
 from cg.api import to_observation_class
+from ptcg import bc_search
 from ptcg import heuristics
 from ptcg import policy
 from ptcg import search as ptcg_search
@@ -84,7 +85,17 @@ def agent(obs_dict: dict) -> list[int]:
 
     t0 = time.time()
     act = None
-    if "search" in ALGO:
+    if ALGO == "bcs":
+        try:
+            budget = _budget(obs_dict)
+            if budget > 0.3:
+                act = bc_search.decide(obs_dict, obs, DECK, budget)
+        except Exception:
+            act = None
+        finally:
+            _spent += time.time() - t0
+
+    if act is None and "search" in ALGO and ALGO != "bcs":
         try:
             budget = _budget(obs_dict)
             if budget > 0:
