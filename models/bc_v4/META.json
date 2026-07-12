@@ -1,0 +1,20 @@
+{
+ "model": "bc_v4",
+ "hid": 128,
+ "trained": "2026-07-12",
+ "feat_dir": "data/bc/feat_v2",
+ "sources": [
+  "pairs_0701.jsonl.gz",
+  "pairs_0702.jsonl.gz",
+  "pairs_0703.jsonl.gz",
+  "pairs_0704.jsonl.gz",
+  "pairs_0705.jsonl.gz",
+  "pairs_0706.jsonl.gz",
+  "pairs_0707.jsonl.gz",
+  "pairs_0708.jsonl.gz",
+  "pairs_0709.jsonl.gz",
+  "pairs_0710.jsonl.gz",
+  "pairs_0711.jsonl.gz"
+ ],
+ "epochs": 6
+}

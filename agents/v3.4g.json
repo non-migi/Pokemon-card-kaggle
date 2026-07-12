@@ -1,0 +1,1 @@
+{"label": "bc_v4(11日フル) + multi-select + オーロンゲ型(v3.3gのモデル差替=データ効果分離)", "deck": "decks/meta/meta_01.csv", "model": "bc_v4", "config": {"algo": "bc"}}

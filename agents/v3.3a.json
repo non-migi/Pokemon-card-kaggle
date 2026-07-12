@@ -1,0 +1,1 @@
+{"label": "bc_v2 + multi-select + フーディン型(bc_v4比較のベースライン)", "deck": "decks/meta/meta_00.csv", "model": "bc_v2", "config": {"algo": "bc"}}
