@@ -1,0 +1,1 @@
+{"label": "BC×探索(bcs) + multi-select + フーディン型 + bc_v2(v4.0aにmulti-select追加)", "deck": "decks/meta/meta_00.csv", "model": "bc_v2", "config": {"algo": "bcs", "max_move_sec": 8.0}}
