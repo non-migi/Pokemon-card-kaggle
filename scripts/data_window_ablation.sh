@@ -21,7 +21,7 @@ WINDOWS[first4]="0701 0702 0703 0704"   # last4と同サイズ・古い側 = 直
 REF="build/v3.3g"   # 基準: bc_v2(10日) + multi-select + オーロンゲ
 N=300
 
-echo "=== データ窓アブレーション (基準=$REF, 各$N戦) ==="
+echo "=== データ窓アブレーション (基準=$REF, 各${N}戦) ==="
 for name in last2 last4 last6 first4; do
   days=(${=WINDOWS[$name]})
   files=()
