@@ -16,15 +16,18 @@ import numpy as np
 
 from cg.api import to_observation_class
 
-from . import heuristics, policy
+from . import heuristics, policy, value
 from .belief import sample_world
 from .simx import search_begin_dict, search_step_dict, search_end
 
 SEARCHABLE = {0, 6, 1}   # MAIN / ATTACK / 単数CARD
 TOP_K = 5
 MIN_WORLDS = 2
-MAX_WORLDS = 24
 ROLLOUT_MAX = 200
+# 価値網(route B)が有効なら: ロールアウトを短く打ち切り価値網でブートストラップ。
+# 1ロールアウトが安くなるので、同じ予算で桁違いに多くの世界を回せる(imperfect info下の律速=世界数)。
+VALUE_TRUNC = 20        # 価値網有効時のロールアウト打ち切り手数
+MAX_WORLDS = 96 if value.ENABLED else 24
 
 
 def _policy_act(od: dict) -> list[int]:
@@ -54,11 +57,23 @@ def _terminal_value(cur: dict, my_index: int) -> float:
 
 
 def _rollout(state: dict, my_index: int) -> float:
+    """終局まで(価値網有効時はVALUE_TRUNC手で打ち切り価値網でブートストラップ)。"""
+    limit = VALUE_TRUNC if value.ENABLED else ROLLOUT_MAX
     steps = 0
-    while state["observation"]["current"]["result"] < 0 and steps < ROLLOUT_MAX:
+    while state["observation"]["current"]["result"] < 0 and steps < limit:
         state = search_step_dict(state["searchId"], _policy_act(state["observation"]))
         steps += 1
-    return _terminal_value(state["observation"]["current"], my_index)
+    cur = state["observation"]["current"]
+    if cur["result"] >= 0:
+        return _terminal_value(cur, my_index)          # 決着したら真の結果
+    if value.ENABLED:                                   # 未決着は価値網で評価
+        try:
+            v = value.win_prob(to_observation_class(state["observation"]).current, my_index)
+            if v is not None:
+                return v
+        except Exception:
+            pass
+    return _terminal_value(cur, my_index)               # フォールバック(サイド差)
 
 
 def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,

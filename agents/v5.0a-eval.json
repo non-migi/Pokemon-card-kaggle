@@ -1,0 +1,1 @@
+{"label": "v5.0a(BC×探索+価値網+multi-select+フーディン)のローカル評価用(1手1秒)", "deck": "decks/meta/meta_00.csv", "model": "bc_v2", "config": {"algo": "bcs", "max_move_sec": 1.0}}
