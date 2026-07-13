@@ -1,0 +1,4 @@
+{"model": "value_v1", "type": "value_mlp", "arch": "40->128->128->1", "trained": "2026-07-14",
+ "data": "selfplay/bc_v1 2.26M rows (BC操縦・トップメタ3デッキ)", "holdout_AUC": 0.851,
+ "status": "棄却(現形では探索でフルロールアウトを超えず)。特徴量v2で再挑戦する場合の起点",
+ "revive": "models/value_v1/value_params.py を src/ptcg/ に戻すと value.ENABLED=True + bc_search が価値網ブートストラップに切替"}
