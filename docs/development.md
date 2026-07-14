@@ -27,17 +27,40 @@ cp -r "data/simulation/sample_submission/sample_submission/cg" src/
 # エージェントの組立て+検証(agents/<name>.json から)
 .venv/bin/python -m ptcglab.build v3.0g --no-tar
 
-# A/B評価: 変更が本物か必ずここで判定(結果は results/arena.jsonl に自動記録)
-.venv/bin/python scripts/evaluate.py build/<新> --vs build/<旧> -n 200 -j 8 --note "説明"
+# 純BCの高速screen。結果はresults/arena.jsonlへ自動記録
+.venv/bin/python scripts/evaluate.py build/<新BC> --vs build/<旧BC> \
+  -n 300 -j 8 --profile standard --suite <実験名> --note "説明"
+
+# searchの計算量固定A/B。両agentのfixed_search_worldsを同じ値にする
+.venv/bin/python scripts/evaluate.py build/<新-fixed> --vs build/<旧-fixed> \
+  -n 80 -j 8 --profile fixed-worlds --suite <実験名> --note "説明"
+
+# 提出版wall-clock search。CPU競合を避けるため-j 1必須
+.venv/bin/python scripts/evaluate.py build/<新-production> --vs build/<旧-production> \
+  -n 2 -j 1 --profile production --suite <実験名> --note "安全性smoke"
+
+# 複数相手ガントレット。まずdry-runでhash/config/総試合数を確認
+.venv/bin/python scripts/gauntlet.py build/<候補> \
+  --vs build/<相手1> build/<相手2> build/<相手3> \
+  --weights 0.48 0.26 0.05 -n 80 -j 8 --profile fixed-worlds \
+  --suite <実験名> --dry-run
 
 # 敗因の内訳(reason: 1=サイド 2=山札切れ 3=ポケモン無し 4=効果)
 .venv/bin/python scripts/diagnose.py 60 first
+
+# arena回帰テスト
+.venv/bin/python -m unittest tests.test_arena
 ```
 
 ### 改善判定のルール
 
 - 変更は1つずつアブレーションし、`docs/experiments.md` に記録する
 - 採用基準: 旧版との直接対決300戦以上で、Wilson 95%CI下限 > 50%
+- 測定前に`results/arena.jsonl`と`results/gauntlet.jsonl`を検索し、重複実験を避ける
+- `n`は正の偶数。提出判定は既定のfresh process per seat pairを使い、`--reuse-agent`は使わない
+- searchはfixed-worldsで性能比較、production `-j 1`で本番設定の完走確認を分ける
+- 採用する記録は`failure_count=0`、`run_failures=[]`、両席`DONE`を必須とする
+- gauntletの加重値は収載対面内の点推定。`weight_sum<1`なら全環境EVではない
 - 提出は**有意な改善があったときだけ**(1日5回制限)
 
 ## 提出手順
@@ -56,8 +79,10 @@ kaggle competitions submissions -c pokemon-tcg-ai-battle | head -5
 ### 提出前チェックリスト
 
 - [ ] `ptcglab.build` の検証が通る(**ファイルパスロード検証込み**。importベースの評価だけでは不十分)
-- [ ] evaluate.py で旧版に有意勝ち越し
+- [ ] 純BCまたはfixed-worldsで旧版に有意勝ち越し、複数対面の弱点も記録
+- [ ] production profileを`-j 1`で完走し、failure 0を確認
 - [ ] 1手あたりの最悪時間を確認(600秒/試合を超えない設計か)
+- [ ] `fixed_search_worlds`入りの評価専用agentではないこと(buildはtar化を拒否する)
 
 ## 本番環境との同等性(Docker検討の結論、2026-07-12調査)
 

@@ -425,3 +425,69 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
 - v1 + アブレーションA。最終: vs random 300戦 93.0% [89.5–95.4] / vs first 300戦 49.7% [44.0–55.3]
 - 提出#54494953 COMPLETE、初期レート600.0
 - 教訓: 初回2提出はERROR — Kaggleローダーに`__file__`が無いことが原因(development.md参照)
+
+## 2026-07-14 最新メタ再集計・独自メタ候補v4.2t
+
+### 公式episodesの最新スナップショット
+
+- 取得元: Kaggle公式Episodes Index / 2026-07-13 Daily Top Episodes。Top12各チームの最新6件を取り、
+  episode IDを重複除外した **66 replay / 132 deck slot**。
+- Alakazam 63 (47.7%) / Kangaskhan–Crustle 34 (25.8%) / その他16 (12.1%) /
+  Grimmsnarl 10 (7.6%) / Froslass–Starmie 7 (5.3%) / Lucario 1 (0.8%) /
+  Archaludon 1 (0.8%)。canonical Alakazam完全一致は52出現・21チーム。
+- 帯別の小標本(各帯6チーム×最新5件)では1000+のAlakazam 56.7%、Lucario 11.7%。
+  X上の「Lucario再増」は自己申告・個人観測なので仮説扱いとし、公式全体比率とは混同しない。
+
+### arena schema v2 / gauntlet
+
+- `ptcglab.arena`を評価の唯一実装へ強化。正の偶数戦、P0/P1同数、W/D/L/unscored、
+  strict failure、run/suite ID、git・環境version、agent tree/config/deck/model/cg SHAをledgerへ記録。
+- 既定分離は **fresh process per seat pair**。同一processでmain/cgを試合ごとに再importすると
+  native buffer (`capacity 7`) が解放されずabortしたため、1 processで席反転2戦だけ行う。
+  ペアごとに実行順も反転し、席と第1/第2ゲームの交絡を均す。
+- `main._spent`が試合間に持ち越されるバグをdeck handshakeで初期化。BC構成は
+  `policy.ENABLED`を起動時assertし、モデル不読込でheuristicへ静かに化ける測定を禁止。
+- production wall-clock searchは設定から自動判定して **`-j 1`強制**。fixed-worldsは両agentの
+  world数一致を強制し、壁時計budgetから完全分離。未完遂はagent metrics経由でfailureにする。
+- 初回fixed 49/80は壁時計gateが残っていたため補助値へ格下げ。commit `2fcea12`後のclean rerunを
+  提出判断に使用。build途中変更も終了時rehashで検出する。
+- 複数相手は順次実行し、入力重み内の条件付き加重点推定と、重みなしpooled Wilson CIを分離。
+  今回の3対面重み合計0.788は全環境EVではなく、収載3対面内の条件付き値。
+
+### デッキ候補screen（各対面n=20、相手は上位デッキ＋heuristic操縦）
+
+| 候補 | Alakazam | Kangaskhan | Froslass | 3対面内加重 | 単純合算 |
+|---|---:|---:|---:|---:|---:|
+| 現行Alakazam純BC | 100% | 60% | 75% | 85.2% | 78.3% |
+| **Great Tusk–Crustle** | **90%** | **90%** | 30% | 86.0% | 70.0% |
+| Rocket Mewtwo–Spidops | 90% | 65% | 35% | 78.1% | 63.3% |
+| Alakazam Mist/Neutral | 100% | 65% | 75% | 86.9% | 80.0% |
+| Comfey–Brambleghast | 95% | 100% | 55% | 94.0% | 83.3% |
+
+- Comfeyは現行との直接80戦53.8% [42.9–64.2]で中立。Rocketはscreenで劣後し棄却。
+- Alakazam Mist/Neutralは直接80戦68.8% [57.9–77.8]だが、現行と同系統で独自性が低く、
+  80戦に414.8秒を要したため安全な予備候補。
+- Great TuskはExplorer's Guidance→Great Tuskの4枚mill、Crustle＋Neutralization Zoneのex壁、
+  Lisia/Xerosicで手札と盤面を崩す独自メタ。Alakazam＋Kangaskhanが73.5%の現環境へ合わせて採用候補。
+- 弱点: Froslass heuristicに30%/20、全エネが特殊でEnhanced Hammerに弱い、Fighting Gongの
+  基本闘energy検索部分を使えない、長期戦で評価コストが高い。Lucario heuristicには35/40=87.5%
+  [73.9–94.5]だが、現行Alakazamは39/40=97.5%で候補が10pt低い。
+
+### Great Tusk直接評価
+
+- 同じbc_v2純BC vs 現行Alakazam (`v3.3a`): 53/80 + 133/220 = **186/300 = 62.0%**、
+  pooled Wilson **[56.4–67.3]**。P0 84/150=56.0%、P1 102/150=68.0%、failure 0。
+- commit `2fcea12`後、BCS fixed 2 worlds vs 現行fixed 2 worlds:
+  11/20 + 38/60 = **49/80 = 61.25% [50.3–71.2]**、両席DONE、failure/run failure/
+  fixed incompleteすべて0。追加60戦はP0/P1とも19/30。
+- production 8秒、`-j 1`スモーク: vs submitted `v4.1a`を各席1戦、**1–1**、両席DONE、
+  failure 0、812.1秒。勝率証拠ではなく本番設定の安全性確認。
+- 判定: 純BC 300戦ゲートとclean fixed 80戦ゲートを通過。本番active最強のv4.1aを保持し、
+  弱いv4.1g枠を **v4.2t** で置換する候補。ラダーではFroslass弱点と長期戦を監視する。
+
+### bc_v5（最新データ再学習）
+
+- 07-08〜07-13のDaily Top、1,951,495 decisions、6 epochs、seed 0。
+  holdout best checkpointを復元する仕組みを追加し、best epoch 5 / top-1 **63.144%**。
+- 同じGreat Tuskデッキでbc_v5 vs bc_v2: 110/200 + 102/200 = **212/400 = 53.0%**、
+  pooled Wilson **[48.1–57.8]**。有意差なしのため **bc_v5は棄却、提出候補はbc_v2継続**。

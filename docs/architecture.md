@@ -6,14 +6,14 @@
 ┌─ オフライン(このリポジトリ) ──────────────────────────────┐
 │  学習:   bc_extract.py(公式トップエピソード→意思決定ペア)          │
 │          train_bc.py(2タワーランカー、torch/MPS→numpyエクスポート)  │
-│  評価:   evaluate.py(並列A/B+Wilson CI) bc_matchups.py(デッキ表)│
+│  評価:   arena.py(schema v2 A/B) / evaluate.py / gauntlet.py          │
 │  分析:   ladder_stats.py / meta_scrape.py / band_meta.py /         │
 │          diagnose.py / render_replay_jp.py(日本語リプレイ)          │
 │  デッキ: deck_lib.py / deck_opt.py / deck_tournament.py             │
 └──────────────────────────────────────────────┘
                  │ 検証済みのロジック・学習済みパラメータだけを反映
                  ▼
-┌─ ランタイム(submission/ = Kaggleに提出) ───────────────────┐
+┌─ ランタイム(src/ + agents/ + models/ → build/ → Kaggle) ────────┐
 │  main.py     意思決定カスケード(ALGO: 探索→BC→ヒューリスティック)  │
 │  deck.csv    デッキ(60行のカードID)— BC方策とセットで選ぶ          │
 │  ptcg/       自作パッケージ(下記)+ policy_params.npz(150KB)      │
@@ -25,17 +25,34 @@
 
 | モジュール | 責務 | 状態 |
 |---|---|---|
-| `ptcg/policy.py` + `policy_features.py` | **BC方策(現主力)**。2タワー(state塔×option塔の内積)のnumpy推論。単数選択を全てカバー、1決定<1ms | v3.0〜 |
-| `ptcg/heuristics.py` | 優先度ヒューリスティック。BC対象外(複数選択)とフォールバック、探索のロールアウト方策 | 全世代 |
-| `ptcg/search.py` | 決定化フラットMC探索(公式search API)。ALGO=bc_searchで先頭段 | v2.0〜 |
+| `ptcg/policy.py` + `policy_features.py` | **BC方策(現主力)**。2タワー(state塔×option塔の内積)のnumpy推論。単数・複数選択、1決定<1ms | v3.0〜 |
+| `ptcg/bc_search.py` | **BC×決定化探索(現主力)**。BC top-5候補をBCロールアウトで比較。`algo=bcs` | v4.0〜 |
+| `ptcg/heuristics.py` | 優先度ヒューリスティック。BC/探索の例外・分布外フォールバック | 全世代 |
+| `ptcg/search.py` | 旧・ヒューリスティック決定化フラットMC探索。value打ち切りは常時無効 | v2系互換 |
 | `ptcg/belief.py` + `meta_decks.py` | 相手デッキ推定(可視カード×メタライブラリ照合、ミラーフォールバック) | v2.1〜 |
-| `ptcg/value.py` + `features.py` | 盤面勝率の学習器(現在は無効。ロールアウト打ち切りでの再利用待ち) | 棄却v0 |
-| main.py の時間管理 | 残り時間の線形配分(BCはほぼ消費しないため実質探索用) | — |
+| `ptcg/value.py` + `features.py` | 盤面勝率の学習器。value_v1はAUC 0.851、A/B 47.8%/400で現形棄却 | 無効 |
+| main.py の時間管理 | productionは残り時間の線形配分。`_spent`はdeck handshakeごとに初期化 | — |
 
 ### 設計原則(不変)
 - **落ちない**: どの段も例外・分布外で下段にフォールバック。INVALIDは即負け
 - **enumはintで比較**(コンペ中の追加に耐える)/ Kaggleローダーは`exec(code,{})`(`__file__`無し、最後のcallableがagent)
 - **BCはデッキとセット**: 方策は訓練分布内のデッキでのみ強い。デッキ変更時は再評価必須
+- **構成不良は落とす**: BC指定で`policy.ENABLED=False`なら起動失敗。実行中の例外だけを下段へ救済
+
+## 評価基盤（arena schema v2、2026-07-14）
+
+- `ptcglab.arena`がA/Bの唯一実装。1 processにつき席反転1ペアをロードし、native cg状態と
+  agent moduleを測定ペア間で分離する。席順とペア内実行順の両方を均等化する。
+- ledgerはW/D/L/unscored、P0/P1、failure、run ID/suite、git commit、kaggle-environments version、
+  agent tree/config/deck/model/cg SHAを持つ。終了時rehashで評価中のbuild変更も検出する。
+- `production`: wall-clock探索。本番と同じだがCPU負荷に敏感なため`jobs=1`強制。
+- `fixed-worlds`: ローカル比較専用。両search agentの`fixed_search_worlds`（2〜24）を一致させ、
+  壁時計budgetから分離する。未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。
+- `standard`: 純BC/heuristic用の高速並列screen。
+- gauntletの加重勝率は入力対面内の点推定。pooled Wilson CIは重みなしで別表示する。
+
+`train_bc2.py`はnumpy/torch seedを固定し、各epochのholdout top-1が最良のcheckpointへ戻してから
+numpyへexportする。`META.json`にseed/best_epoch/holdout_top1を保存する。
 
 ---
 
