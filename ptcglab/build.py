@@ -62,11 +62,23 @@ def build(name: str, validate: bool = True, tar: bool = True) -> str:
     if validate:
         _validate(out)
     if tar:
+        _remove_bytecode(out)
         members = [m for m in os.listdir(out)]
         subprocess.run(["tar", "czf", tar_path, "-C", out, *members], check=True)
         print(f"built: {tar_path} ({os.path.getsize(tar_path) / 1e6:.1f}MB)")
         return tar_path
     return out
+
+
+def _remove_bytecode(root: str) -> None:
+    """検証importが生成したhost固有bytecodeを提出物から除く。"""
+    for base, dirs, files in os.walk(root, topdown=False):
+        for filename in files:
+            if filename.endswith((".pyc", ".pyo")):
+                os.remove(os.path.join(base, filename))
+        for dirname in dirs:
+            if dirname == "__pycache__":
+                shutil.rmtree(os.path.join(base, dirname), ignore_errors=True)
 
 
 def _validate_spec(spec: dict, spec_path: str) -> None:

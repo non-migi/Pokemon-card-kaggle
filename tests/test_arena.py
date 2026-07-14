@@ -5,6 +5,7 @@ import unittest
 from unittest import mock
 
 from ptcglab import arena
+from ptcglab import build as build_module
 
 
 class ArenaUnitTests(unittest.TestCase):
@@ -75,6 +76,18 @@ class ArenaUnitTests(unittest.TestCase):
         )
         self.assertEqual(got["status"], "dry-run")
         self.assertEqual(got["total_games"], 2)
+
+    def test_build_removes_host_bytecode_before_packaging(self):
+        with tempfile.TemporaryDirectory() as d:
+            cache = os.path.join(d, "pkg", "__pycache__")
+            os.makedirs(cache)
+            with open(os.path.join(cache, "mod.cpython-312.pyc"), "wb") as f:
+                f.write(b"host bytecode")
+            with open(os.path.join(d, "keep.py"), "w") as f:
+                f.write("pass\n")
+            build_module._remove_bytecode(d)
+            self.assertFalse(os.path.exists(cache))
+            self.assertTrue(os.path.isfile(os.path.join(d, "keep.py")))
 
 
 if __name__ == "__main__":
