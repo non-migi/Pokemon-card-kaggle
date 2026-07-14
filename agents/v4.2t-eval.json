@@ -1,0 +1,1 @@
+{"label":"Great Tusk / Crustle counter-meta + bc_v2 + BCS, local fixed 2 worlds","deck":"decks/candidates/great_tusk_crustle_mill.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}

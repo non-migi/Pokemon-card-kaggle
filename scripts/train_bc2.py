@@ -7,6 +7,7 @@
 """
 
 import argparse
+import copy
 import datetime
 import glob
 import json
@@ -61,6 +62,8 @@ def main():
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--name", required=True)
     ap.add_argument("--hid", type=int, default=128)
+    ap.add_argument("--seed", type=int, default=0,
+                    help="numpy/torchの学習seed(再現性と複数run比較用)")
     args = ap.parse_args()
 
     out_dir = os.path.join(ROOT, "models", args.name)
@@ -76,9 +79,14 @@ def main():
     hold_shard, train_shards = shards[-1], shards[:-1]
     print(f"shards: train={len(train_shards)} holdout=1 vocab={len(vocab)}")
 
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     dev = "mps" if torch.backends.mps.is_available() else "cpu"
     model = TwoTower(len(vocab), meta["n_state"], meta["n_option"], hid=args.hid).to(dev)
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
+    best_acc = -1.0
+    best_epoch = -1
+    best_state = None
 
     for ep in range(args.epochs):
         model.train()
@@ -98,7 +106,19 @@ def main():
             for sb, ob, cb, mb, yb in shard_batches(hold_shard, dev, 2048, shuffle=False):
                 correct += (model(sb, ob, cb, mb).argmax(-1) == yb).sum().item()
                 htot += len(yb)
-        print(f"epoch {ep}: loss={tot / cnt:.4f} holdout_top1={correct / htot * 100:.1f}%", flush=True)
+        acc = correct / htot
+        if acc > best_acc:
+            best_acc = acc
+            best_epoch = ep
+            # 最終epochが最良とは限らない(bc_v3で実際に過学習した)。
+            # CPU cloneを保持し、学習終了後に最良holdoutへ戻す。
+            best_state = copy.deepcopy({k: v.detach().cpu() for k, v in model.state_dict().items()})
+        print(f"epoch {ep}: loss={tot / cnt:.4f} holdout_top1={acc * 100:.1f}%"
+              f" best={best_acc * 100:.1f}%@{best_epoch}", flush=True)
+
+    if best_state is None:
+        raise SystemExit("学習済みcheckpointがない")
+    model.load_state_dict(best_state)
 
     sd = {k: v.cpu().numpy() for k, v in model.state_dict().items()}
     np.savez_compressed(
@@ -116,8 +136,11 @@ def main():
     with open(os.path.join(out_dir, "META.json"), "w") as f:
         json.dump({"model": args.name, "hid": args.hid, "trained": datetime.date.today().isoformat(),
                    "feat_dir": args.feat, "sources": meta.get("sources"),
-                   "epochs": args.epochs}, f, ensure_ascii=False, indent=1)
-    print(f"exported -> models/{args.name}/")
+                   "epochs": args.epochs, "best_epoch": best_epoch,
+                   "holdout_top1": round(best_acc, 6), "seed": args.seed},
+                  f, ensure_ascii=False, indent=1)
+    print(f"exported -> models/{args.name}/ (best epoch={best_epoch}, "
+          f"holdout_top1={best_acc * 100:.1f}%)")
 
 
 if __name__ == "__main__":

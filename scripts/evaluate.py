@@ -22,11 +22,21 @@ def main() -> None:
     ap.add_argument("agent")
     ap.add_argument("--vs", default="random")
     ap.add_argument("-n", type=int, default=200)
-    ap.add_argument("-j", type=int, default=os.cpu_count() or 4)
+    ap.add_argument("-j", type=int, default=1,
+                    help="wall-clock searchは1必須。fixed-worlds/純BCのみ並列可")
+    ap.add_argument("--profile", choices=("auto", "standard", "production", "fixed-worlds"),
+                    default="auto")
+    ap.add_argument("--suite", default="")
+    ap.add_argument("--reuse-agent", action="store_true",
+                    help="高速だがKaggle同等性が下がる。提出判定では使わない")
     ap.add_argument("--note", default="")
     args = ap.parse_args()
 
-    r = run_match_series(args.agent, args.vs, n=args.n, jobs=args.j, note=args.note)
+    r = run_match_series(
+        args.agent, args.vs, n=args.n, jobs=args.j, note=args.note,
+        profile=args.profile, suite=args.suite,
+        fresh_process_per_pair=not args.reuse_agent,
+    )
     print(f"{r['a']} vs {r['b']}: {r['n']}戦 勝率 {r['winrate'] * 100:.1f}% "
           f"[Wilson95%: {r['ci95'][0] * 100:.1f}%–{r['ci95'][1] * 100:.1f}%] ({r['sec']}s)")
 

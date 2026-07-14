@@ -1,0 +1,18 @@
+{
+ "model": "bc_v5",
+ "hid": 128,
+ "trained": "2026-07-14",
+ "feat_dir": "data/bc/feat_v3",
+ "sources": [
+  "pairs_0708.jsonl.gz",
+  "pairs_0709.jsonl.gz",
+  "pairs_0710.jsonl.gz",
+  "pairs_0711.jsonl.gz",
+  "pairs_0712.jsonl.gz",
+  "pairs_0713.jsonl.gz"
+ ],
+ "epochs": 6,
+ "best_epoch": 5,
+ "holdout_top1": 0.63144,
+ "seed": 0
+}

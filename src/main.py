@@ -42,15 +42,31 @@ def _load_config() -> dict:
 
 CONFIG = _load_config()
 # bc(BC方策のみ) / search(探索のみ) / bc_search(探索→BC→ヒューリスティック)
-ALGO = CONFIG.get("algo", "bc")
+ALGO = str(CONFIG.get("algo", "bc"))
+if "bc" in ALGO and not policy.ENABLED:
+    # BC入りagentが黙ってheuristicへ化けると、A/Bも提出検証も無意味になる。
+    # 実行中の一時的な探索失敗は下段へフォールバックするが、構成不良は起動時に止める。
+    raise RuntimeError("BCモデルをロードできない: policy.ENABLED=False")
 
 # ---- 時間管理(探索使用時のみ意味を持つ) ----
 TOTAL_OVERAGE_SEC = 600.0
 RESERVE_SEC = 60.0
 BUDGET_DIVISOR = 50.0
 MAX_MOVE_SEC = float(CONFIG.get("max_move_sec", 8.0))
+try:
+    # ローカルA/B専用: 壁時計ではなく各決定の決定化world数を揃える。
+    # 提出版は未指定のままなので、従来どおり時間予算を最大限使う。
+    FIXED_SEARCH_WORLDS = int(CONFIG["fixed_search_worlds"])
+    if not 2 <= FIXED_SEARCH_WORLDS <= 24:
+        FIXED_SEARCH_WORLDS = None
+except (KeyError, TypeError, ValueError):
+    FIXED_SEARCH_WORLDS = None
 
 _spent = 0.0
+AGENT_METRICS = {
+    "fixed_search_incomplete": 0,
+    "fixed_search_errors": 0,
+}
 
 
 def read_deck_csv() -> list[int]:
@@ -81,19 +97,33 @@ def agent(obs_dict: dict) -> list[int]:
     global _spent
     obs = to_observation_class(obs_dict)
     if obs.select is None:
+        # arena workerは複数試合でcallableを再利用する。Kaggle本番の1 episodeごとの
+        # 時間管理と揃えるため、デッキ提出(各試合の先頭)で必ず状態を初期化する。
+        _spent = 0.0
         return list(DECK)
 
     t0 = time.time()
     act = None
     if ALGO == "bcs":
         try:
-            budget = _budget(obs_dict)
-            if budget > 0.3:
-                act = bc_search.decide(obs_dict, obs, DECK, budget)
+            # fixed-worldsは比較用の計算量固定モード。remainingOverageTimeや
+            # CPU競合で探索回数が変わらないよう、壁時計budget gateを通さない。
+            budget = MAX_MOVE_SEC if FIXED_SEARCH_WORLDS is not None else _budget(obs_dict)
+            if FIXED_SEARCH_WORLDS is not None or budget > 0.3:
+                act = bc_search.decide(
+                    obs_dict, obs, DECK, budget,
+                    fixed_worlds=FIXED_SEARCH_WORLDS,
+                )
+        except bc_search.FixedSearchIncomplete:
+            AGENT_METRICS["fixed_search_incomplete"] += 1
+            act = None
         except Exception:
+            if FIXED_SEARCH_WORLDS is not None:
+                AGENT_METRICS["fixed_search_errors"] += 1
             act = None
         finally:
-            _spent += time.time() - t0
+            if FIXED_SEARCH_WORLDS is None:
+                _spent += time.time() - t0
 
     if act is None and "search" in ALGO and ALGO != "bcs":
         try:

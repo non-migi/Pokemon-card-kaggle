@@ -1,5 +1,6 @@
 """BC方策×デッキのマッチアップ表(相手はヒューリスティック操縦)。"""
 
+import argparse
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
@@ -8,13 +9,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 
-def _init():
+def _init(build_name: str):
     import logging
 
     logging.disable(logging.WARNING)
     # BCモデル入りのptcgが必要なため、srcではなくビルド済みディレクトリを使う
     # (src/ptcgはモデル非同梱 — models/はビルド時に注入される設計)
-    agent_dir = os.path.join(ROOT, "build", os.environ.get("BC_BUILD", "v3.2g"))
+    agent_dir = os.path.join(ROOT, "build", build_name)
     if not os.path.exists(agent_dir):
         raise SystemExit("先に .venv/bin/python -m ptcglab.build v3.0g --no-tar を実行")
     sys.path.insert(0, agent_dir)
@@ -45,7 +46,8 @@ def _play(args):
         obs = to_observation_class(od)
         if obs.select is None:
             return list(my_deck)
-        return policy.choose(od) or fallback(obs)
+        act = policy.choose(od)
+        return act if act is not None else fallback(obs)
 
     def h_agent(od):
         obs = to_observation_class(od)
@@ -65,12 +67,19 @@ OPP = {"フーディン": "decks/meta/meta_00.csv", "オーロンゲ": "decks/me
        "ガルーラ": "decks/meta/meta_02.csv"}
 
 if __name__ == "__main__":
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else 200
-    with ProcessPoolExecutor(max_workers=8, initializer=_init) as ex:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("n", nargs="?", type=int, default=200)
+    ap.add_argument("--build", default="v3.2g",
+                    help="BCモデル同梱済みのbuild/<name>")
+    ap.add_argument("-j", "--jobs", type=int, default=8)
+    args = ap.parse_args()
+    with ProcessPoolExecutor(
+        max_workers=args.jobs, initializer=_init, initargs=(args.build,),
+    ) as ex:
         for my_name, my_path in MY.items():
             row = []
             for opp_name, opp_path in OPP.items():
-                tasks = [(my_path, opp_path, i % 2 == 1) for i in range(n)]
+                tasks = [(my_path, opp_path, i % 2 == 1) for i in range(args.n)]
                 res = list(ex.map(_play, tasks, chunksize=4))
                 row.append(f"{opp_name}:{sum(res) / len(res) * 100:.0f}%")
             print(f"{my_name} → " + " ".join(row), flush=True)

@@ -8,7 +8,6 @@
 勝敗(勝ち1/分け0.5/負け0)を候補ごとに平均。
 """
 
-import os
 import random
 import time
 
@@ -21,7 +20,9 @@ from .belief import sample_world
 # 価値関数によるロールアウト打ち切り(0=無効)。
 # v0(LR, AUC0.73)は終局プレイアウトに45.5%で敗北(2026-07-11)→ デフォルト無効。
 # より強いモデル(非線形+特徴量拡充)ができたら再評価する
-ROLLOUT_TRUNC_STEPS = int(os.environ.get("PTCG_ROLLOUT_TRUNC", "0"))
+# value routeは現形で棄却済み。設定を環境変数へ逃がすと同一processのA/B相手へ
+# 漏れるため、旧searchでは常に無効に固定する。
+ROLLOUT_TRUNC_STEPS = 0
 ROLLOUT_MAX_STEPS = 400
 MIN_WORLDS = 2
 MAX_WORLDS = 64

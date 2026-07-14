@@ -30,6 +30,10 @@ VALUE_TRUNC = 20        # 価値網有効時のロールアウト打ち切り手
 MAX_WORLDS = 96 if value.ENABLED else 24
 
 
+class FixedSearchIncomplete(RuntimeError):
+    """固定計算量を完遂できず、比較用測定に採用できない。"""
+
+
 def _policy_act(od: dict) -> list[int]:
     act = policy.choose(od)
     if act is not None:
@@ -77,14 +81,21 @@ def _rollout(state: dict, my_index: int) -> float:
 
 
 def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
-           rng: random.Random | None = None) -> list[int] | None:
-    """BC×探索。対象外・予算不足・世界不足ならNone(呼び手はBC単体へ)。"""
+           rng: random.Random | None = None,
+           fixed_worlds: int | None = None) -> list[int] | None:
+    """BC×探索。対象外・予算不足・世界不足ならNone(呼び手はBC単体へ)。
+
+    fixed_worldsはローカルA/B用。同じworld数を必ず処理してCPU負荷による
+    壁時計confoundを避ける。未指定の提出版は従来どおりbudget_secまで探索する。
+    """
     sel = obs_dict.get("select") or {}
     opts = sel.get("option") or []
     if sel.get("maxCount") != 1 or sel.get("type") not in SEARCHABLE or len(opts) < 2:
         return None
     scores = policy.scores(obs_dict)
     if scores is None:
+        if fixed_worlds is not None:
+            raise FixedSearchIncomplete("searchableな選択でBC scoreを取得できない")
         return None
     order = np.argsort(-scores)
     cands = [[int(i)] for i in order[: min(TOP_K, len(opts))]]
@@ -95,11 +106,21 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
     my_index = obs_dict["current"]["yourIndex"]
     totals = [0.0] * len(cands)
     counts = [0] * len(cands)
-    deadline = time.time() + budget_sec
-    hard_stop = deadline + budget_sec * 0.5
+    start = time.time()
+    deadline = start + budget_sec
+    world_limit = MAX_WORLDS
+    if fixed_worlds is not None:
+        world_limit = int(fixed_worlds)
+        if not MIN_WORLDS <= world_limit <= MAX_WORLDS:
+            raise ValueError(f"fixed_worldsは{MIN_WORLDS}..{MAX_WORLDS}: {world_limit}")
+        # 固定計算モードでも異常時に試合全体を固めないための安全弁。
+        # 通常の数worldなら数百msで終わるため、この上限には到達しない。
+        hard_stop = start + max(30.0, budget_sec * 4.0)
+    else:
+        hard_stop = deadline + budget_sec * 0.5
     worlds = 0
     try:
-        while time.time() < deadline and worlds < MAX_WORLDS:
+        while worlds < world_limit and (fixed_worlds is not None or time.time() < deadline):
             try:
                 world = sample_world(obs_dc, my_deck, rng)
                 root = search_begin_dict(obs_dict, *world)
@@ -121,6 +142,12 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
         except Exception:
             pass
 
+    if fixed_worlds is not None and (
+        worlds != world_limit or not all(c == world_limit for c in counts)
+    ):
+        raise FixedSearchIncomplete(
+            f"固定world未完遂: worlds={worlds}/{world_limit}, counts={counts}"
+        )
     if worlds < MIN_WORLDS or not all(counts):
         return None  # 探索不十分: BC単体の判断に任せる
     best = max(range(len(cands)), key=lambda i: totals[i] / counts[i])
