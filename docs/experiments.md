@@ -593,3 +593,20 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
 - Hammerはbc_v2でoption 138,759回/教師選択13,529回、この59/60 exact近傍も8,678 eligible判断があり、
   Tool ScrapperやNeutralization Zoneより明確に訓練分布内。
 - 実験順はRocket exact→canonical Alakazam非劣化→Kang exactとし、必ず1枚差の単独アブレーションから始める。
+
+### v4.3a提出完了とHammer4純BC gate（07-16）
+
+- `v4.3a.tar.gz`を07-16 00:48 JSTに提出。submission ID **54731784**、01:01 JSTに
+  `COMPLETE`、validation episode 86130442も`COMPLETED`。公開戦0のため表示600.0は初期値として扱う。
+  最新2提出はv4.3a + v4.2t、07-16の提出枠は1/5使用。
+- Hammer4候補はcanonicalから **Nighttime Mine (1266) 3→2 / Enhanced Hammer (1081) 3→4**だけを変更。
+  `ptcglab.build screen-20260716-alakazam-hammer4 --no-tar`で両席`DONE`を確認した。
+- 同じbc_v2純BCの直接A/BはHammer4が **162.5/300 = 54.17% [48.51–59.72]**
+  (161勝3分136敗、P0 56.0% / P1 52.33%)。全300戦両agent`DONE`、failure/run failure 0。
+- Rocket exact heuristicへのmatched 80戦はHammer4 **61/80 = 76.25%**、canonical **64/80 = 80.0%**で
+  **-3.75pt**。Kangaskhan exact heuristicはHammer4 **64/80 = 80.0%**、canonical
+  **48/80 = 60.0%**で **+20.0pt**。二層重みのRocket 0.07 / Kang 0.14だけで差分を当てると+2.54pt。
+- 判定: 純BC同型は点推定+4.17pt（Elo換算約+29）で非劣化、最大対策対象Kangに大幅改善。
+  **screen通過**とし、提出候補化の前に`v4.3h-fixed2` vs `v4.3a-fixed2`で探索込みを再確認する。
+- 300戦は台帳へ正常記録後もworker終了待ちが長引き、CLIを手動停止した。記録自体は全300戦・failure 0だが、
+  arenaにはpair単位watchdogがないため、別途タイムアウト設計を行う。

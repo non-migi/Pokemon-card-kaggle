@@ -3,15 +3,15 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-16 00:40 JST (Codex) — v4.3a production gate通過、提出GOを確定
+最終更新: 2026-07-16 01:05 JST (Codex) — v4.3a提出COMPLETE、Hammer4純BC gate通過
 
-## ラダー状況(2026-07-16 00:38 JST、active = 最新2提出のみ)
+## ラダー状況(2026-07-16 01:04 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
+| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **600.0 / 公開戦0** (validationのみ完了、初期値) |
 | **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **709.9 / 68戦32勝36敗 (47.1%)** |
-| **v4.1a** (sub 54612885) | **yes** | bc_v2 BCS + 旧Alakazam | **874.4 / 148戦79勝69敗 (53.4%)** |
-| **v4.3a** (未提出) | no | bc_v2 BCS + **canonical Top Alakazam** | 提出GO、tar SHA `98faa7b3…` |
+| **v4.1a** (sub 54612885) | no | bc_v2 BCS + 旧Alakazam | **874.4 / 148戦79勝69敗 (53.4%)で凍結** |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
 | **v4.0a** (sub 54591345) | no | BC×探索 + bc_v2 + フーディン型 | **826.4 / 67戦** (07-12 23:25 JSTに停止) |
 
@@ -22,7 +22,8 @@
 `v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。純BC直接 **74.67%/300**、
 fixed2 BCS **75.0%/80**、二層meta加重 **88.95% vs baseline 83.23%**。最終production 8秒は
 凍結した実提出v4.1aに **8–2/10** (P0 3–2 / P1 5–0)、全戦`DONE`、failure 0、最小残りoverage
-**215.99秒**。両席buildも通過したため提出GO。
+**215.99秒**。両席buildを通し、07-16 00:48 JSTに提出、01:01 JSTに`COMPLETE`。表示600.0は
+公開戦0の初期値で性能判定には使わない。最新2枠はv4.3a + v4.2tへ切替済み。
 
 **G3通過(予定より3週早い)**: v4.0a = BC×探索が純BC(v3.2a)に **58.1%/400戦**(有意)。
 本番ラダーで **826.4/67戦** — これまでの平衡750-780を上抜けしたが、v4.1a投入時にinactive化。
@@ -35,10 +36,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **v4.3aを固定して提出**: 回帰テスト・diff・commit/push後、直前に`submissions`を再確認して提出。
-   v4.1a 874.4がactiveから外れるが、直接75%のElo中心は約+191で置換の期待値が高い。
-2. **Hammer 4枚の1枚差候補**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`をRocket exact→
-   canonical mirror非劣化→Kang exactの順で純BC screen。近傍教師8,678判断があり分布内リスクが低い。
+1. **v4.3aの公開戦を監視**: validationは完了。公開戦0の600.0を評価せず、対面別勝敗と収束レートを追う。
+2. **Hammer4をfixed2 BCSでgate**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
+   純BC同型 **54.17%/300 [48.51–59.72]**、Kang exact **80% vs canonical 60%**、Rocket exact
+   **76.25% vs 80%**。次は`v4.3h-fixed2` vs `v4.3a-fixed2`で探索込みの再現性を測る。
 3. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
 4. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
@@ -74,10 +75,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Codex: v4.3aのcommit/push・Kaggle提出、続いてHammer 4枚案の1枚差screen
+- Codex: Hammer4 (`v4.3h-fixed2`) の固定計算量BCS gate
 
 ## 今日の提出枠
 
-- 07-16: **0/5 使用**。v4.3aはproduction gate通過、commit/push後に提出予定
+- 07-16: **1/5 使用** (`v4.3a`, sub 54731784, COMPLETE)
 - 07-15: 0/5使用
 - 07-14: 1/5使用 (`v4.2t`, sub 54688865, COMPLETE)

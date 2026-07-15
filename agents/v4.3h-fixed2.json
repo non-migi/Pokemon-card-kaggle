@@ -1,0 +1,1 @@
+{"label":"07-16 canonical Alakazam Hammer4 + bc_v2 + BCS fixed-2 one-card candidate","deck":"decks/candidates/alakazam_hammer4_20260716.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}
