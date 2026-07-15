@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from ptcglab import arena
@@ -54,6 +55,25 @@ class ArenaUnitTests(unittest.TestCase):
         with mock.patch.object(arena, "_play", side_effect=lambda swap: swap):
             self.assertEqual(arena._play_seat_pair(0), [False, True])
             self.assertEqual(arena._play_seat_pair(1), [True, False])
+
+    def test_remaining_overage_min_ignores_missing_and_invalid_values(self):
+        env = SimpleNamespace(steps=[
+            [{"observation": {"remainingOverageTime": 600}}, {}],
+            [{"observation": {}}, {"observation": {"remainingOverageTime": 500}}],
+            [{"observation": {"remainingOverageTime": 123.45678}},
+             {"observation": {"remainingOverageTime": True}}],
+            [{"observation": {"remainingOverageTime": float("nan")}},
+             {"observation": {"remainingOverageTime": float("inf")}}],
+        ])
+        self.assertEqual(arena._remaining_overage_min(env, 0), 123.4568)
+        self.assertEqual(arena._remaining_overage_min(env, 1), 500.0)
+        self.assertIsNone(arena._remaining_overage_min(SimpleNamespace(steps=[]), 0))
+        self.assertIsNone(arena._remaining_overage_min(SimpleNamespace(steps=None), 0))
+
+    def test_min_present_ignores_missing_values(self):
+        rows = [{"x": None}, {}, {"x": 4.5}, {"x": 2.25}]
+        self.assertEqual(arena._min_present(rows, "x"), 2.25)
+        self.assertIsNone(arena._min_present(rows[:2], "x"))
 
     def test_fingerprint_ignores_pycache_but_covers_config(self):
         with tempfile.TemporaryDirectory() as d:

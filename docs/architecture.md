@@ -49,6 +49,7 @@
 - `fixed-worlds`: ローカル比較専用。両search agentの`fixed_search_worlds`（2〜24）を一致させ、
   壁時計budgetから分離する。未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。
 - `standard`: 純BC/heuristic用の高速並列screen。
+- 本番時間制御のgate用に、全stepの`remainingOverageTime`最小値を全体・席別でledgerへ記録する。
 - gauntletの加重勝率は入力対面内の点推定。pooled Wilson CIは重みなしで別表示する。
 
 `train_bc2.py`はnumpy/torch seedを固定し、各epochのholdout top-1が最良のcheckpointへ戻してから

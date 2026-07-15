@@ -503,3 +503,93 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
   holdout best checkpointを復元する仕組みを追加し、best epoch 5 / top-1 **63.144%**。
 - 同じGreat Tuskデッキでbc_v5 vs bc_v2: 110/200 + 102/200 = **212/400 = 53.0%**、
   pooled Wilson **[48.1–57.8]**。有意差なしのため **bc_v5は棄却、提出候補はbc_v2継続**。
+
+## 2026-07-15 ラダー診断・二層メタ更新・canonical Alakazam再選定
+
+### v4.2tラダー62戦の終局診断
+
+- 07-15観測時点のactive ratingは **v4.2t = 700.9 / v4.1a = 879.7**。v4.2tの公開戦は
+  **28勝34敗、45.2% (n=62)**。全試合で両席`DONE`、timeoutなし、残り時間の最小は163.4秒で、
+  不振は実行障害や時間切れではない。
+- **28勝はすべて相手のdeckout**。一方、34敗の終了理由はポケモン無し17、サイド0が10、
+  自分のdeckoutが7。mill勝ちの経路自体は狙いどおりだが、盤面維持と自分の山札管理が不足した。
+- ポケモン無し17敗のうち7試合は、ベンチが空で手札にplayableなBasic Pokémonがあるのに展開を拒否。
+  該当する重要選択21回中 **15回でBasicを出さなかった**。Great Tuskデッキがbc_v2の訓練分布外であるため、
+  デッキの対メタ性能以前に方策との不整合が実戦の直接的な敗因になった。
+- 判定: **v4.2tの「Great Tuskデッキ×bc_v2」は最終候補から棄却**。Basic展開を強制する安全則は
+  独立の方策改善候補として保留するが、この修正だけを根拠にGreat Tuskを再提出しない。
+
+### Kaggle公式episodesによる二層メタ
+
+- 公式Leaderboard CSVは2026-07-15 22:05:59 JST時点、全5,061チーム。
+  1000–1099.9は73チーム、1100–1199.9は13チーム、1200+は1チームだった。
+- **1000–1099帯**: 全73チームからseed固定で12チーム(16.4%)を抽出し、各5件の代表submission最新公開戦、
+  anchor `n=60`。Alakazam 58.3% / Grimmsnarl 16.7% / Mega Lucario 16.7% /
+  Cornerstone Ogerpon–Crustle wall 8.3%。昇格帯は依然Alakazam中心。
+- **1100+帯**: snapshot上の全14チームを網羅し、各6件、anchor `n=84`。
+  Kangaskhan–Crustle 28.6% / Alakazam 21.4% / Grimmsnarl 21.4% /
+  Rocket Mewtwo–Spidops 14.3% / Festival Lead 14.3%。最上位はAlakazam一極でなく5極化した。
+- Top12の共有対戦を除いた56 replay / 全112 deck slotでもAlakazam 28.6%、Kangaskhan 27.7%、
+  Grimmsnarl 13.4%、Rocket 11.6%、Festival 11.6%。07-14のTop12全slotでAlakazam 47.7%だった値から
+  急変しており、一日標本として扱うが、Alakazamだけへの過適合は避ける。
+- 二層を混ぜたscreen重みは Alakazam 0.40 / Grimmsnarl 0.19 / Lucario 0.08 /
+  Kangaskhan 0.14 / Rocket 0.07 / Festival 0.07 / Froslass 0.05 (`weight_sum=1.0`) とした。
+  判定: **二層poolを次の提出候補screenへ採用**。昇格性能と1100+での生存性能を別々に読み、
+  単一のTop12比率だけで提出判断しない。
+
+### canonical Alakazamのdeck-only評価
+
+- canonical Top Alakazam純BC vs 現行提出系`v3.3a`純BC。同じbc_v2でデッキだけを変更し、
+  **224.0/300 = 74.67% [69.45–79.26]** (223勝2分75敗)、failure 0。
+- `v4.3a-fixed2` vs `v4.1a-fixed2`。同じbc_v2、BCSを固定2 worldsに揃え、
+  **60/80 = 75.0% [64.5–83.2]**、両席`DONE`、failure/run failure/fixed incompleteすべて0。
+  壁時計でなく計算量固定でもデッキ差が再現した。
+- 二層gauntletは各相手40戦。canonical候補の条件付き加重勝率は **88.95%**、`v3.3a` baselineは
+  **83.23%**で、差は+5.72pt。特に最大弱点だったKangaskhanが **75.0% vs 52.5% (+22.5pt)**。
+  Rocketだけは75.0% vs 80.0%と低下したが、他の主要対面は同等以上だった。
+- gauntlet相手はすべて**上位exact deck＋heuristic操縦**であり、88.95%をラダー絶対勝率とは解釈しない。
+  同じ相手・同じ試合数での候補とbaselineの差分、および純BC直接300戦・fixed2 80戦との整合だけを採用根拠にする。
+- 判定: **canonical Alakazamへのデッキ更新を採用**し、v4.2tの置換候補とする。提出自体は
+  production両席smoke、最新2提出と当日枠の再確認を通すまで保留する。
+
+### Kaggle / X 最新情報の証拠レベル
+
+- 公式Leaderboard: <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>。
+  最新Daily Top Episodesは調査時点で07-14版(4,929 episodes)までで、07-15版は未公開だった:
+  <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-14>。
+- 公式hostによればDaily Top Episodesは参加者平均ratingが高い順で、上位競技者へ偏る。
+  したがってTopメタ・BC教師には使えるが、全ラダーの不偏標本ではない:
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/709160>。
+- DiscussionのRL/探索方式は自己申告・推測として分離した。1.7M parameter RL、700k model＋
+  uncertainty時search等の報告はあるが、公式episodeだけでは手法を確定できない:
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/724362>。
+- Xは通常検索で直近の検証可能な大会投稿を取得できず、signed-in sessionを使えるbrowser instanceも
+  **unavailable**だった。これは「新情報が存在しない」ことを意味しないため、今回の採用判断にはX情報を使わず、
+  Kaggle公式Leaderboard / episodes / replayを一次証拠とした。
+
+### v4.3a正式build・production gate（07-16）
+
+- 提出本命は未評価のbelief変更を含めず、**canonical Alakazamへのdeck-only変更**に凍結した。
+  正式`build/v4.3a` と既存の検証済み`build/v4.3a-fixed2`は、`agent_config.json`の
+  `fixed_search_worlds` 有無以外の全コード・deck・modelが完全一致した。
+- `ptcglab.build v4.3a`のファイルパスローダー検証は両席`DONE`。tarに`__pycache__`/`.pyc`なし。
+  `v4.3a.tar.gz` SHA-256 = `98faa7b3e8d0541d2841acb7749bdae2a15f9af91b014e6c81b1654dd88da85c`。
+- 比較相手は作業中buildではなく、実際に提出した`v4.1a.tar.gz`
+  (SHA-256 `d19102202096bb0fe126940c2d1fec71436bf914c8b60a87b7177d7892313f89`)を`/tmp`へ展開して凍結した。
+- 事前gate: production 8秒、`jobs=1`、10戦で6勝以上・各席2/5以上・failure 0・
+  candidate最小残りoverage 60秒以上。4勝以下/片席0勝/failure/残45秒未満はSTOP、
+  5勝または残45–60秒は20戦まで延長、と結果確認前に固定した。
+- 結果: **8勝2敗 = 80.0%/10 [49.0–94.3]**。P0 **3–2** / P1 **5–0**、両agent全10戦`DONE`、
+  failure/run failure 0。candidateの最小残りoverageは **215.9944秒**
+  (P0 223.2629 / P1 215.9944)で、長期戦でも60秒gateを大幅に通過。所要5,116.6秒。
+- 判定: 純BC 300戦、fixed2 80戦、二層meta 280戦、production 10戦が整合したため
+  **v4.3aを提出GO**。直接75%をElo換算した中心は約+191で、v4.1a 874.4基準の期待は約1065–1070。
+  1100を確約する値ではなく、次の+30 Eloへのbridgeと位置づける。
+
+### 次の+30 Elo候補: Hammer 4枚案
+
+- 第一候補は `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`。Rocketの特殊energy 4枚、
+  Kangaskhan 12枚、Alakazam 5枚を横断して破壊できる。
+- Hammerはbc_v2でoption 138,759回/教師選択13,529回、この59/60 exact近傍も8,678 eligible判断があり、
+  Tool ScrapperやNeutralization Zoneより明確に訓練分布内。
+- 実験順はRocket exact→canonical Alakazam非劣化→Kang exactとし、必ず1枚差の単独アブレーションから始める。

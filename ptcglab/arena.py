@@ -93,6 +93,22 @@ def _state_error(env, seat: int):
     return None
 
 
+def _remaining_overage_min(env, seat: int) -> float | None:
+    """Kaggleの全stepから、その席の最小残りoverage秒を取る。"""
+    values: list[float] = []
+    for step in (getattr(env, "steps", None) or ()):
+        try:
+            observation = step[seat].get("observation") or {}
+            value = observation.get("remainingOverageTime")
+        except (AttributeError, IndexError, TypeError):
+            continue
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            number = float(value)
+            if math.isfinite(number):
+                values.append(number)
+    return round(min(values), 4) if values else None
+
+
 def _agent_metrics(agent) -> dict:
     metrics = getattr(agent, "__globals__", {}).get("AGENT_METRICS", {})
     return dict(metrics) if isinstance(metrics, dict) else {}
@@ -140,6 +156,8 @@ def _play(swap: bool) -> dict:
         "status_b": status_b,
         "error_a": _state_error(env, a_seat),
         "error_b": _state_error(env, b_seat),
+        "remaining_overage_sec_a": _remaining_overage_min(env, a_seat),
+        "remaining_overage_sec_b": _remaining_overage_min(env, b_seat),
         "metrics_a": metrics_a,
         "metrics_b": metrics_b,
         "failures": failures,
@@ -259,6 +277,11 @@ def _summarize(results: list[dict]) -> dict:
     }
 
 
+def _min_present(results: list[dict], key: str) -> float | None:
+    values = [r.get(key) for r in results if r.get(key) is not None]
+    return round(min(values), 4) if values else None
+
+
 def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
                      note: str = "", profile: str = "auto", run_id: str | None = None,
                      suite: str = "", fresh_process_per_pair: bool = True,
@@ -293,10 +316,13 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         ) as ex:
             results = list(ex.map(_play, swaps, chunksize=4))
     overall = _summarize(results)
-    by_seat = {
-        "P0": _summarize([r for r in results if r["a_seat"] == 0]),
-        "P1": _summarize([r for r in results if r["a_seat"] == 1]),
-    }
+    by_seat = {}
+    for label, seat in (("P0", 0), ("P1", 1)):
+        seat_rows = [r for r in results if r["a_seat"] == seat]
+        by_seat[label] = _summarize(seat_rows)
+        by_seat[label]["a_min_remaining_overage_sec"] = _min_present(
+            seat_rows, "remaining_overage_sec_a",
+        )
     failure_rows = [r for r in results if r["failures"]]
     end_meta_a, end_meta_b = agent_fingerprint(agent_a), agent_fingerprint(agent_b)
     run_failures = []
@@ -325,6 +351,10 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         "ci95": overall["score_ci95_approx"],
         "overall": overall,
         "by_seat": by_seat,
+        "min_remaining_overage_sec": {
+            "a": _min_present(results, "remaining_overage_sec_a"),
+            "b": _min_present(results, "remaining_overage_sec_b"),
+        },
         "failure_count": len(failure_rows),
         "failures": failure_rows[:20],
         "run_failures": run_failures,

@@ -3,23 +3,26 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-14 23:54 JST (Codex) — 独自メタv4.2tを提出、arena v2と最新メタ評価を確定
+最終更新: 2026-07-16 00:40 JST (Codex) — v4.3a production gate通過、提出GOを確定
 
-## ラダー状況(2026-07-14 23:54 JST、アクティブ = 最新2提出のみ)
+## ラダー状況(2026-07-16 00:38 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
-| **v4.2t** (sub 54688865) | **yes** | BC×探索 + multi-select + bc_v2 + **Great Tusk–Crustle mill** | **680.0 / 3戦 (2勝1敗、初期値)** |
-| **v4.1a** (sub 54612885) | **yes** | **BC×探索 + multi-select** + bc_v2 + フーディン型 | **847.5 / 112戦** |
+| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **709.9 / 68戦32勝36敗 (47.1%)** |
+| **v4.1a** (sub 54612885) | **yes** | bc_v2 BCS + 旧Alakazam | **874.4 / 148戦79勝69敗 (53.4%)** |
+| **v4.3a** (未提出) | no | bc_v2 BCS + **canonical Top Alakazam** | 提出GO、tar SHA `98faa7b3…` |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
 | **v4.0a** (sub 54591345) | no | BC×探索 + bc_v2 + フーディン型 | **826.4 / 67戦** (07-12 23:25 JSTに停止) |
 
-`v4.2t`は23:18 JST提出、Kaggle validation完了、最新2枠は **v4.2t + v4.1a**。
-初期公開3戦は初期デッキ系とフーディン型に勝ち、ルカリオ型に負け。両agentは全戦`DONE`で、
-自agent残り時間は最低262.9秒。680.0は極小標本の初期値であり、性能確定とは扱わない。
-次を提出すると最強のv4.1aが押し出されるため、少なくとも80公開戦までは追加提出しない。
+`v4.2t`は68戦で平衡709.9へ低下。調査時62戦の28勝は全て相手deckoutだが、34敗は
+ポケモン無17/サイド10/自deckout 7。ポケモン無7敗で、ベンチ空・手札に出せるBasicがあるのに
+21の重要選択中15回出さず。timeoutではなく、**Great Tuskとbc_v2の分布不整合**が失敗の主因。
 
-チーム `gogogozi migimimi` の表示値は **847.5**。順位・Top 8差は再取得前のためここでは固定しない。
+`v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。純BC直接 **74.67%/300**、
+fixed2 BCS **75.0%/80**、二層meta加重 **88.95% vs baseline 83.23%**。最終production 8秒は
+凍結した実提出v4.1aに **8–2/10** (P0 3–2 / P1 5–0)、全戦`DONE`、failure 0、最小残りoverage
+**215.99秒**。両席buildも通過したため提出GO。
 
 **G3通過(予定より3週早い)**: v4.0a = BC×探索が純BC(v3.2a)に **58.1%/400戦**(有意)。
 本番ラダーで **826.4/67戦** — これまでの平衡750-780を上抜けしたが、v4.1a投入時にinactive化。
@@ -32,16 +35,22 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **v4.2tを80公開戦まで監視**: レート、対面別勝率、Froslass/Lucario、長期戦の残り時間を追う。
-   初期3戦は2–1だが、唯一の敗戦がXで増加仮説のあったLucario。短期値で再提出判断しない。
-2. **次の提出は保留**: 新提出は847.5のv4.1aを押し出す。v4.2tが明確に弱い場合も、置換候補を
-   複数相手gauntlet・fixed-worlds・production両席で先に検証し、提出直前に最新2枠を再確認する。
-3. **次の性能軸は特徴量v2またはBC初期化RL**: 40次元価値網への単純なデータ増は打ち切る。
-   キーカード、攻撃圏、進化準備、トラッシュ内エネ種別等を追加し、価値網再開条件はAUC>0.90を目安にする。
-4. **再現性を直す**: v4.0a/v4.1aのJSON configが同一で、現在srcからv4.0a提出物を再現できない。
-   source commit/checksumまたはmulti-select/valueの明示flagをagent定義に固定する。
+1. **v4.3aを固定して提出**: 回帰テスト・diff・commit/push後、直前に`submissions`を再確認して提出。
+   v4.1a 874.4がactiveから外れるが、直接75%のElo中心は約+191で置換の期待値が高い。
+2. **Hammer 4枚の1枚差候補**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`をRocket exact→
+   canonical mirror非劣化→Kang exactの順で純BC screen。近傍教師8,678判断があり分布内リスクが低い。
+3. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
+   暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
+4. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
+   投入後はRocket/Kang/Grim/Festival別の実勝率と収束レートを追う。
 
 **確定した知見(今セッション)**:
+- メタは二層。1000–1099帯はAlakazam 58.3%、1100+全14チームはKang 28.6 / Alakazam 21.4 /
+  Grim 21.4 / Rocket 14.3 / Festival 14.3%。昇格poolと1100+生存poolを分けて評価する。
+- v4.2tの失敗はデッキ単体ではなくBCとの共適応不足。canonical Alakazamの7枚差は
+  純BC/fixed2/gauntlet/productionの4種で一貫して優位。
+- arena schema v2に全体・席別の最小`remainingOverageTime`を追加。production 10戦の候補最小は
+  215.99秒で、本番時間安全性を自動gate化できた。
 - 公式Top12最新6件(重複除外66 replay/132枠): Alakazam 47.7%、Kangaskhan–Crustle 25.8%、
   Froslass–Starmie 5.3%、Lucario 0.8%。X情報は仮説、公式episodesを判断の主根拠にした
 - Great Tusk純BCは現行Alakazamに **62.0%/300 [56.4–67.3]**、fixed2 BCSは
@@ -55,20 +64,20 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   `models/value_v1`へ退避し、実行時はフルロールアウトへフォールバック
 - Kaggleは目標48試合/日、各マッチ10%でランダム相手。短期レート/順位には対面運が残る
 
-## 外部情報スキャン(07-14)
+## 外部情報スキャン(07-15)
 
-- ゲームエンジンソース公開は取得済み: `data/simulation/ptcg_engine/`。コンペ限定利用・再配布禁止。
-  API要点は`docs/observation.md`に整理済み
-- X: カドラバAIチームが新モデルで金圏・最高11位を自己申告。上位も継続更新中
-- X: Mega Lucario再増/対sample 65%の個人観測あり。公式全体統計ではないため仮説扱い
-- OSS `cabt-viewer`はリプレイ分類/human-vs-AI sanity checkに有用(第三者early-stage)
+- Leaderboardは5,061チーム、1000+ 87、1100–1199は13、1200+は1チーム。07-14 Daily Topは
+  4,929 episodes、top average 1271.74 / median 1126.67。Top教師と全ラダーの不偏標本は区別する。
+- 公式DiscussionのRL/search手法は参考にするが、自己申告とreplayからの推測を分離する。
+- Xは通常検索で新しい検証可能情報を取得できず、署名済みbrowser sessionもunavailableだった。
+  今回はKaggle公式Leaderboard/episodes/replayだけを採用根拠にした。
 
 ## 作業中(衝突防止欄)
 
-- Codex: 07-15 1100突破施策 — 最新ラダー/敗戦/Top帯メタ再診断、方策・探索・デッキ改善の実装評価
+- Codex: v4.3aのcommit/push・Kaggle提出、続いてHammer 4枚案の1枚差screen
 
 ## 今日の提出枠
 
-- 07-14: **1/5 使用** (`v4.2t`, sub 54688865, COMPLETE)。次の提出はv4.1aを押し出すため保留
-- 07-13: 1/5 使用(v4.1a)
-- (07-12: v4.0a, v4.1g で2枠使用済み)
+- 07-16: **0/5 使用**。v4.3aはproduction gate通過、commit/push後に提出予定
+- 07-15: 0/5使用
+- 07-14: 1/5使用 (`v4.2t`, sub 54688865, COMPLETE)

@@ -1,0 +1,1 @@
+{"label":"07-15 canonical Top12 Alakazam + bc_v2 + BCS fixed-2 deck-only candidate","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}
