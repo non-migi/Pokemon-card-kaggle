@@ -77,6 +77,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 ## 作業中(衝突防止欄)
 
 - Codex: bc_v6 recent8 (07-08〜15) のfeaturize・学習・bc_v2 A/B
+- Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
+  探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
+  生成は重負荷につき-j6で実行。**production `-j1` wall-clock確認とは並走不可**(fixed-worlds gateは併走OK)。
+  deck tech/Hammer4/belief/bc_v6には触れない
 
 ## 今日の提出枠
 
