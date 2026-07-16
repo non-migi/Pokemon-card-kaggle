@@ -645,3 +645,16 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
   **38.6**まで上昇し、固定探索にも残る30秒hard-stopの交絡を無視できなくなったため手動中断した。
   ledgerへ結果は書かれておらず、部分試合は性能証拠に数えない。ExIt生成完了・負荷解消後に上記160戦を
   config/model/hashと閾値を変えず最初から再実行する。
+
+### 次の低距離deck tech: Dunsparce 4枚案（07-16 20:59）
+
+- v4.3aの公開31敗はサイド負け18、自deckout 6、ポケモン切れ7。ポケモン切れ7敗は全て場が1体だけの
+  時点を含み、うち5敗はturn 1–3。追加Basicが直接触れられる最大の実敗因群だった。
+- 候補はcanonicalから **Nighttime Mine (1266) 3→2 / Dunsparce (305) 3→4**だけを変更。
+  Alakazamへの8敗中3敗では相手がDunsparce 4枚構成で、最新上位ミラーにも実在する。Dunsparceは
+  既存デッキ内かつbc_v2/v6の頻出語彙で、分布外リスクが小さい。
+- 回帰リスクはNighttime Mineの引き率低下で、主にDragapult/Teraへの遅延力が落ちること。
+  自deckout 6敗は終盤にDunsparce系が既に場か手札にあり、改善対象には数えない。
+- `screen-20260716-alakazam-duns4`を組み、canonicalとの差が `{305:+1, 1266:-1}`、計60枚であることと
+  `ptcglab.build --no-tar`の両席`DONE`を確認。ExIt生成中は性能screenを回さず、負荷解消後に
+  canonical同型の純BC→ポケモン切れ再現対面→fixed2の順で判定する。
