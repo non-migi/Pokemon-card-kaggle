@@ -658,3 +658,15 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
 - `screen-20260716-alakazam-duns4`を組み、canonicalとの差が `{305:+1, 1266:-1}`、計60枚であることと
   `ptcglab.build --no-tar`の両席`DONE`を確認。ExIt生成中は性能screenを回さず、負荷解消後に
   canonical同型の純BC→ポケモン切れ再現対面→fixed2の順で判定する。
+
+### arena pair watchdog（07-16 21:04）
+
+- 300戦の台帳追記後にworker終了待ちでCLIが固まった事例と、CPU競合下のfixed2中断で
+  `ProcessPoolExecutor.shutdown(wait=True)`が再度止まった事例を受け、fresh-pair実行を手動spawn
+  `Process`＋one-way `Pipe`＋`connection.wait`へ変更した。
+- pair timeout / child crash / malformed payloadは要求試合数と席均衡を崩さず、両席2行の
+  `ERROR` / unscored / failureとしてschema v2 ledgerへ保存してからstrict errorにする。
+  正常payload取得後の終了hangだけは子をterminate/killし、対戦結果を維持してwatchdog metadataへ記録する。
+- timeout、crash、終了hang、protocol error、完了順と出力順の分離、strict ledgerを含む
+  **19 unit testsが0.858秒で全通過**。実process smoke `random vs first` 2戦も両席`DONE`、
+  failure/run failure 0、watchdog event 0、4.0秒で終了した。勝率は性能証拠に使わない。

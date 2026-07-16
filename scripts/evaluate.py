@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ptcglab.arena import run_match_series  # noqa: E402
+from ptcglab.arena import DEFAULT_PAIR_TIMEOUT_SEC, run_match_series  # noqa: E402
 
 
 def main() -> None:
@@ -29,6 +29,8 @@ def main() -> None:
     ap.add_argument("--suite", default="")
     ap.add_argument("--reuse-agent", action="store_true",
                     help="高速だがKaggle同等性が下がる。提出判定では使わない")
+    ap.add_argument("--pair-timeout-sec", type=float, default=DEFAULT_PAIR_TIMEOUT_SEC,
+                    help="fresh processの席反転1ペア上限秒。productionでは十分長くする")
     ap.add_argument("--note", default="")
     args = ap.parse_args()
 
@@ -36,6 +38,7 @@ def main() -> None:
         args.agent, args.vs, n=args.n, jobs=args.j, note=args.note,
         profile=args.profile, suite=args.suite,
         fresh_process_per_pair=not args.reuse_agent,
+        pair_timeout_sec=args.pair_timeout_sec,
     )
     print(f"{r['a']} vs {r['b']}: {r['n']}戦 勝率 {r['winrate'] * 100:.1f}% "
           f"[Wilson95%: {r['ci95'][0] * 100:.1f}%–{r['ci95'][1] * 100:.1f}%] ({r['sec']}s)")

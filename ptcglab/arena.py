@@ -21,13 +21,25 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 import uuid
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+from multiprocessing.connection import wait as wait_connections
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEDGER = os.path.join(ROOT, "results", "arena.jsonl")
 GAUNTLET_LEDGER = os.path.join(ROOT, "results", "gauntlet.jsonl")
+DEFAULT_PAIR_TIMEOUT_SEC = 3600.0
+PAIR_EXIT_GRACE_SEC = 0.5
+PAIR_TERMINATE_GRACE_SEC = 1.0
+PAIR_KILL_GRACE_SEC = 1.0
+
+_RESULT_KEYS = frozenset({
+    "a_seat", "reward", "score", "status_a", "status_b", "error_a", "error_b",
+    "remaining_overage_sec_a", "remaining_overage_sec_b", "metrics_a", "metrics_b",
+    "failures", "sec",
+})
 
 _worker_agents = {}
 
@@ -167,8 +179,278 @@ def _play(swap: bool) -> dict:
 
 def _play_seat_pair(pair_index: int) -> list[dict]:
     """同じfresh process内でP0/P1を1戦ずつ行い、席と実行順を両方均す。"""
-    swaps = (False, True) if pair_index % 2 == 0 else (True, False)
+    swaps = _seat_pair_swaps(pair_index)
     return [_play(swap) for swap in swaps]
+
+
+def _seat_pair_swaps(pair_index: int) -> tuple[bool, bool]:
+    return (False, True) if pair_index % 2 == 0 else (True, False)
+
+
+def _seat_pair_worker(send_conn, pair_index: int, spec_a: str, spec_b: str) -> None:
+    """spawn child entry。例外objectをPipeへ流さず、文字列のprotocolに固定する。"""
+    try:
+        _init_worker(spec_a, spec_b)
+        send_conn.send({"status": "ok", "rows": _play_seat_pair(pair_index)})
+    except BaseException as exc:
+        detail = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))[-4000:]
+        try:
+            send_conn.send({"status": "error", "detail": detail})
+        except (BrokenPipeError, EOFError, OSError):
+            pass
+    finally:
+        try:
+            send_conn.close()
+        except OSError:
+            pass
+
+
+def _synthetic_failed_pair(pair_index: int, kind: str, detail: str,
+                           elapsed_sec: float) -> list[dict]:
+    """pairが結果を返せない場合も、既存schemaの両席2行を必ず残す。"""
+    message = f"arena_pair_{kind}: {detail}"
+    sec = round(max(0.0, elapsed_sec), 4)
+    rows = []
+    for swap in _seat_pair_swaps(pair_index):
+        rows.append({
+            "a_seat": 1 if swap else 0,
+            "reward": None,
+            "score": 0.0,
+            "status_a": "ERROR",
+            "status_b": "ERROR",
+            "error_a": message,
+            "error_b": message,
+            "remaining_overage_sec_a": None,
+            "remaining_overage_sec_b": None,
+            "metrics_a": {},
+            "metrics_b": {},
+            "failures": [message],
+            "sec": sec,
+        })
+    return rows
+
+
+def _validate_pair_payload(rows, pair_index: int) -> str | None:
+    if not isinstance(rows, list) or len(rows) != 2:
+        return "ok payloadのrowsが長さ2のlistでない"
+    expected_seats = [1 if swap else 0 for swap in _seat_pair_swaps(pair_index)]
+    for i, (row, expected_seat) in enumerate(zip(rows, expected_seats)):
+        if not isinstance(row, dict):
+            return f"rows[{i}]がdictでない"
+        missing = sorted(_RESULT_KEYS - row.keys())
+        if missing:
+            return f"rows[{i}]の必須key不足: {missing}"
+        if row.get("a_seat") != expected_seat:
+            return f"rows[{i}].a_seat={row.get('a_seat')!r}, expected={expected_seat}"
+    return None
+
+
+def _reap_pair_process(process, exit_grace_sec: float, terminate_grace_sec: float,
+                       kill_grace_sec: float) -> tuple[str | None, bool]:
+    """processを有限時間で回収し、強制したactionと最終生存状態を返す。"""
+    process.join(max(0.0, exit_grace_sec))
+    if not process.is_alive():
+        return None, False
+    action = "terminate"
+    process.terminate()
+    process.join(max(0.0, terminate_grace_sec))
+    if process.is_alive():
+        action = "kill"
+        kill = getattr(process, "kill", process.terminate)
+        kill()
+        process.join(max(0.0, kill_grace_sec))
+    return action, process.is_alive()
+
+
+def _run_fresh_seat_pairs(spec_a: str, spec_b: str, pair_count: int, jobs: int,
+                          pair_timeout_sec: float, *, worker_target=None,
+                          exit_grace_sec: float = PAIR_EXIT_GRACE_SEC,
+                          terminate_grace_sec: float = PAIR_TERMINATE_GRACE_SEC,
+                          kill_grace_sec: float = PAIR_KILL_GRACE_SEC,
+                          ) -> tuple[list[list[dict]], list[dict], list[str]]:
+    """boundedなspawn childを監視し、pair index順の結果を返す。"""
+    worker_target = worker_target or _seat_pair_worker
+    ctx = multiprocessing.get_context("spawn")
+    paired: list[list[dict] | None] = [None] * pair_count
+    watchdog_events: list[dict] = []
+    cleanup_run_failures: list[str] = []
+    active = {}
+    next_pair = 0
+
+    def _record_start_failure(pair_index: int, exc: Exception, elapsed: float) -> None:
+        detail = f"{type(exc).__name__}: {exc}"
+        paired[pair_index] = _synthetic_failed_pair(
+            pair_index, "start_error", detail, elapsed,
+        )
+        watchdog_events.append({
+            "pair_index": pair_index,
+            "kind": "start_error",
+            "detail": detail,
+        })
+
+    def _launch(pair_index: int) -> None:
+        started = time.monotonic()
+        recv_conn = send_conn = process = None
+        try:
+            recv_conn, send_conn = ctx.Pipe(duplex=False)
+            process = ctx.Process(
+                target=worker_target,
+                args=(send_conn, pair_index, spec_a, spec_b),
+                name=f"arena-pair-{pair_index}",
+            )
+            process.start()
+            # 親がsend端を保持するとchild crash時にrecv側へEOFが届かない。
+            send_conn.close()
+            active[recv_conn] = {
+                "pair_index": pair_index,
+                "process": process,
+                "started": started,
+                "deadline": started + pair_timeout_sec,
+            }
+        except Exception as exc:
+            if send_conn is not None:
+                send_conn.close()
+            if recv_conn is not None:
+                recv_conn.close()
+            if process is not None and process.is_alive():
+                process.terminate()
+                process.join(kill_grace_sec)
+            _record_start_failure(pair_index, exc, time.monotonic() - started)
+
+    def _finish(recv_conn, *, rows: list[dict] | None, kind: str | None,
+                detail: str = "", payload_received: bool = False) -> None:
+        state = active.pop(recv_conn)
+        pair_index = state["pair_index"]
+        process = state["process"]
+        elapsed = time.monotonic() - state["started"]
+        if rows is None:
+            rows = _synthetic_failed_pair(pair_index, kind or "unknown", detail, elapsed)
+        paired[pair_index] = rows
+
+        action, still_alive = _reap_pair_process(
+            process, exit_grace_sec, terminate_grace_sec, kill_grace_sec,
+        )
+        exitcode = process.exitcode
+        event = None
+        if kind is not None:
+            event = {
+                "pair_index": pair_index,
+                "kind": kind,
+                "detail": detail,
+                "exitcode": exitcode,
+            }
+        elif action is not None:
+            event = {
+                "pair_index": pair_index,
+                "kind": "forced_cleanup_after_payload",
+                "action": action,
+                "exitcode": exitcode,
+            }
+        elif payload_received and exitcode not in (0, None):
+            event = {
+                "pair_index": pair_index,
+                "kind": "nonzero_exit_after_payload",
+                "exitcode": exitcode,
+            }
+        if event is not None:
+            if action is not None:
+                event["action"] = action
+            event["elapsed_sec"] = round(elapsed, 4)
+            watchdog_events.append(event)
+        if still_alive:
+            cleanup_run_failures.append(
+                f"pair {pair_index} process remained alive after kill"
+            )
+        recv_conn.close()
+        if not still_alive:
+            process.close()
+
+    def _receive(recv_conn) -> None:
+        state = active[recv_conn]
+        process = state["process"]
+        try:
+            envelope = recv_conn.recv()
+        except (EOFError, OSError) as exc:
+            process.join(0)
+            detail = f"{type(exc).__name__}: {exc}; exitcode={process.exitcode}"
+            _finish(recv_conn, rows=None, kind="worker_crash", detail=detail)
+            return
+        if not isinstance(envelope, dict):
+            _finish(
+                recv_conn, rows=None, kind="protocol_error",
+                detail=f"envelopeがdictでない: {type(envelope).__name__}",
+                payload_received=True,
+            )
+            return
+        if envelope.get("status") == "error":
+            _finish(
+                recv_conn, rows=None, kind="worker_error",
+                detail=str(envelope.get("detail", "worker error"))[-4000:],
+                payload_received=True,
+            )
+            return
+        if envelope.get("status") != "ok":
+            _finish(
+                recv_conn, rows=None, kind="protocol_error",
+                detail=f"未知status={envelope.get('status')!r}", payload_received=True,
+            )
+            return
+        rows = envelope.get("rows")
+        invalid = _validate_pair_payload(rows, state["pair_index"])
+        if invalid:
+            _finish(
+                recv_conn, rows=None, kind="protocol_error", detail=invalid,
+                payload_received=True,
+            )
+            return
+        _finish(recv_conn, rows=rows, kind=None, payload_received=True)
+
+    try:
+        while next_pair < pair_count or active:
+            while next_pair < pair_count and len(active) < jobs:
+                _launch(next_pair)
+                next_pair += 1
+            if not active:
+                continue
+            now = time.monotonic()
+            wait_sec = max(0.0, min(s["deadline"] for s in active.values()) - now)
+            ready = wait_connections(list(active), timeout=wait_sec)
+            for recv_conn in sorted(ready, key=lambda c: active[c]["pair_index"]):
+                if recv_conn in active:
+                    _receive(recv_conn)
+
+            now = time.monotonic()
+            overdue = sorted(
+                (conn for conn, state in active.items() if state["deadline"] <= now),
+                key=lambda c: active[c]["pair_index"],
+            )
+            for recv_conn in overdue:
+                # deadlineとpayload到着が競合した場合は完成済みpayloadを優先する。
+                if recv_conn.poll():
+                    _receive(recv_conn)
+                    continue
+                state = active[recv_conn]
+                elapsed = now - state["started"]
+                _finish(
+                    recv_conn, rows=None, kind="timeout",
+                    detail=f"no payload within {pair_timeout_sec:g}s (elapsed={elapsed:.3f}s)",
+                )
+    finally:
+        # KeyboardInterruptを含む親側例外でもorphan childを残さない。
+        for recv_conn, state in list(active.items()):
+            process = state["process"]
+            try:
+                _reap_pair_process(process, 0.0, terminate_grace_sec, kill_grace_sec)
+            finally:
+                recv_conn.close()
+                if not process.is_alive():
+                    process.close()
+        active.clear()
+
+    if any(pair is None for pair in paired):
+        raise RuntimeError("watchdog internal error: 未完了のseat pairがある")
+    watchdog_events.sort(key=lambda event: (event["pair_index"], event["kind"]))
+    return paired, watchdog_events, cleanup_run_failures  # type: ignore[return-value]
 
 
 def wilson_ci(score: float, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -285,27 +567,29 @@ def _min_present(results: list[dict], key: str) -> float | None:
 def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
                      note: str = "", profile: str = "auto", run_id: str | None = None,
                      suite: str = "", fresh_process_per_pair: bool = True,
-                     strict: bool = True) -> dict:
+                     strict: bool = True,
+                     pair_timeout_sec: float = DEFAULT_PAIR_TIMEOUT_SEC) -> dict:
     """AのBに対する成績を測る。結果はschema v2 ledgerへ自動追記する。"""
     if n <= 0 or n % 2:
         raise ValueError("nは正の偶数が必要(両席を同数にする)")
     if jobs <= 0:
         raise ValueError("jobsは正数が必要")
+    if (not isinstance(pair_timeout_sec, (int, float)) or isinstance(pair_timeout_sec, bool)
+            or not math.isfinite(float(pair_timeout_sec)) or pair_timeout_sec <= 0):
+        raise ValueError("pair_timeout_secは有限の正数が必要")
+    pair_timeout_sec = float(pair_timeout_sec)
     t0 = time.time()
     run_id = run_id or uuid.uuid4().hex
     meta_a, meta_b = agent_fingerprint(agent_a), agent_fingerprint(agent_b)
     profile = _resolve_profile(meta_a, meta_b, jobs, profile)
+    watchdog_events: list[dict] = []
+    cleanup_run_failures: list[str] = []
     if fresh_process_per_pair:
         # main/cgを同一processで何度も再importするとnative bufferが解放されずabortする。
         # そこで1 process=席反転1ペアとし、agentはinitializerで1回だけロードする。
-        with ProcessPoolExecutor(
-            max_workers=jobs,
-            mp_context=multiprocessing.get_context("spawn"),
-            max_tasks_per_child=1,
-            initializer=_init_worker,
-            initargs=(agent_a, agent_b),
-        ) as ex:
-            paired = list(ex.map(_play_seat_pair, range(n // 2), chunksize=1))
+        paired, watchdog_events, cleanup_run_failures = _run_fresh_seat_pairs(
+            agent_a, agent_b, n // 2, jobs, pair_timeout_sec,
+        )
         results = [row for pair in paired for row in pair]
     else:
         swaps = [i % 2 == 1 for i in range(n)]
@@ -325,7 +609,7 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         )
     failure_rows = [r for r in results if r["failures"]]
     end_meta_a, end_meta_b = agent_fingerprint(agent_a), agent_fingerprint(agent_b)
-    run_failures = []
+    run_failures = list(cleanup_run_failures)
     if end_meta_a["sha256"] != meta_a["sha256"]:
         run_failures.append("agent_a artifact changed during evaluation")
     if end_meta_b["sha256"] != meta_b["sha256"]:
@@ -358,6 +642,13 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         "failure_count": len(failure_rows),
         "failures": failure_rows[:20],
         "run_failures": run_failures,
+        # schema v2への後方互換な付加情報。forced cleanupだけなら測定失敗にしない。
+        "watchdog": {
+            "enabled": fresh_process_per_pair,
+            "pair_timeout_sec": pair_timeout_sec if fresh_process_per_pair else None,
+            "event_count": len(watchdog_events),
+            "events": watchdog_events[:20],
+        },
         "statuses_a": dict(Counter(r["status_a"] for r in results)),
         "statuses_b": dict(Counter(r["status_b"] for r in results)),
         "sec": round(time.time() - t0, 1),

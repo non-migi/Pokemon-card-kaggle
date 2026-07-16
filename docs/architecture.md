@@ -43,8 +43,11 @@
 
 - `ptcglab.arena`がA/Bの唯一実装。1 processにつき席反転1ペアをロードし、native cg状態と
   agent moduleを測定ペア間で分離する。席順とペア内実行順の両方を均等化する。
+- fresh-pair runnerはspawn `Process`を`Pipe`＋`connection.wait`でpair単位に監視する。
+  timeout/crash/protocol errorは両席分のsynthetic failure行へ変換し、strict ledgerを残して失敗する。
+  payload取得後だけ子processが終了しない場合は強制回収し、取得済み対戦結果は維持する。
 - ledgerはW/D/L/unscored、P0/P1、failure、run ID/suite、git commit、kaggle-environments version、
-  agent tree/config/deck/model/cg SHAを持つ。終了時rehashで評価中のbuild変更も検出する。
+  agent tree/config/deck/model/cg SHA、watchdog eventを持つ。終了時rehashで評価中のbuild変更も検出する。
 - `production`: wall-clock探索。本番と同じだがCPU負荷に敏感なため`jobs=1`強制。
 - `fixed-worlds`: ローカル比較専用。両search agentの`fixed_search_worlds`（2〜24）を一致させ、
   壁時計budgetから分離する。未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。

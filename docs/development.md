@@ -58,6 +58,8 @@ cp -r "data/simulation/sample_submission/sample_submission/cg" src/
 - 採用基準: 旧版との直接対決300戦以上で、Wilson 95%CI下限 > 50%
 - 測定前に`results/arena.jsonl`と`results/gauntlet.jsonl`を検索し、重複実験を避ける
 - `n`は正の偶数。提出判定は既定のfresh process per seat pairを使い、`--reuse-agent`は使わない
+- fresh pairの既定watchdogは1ペア3600秒。短いscreenでは`--pair-timeout-sec`で明示的に短縮できるが、
+  productionは席反転2戦の合計時間を十分上回る値にする。timeout/crashは台帳記録後にstrict failureとなる
 - searchはfixed-worldsで性能比較、production `-j 1`で本番設定の完走確認を分ける
 - 採用する記録は`failure_count=0`、`run_failures=[]`、両席`DONE`を必須とする
 - gauntletの加重値は収載対面内の点推定。`weight_sum<1`なら全環境EVではない
