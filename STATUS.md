@@ -3,14 +3,14 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-16 19:34 JST (Codex) — v4.3a 920.7、Hammer4 fixed2 BCS gate通過
+最終更新: 2026-07-16 20:56 JST (Codex) — bc_v6は純BCで有望、fixed2はExIt負荷解消後へ延期
 
 ## ラダー状況(2026-07-16 19:32 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
 | **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **920.7 / 78戦47勝31敗 (60.3%)** |
-| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **729.2 / 86戦44勝42敗 (51.2%)** |
+| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **725.3 / 86戦44勝42敗 (51.2%)** |
 | **v4.1a** (sub 54612885) | no | bc_v2 BCS + 旧Alakazam | **869.1 / 149戦79勝70敗 (53.0%)で凍結** |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
 | **v4.0a** (sub 54591345) | no | BC×探索 + bc_v2 + フーディン型 | **826.4 / 67戦** (07-12 23:25 JSTに停止) |
@@ -36,14 +36,17 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **bc_v6（07-08〜15）を学習・A/B**: 新公開07-14/15から各約36.9万decisionを抽出済み。
-   bc_v5の53.0%/400を最新2日で更新し、canonical/Hammerの両デッキでbc_v2を超えるか測る。
+1. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
+   **442.5/800 = 55.31%**だがP0 59.0 / P1 51.63%と席差あり。順逆各80戦、candidate換算
+   86/160以上・両席/両load-order下限・failure 0の事前gateを、ExIt完了後に最初から回す。
 2. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**
    (P0 23/40 / P1 19/40、failure 0)。ただし公開31敗中17敗は特殊energy 0で、1100突破の本命ではない。
-3. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
+3. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
+   公開31敗中7件のポケモン切れを狙うが、ExIt中は組立てまでで重いscreenは行わない。
+4. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
-4. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
+5. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
    投入後はRocket/Kang/Grim/Festival別の実勝率と収束レートを追う。
 
 **確定した知見(今セッション)**:
@@ -66,17 +69,17 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   `models/value_v1`へ退避し、実行時はフルロールアウトへフォールバック
 - Kaggleは目標48試合/日、各マッチ10%でランダム相手。短期レート/順位には対面運が残る
 
-## 外部情報スキャン(07-15)
+## 外部情報スキャン(07-16 20:40 JST)
 
-- Leaderboardは5,061チーム、1000+ 87、1100–1199は13、1200+は1チーム。07-14 Daily Topは
-  4,929 episodes、top average 1271.74 / median 1126.67。Top教師と全ラダーの不偏標本は区別する。
+- Leaderboardは5,120チーム、median 659.3、1000+ 89、1100+ 17、1200+ 3、top-8境界1156.8。
+  07-15 Daily Top 4,825 episodesはbc_v6へ取込済み。07-16版は未公開。
 - 公式DiscussionのRL/search手法は参考にするが、自己申告とreplayからの推測を分離する。
 - Xは通常検索で新しい検証可能情報を取得できず、署名済みbrowser sessionもunavailableだった。
   今回はKaggle公式Leaderboard/episodes/replayだけを採用根拠にした。
 
 ## 作業中(衝突防止欄)
 
-- Codex: bc_v6 recent8 (07-08〜15) のfeaturize・学習・bc_v2 A/B
+- Codex: arena pair watchdog実装＋Dunsparce4候補の組立て。bc_v6 fixed2/productionはExIt完了後
 - Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
   探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
   **生成ジョブ実行中(07-16開始、4500試合≈35万決定、-j6、~19h、→ data/bc/exit_pairs_v1.jsonl.gz)**。
