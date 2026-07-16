@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-16 20:56 JST (Codex) — bc_v6は純BCで有望、fixed2はExIt負荷解消後へ延期
+最終更新: 2026-07-16 21:10 JST (Codex) — arena watchdog完了、bc_v6/Duns4はExIt負荷解消待ち
 
 ## ラダー状況(2026-07-16 19:32 JST、active = 最新2提出のみ)
 
@@ -50,6 +50,12 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    投入後はRocket/Kang/Grim/Festival別の実勝率と収束レートを追う。
 
 **確定した知見(今セッション)**:
+- bc_v6 recent8はcanonical 56.37%/400、Hammer4 54.25%/400、合算55.31%/800だが、
+  P0 59.0 / P1 51.63%の席差がある。fixed2は順逆160戦の事前gateを負荷解消後に再実行する。
+- arena fresh-pairをProcess＋Pipe watchdog化。timeout/crashはschema互換failureとして台帳へ残し、
+  payload後の終了hangは強制回収する。unit 19件＋実process 2戦がfailure 0で完走。
+- 公開31敗のうちポケモン切れ7敗を狙うDunsparce4（Mine3→2 / Dunsparce3→4）を組立て、
+  60枚差分と両席buildを検証済み。性能測定はExIt終了後。
 - メタは二層。1000–1099帯はAlakazam 58.3%、1100+全14チームはKang 28.6 / Alakazam 21.4 /
   Grim 21.4 / Rocket 14.3 / Festival 14.3%。昇格poolと1100+生存poolを分けて評価する。
 - v4.2tの失敗はデッキ単体ではなくBCとの共適応不足。canonical Alakazamの7枚差は
@@ -79,7 +85,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Codex: arena pair watchdog実装＋Dunsparce4候補の組立て。bc_v6 fixed2/productionはExIt完了後
+- Codex: arena watchdog/Dunsparce4組立て完了。bc_v6 fixed2順逆160戦とDuns4 screenはExIt完了後
 - Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
   探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
   **生成ジョブ実行中(07-16開始、4500試合≈35万決定、-j6、~19h、→ data/bc/exit_pairs_v1.jsonl.gz)**。
