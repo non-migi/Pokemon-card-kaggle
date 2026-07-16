@@ -1,0 +1,1 @@
+{"label":"07-16 canonical Top12 Alakazam + bc_v6 recent8 + BCS fixed-2 model gate","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v6","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}

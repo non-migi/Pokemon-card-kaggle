@@ -45,3 +45,23 @@ Kaggleディスカッション・note/X・Qiitaを横断調査。他の参加者
    (サンプルデッキは72-76%)。弱点の対エネ物量デッキは850+帯にほぼ生息しないため無視できる
 3. 表現設計は250カードで足りる(全カード対応を目指さない)
 4. ペア提出でデッキA/B(オーロンゲ vs V3サンプル、同一エージェント)が次の提出の本命
+
+## 6. 2026-07-16 20:40 JST 更新
+
+- Kaggle公式Leaderboard CSV（取得時刻2026-07-16 20:40 JST）は **5,120 teams**、median 659.3。
+  1000+は89、1100+は17、1200+は3。首位1267.2、Strategy top-8 cutoffは1156.8。
+  ライブ値なので、短時間でも閾値人数は上下する。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>
+- 07-15 Daily Top Episodesは公開済みで **4,825 episodes**。そこから369,083 decisionsを抽出し、
+  07-08〜15の直近8日窓でbc_v6を学習した。07-16版は20:40時点でKaggle API検索に存在しない。
+  <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-15>
+  / <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-index>
+- 公式Discussionの「Alakazamが0 damage」例は、Rock Fighting Energyのattack effect遮断で説明され、
+  シミュレータ不具合の証拠ではなかった。Enhanced Hammerはこの局面への直接回答だが、v4.3aの公開31敗中
+  17敗は特殊energy 0だったため、主力全体の改善とはみなさない。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/726485>
+- 上位submissionのepisode割当頻度に差があるという参加者報告が出たが、host確認前の観測値であり、
+  ラダー仕様の確定事実にはしない。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/726690>
+- Xは通常検索・ドメイン指定検索とも、当日メタを裏付ける検証可能な投稿を取得できなかった。
+  「投稿がない」とは推論せず、今回もKaggle公式CSV / dataset / replayを採用判断の主根拠にする。
