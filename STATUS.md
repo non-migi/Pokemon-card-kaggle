@@ -36,11 +36,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **v4.3a公開78戦を敗因別診断**: 920.7 / 60.3%は改善だが1100未達。対面・終局理由・時間・
-   特殊energyを集計し、Hammer4が実敗戦を解くか確認する。
-2. **Hammer4をproduction候補化**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
+1. **bc_v6（07-08〜15）を学習・A/B**: 新公開07-14/15から各約36.9万decisionを抽出済み。
+   bc_v5の53.0%/400を最新2日で更新し、canonical/Hammerの両デッキでbc_v2を超えるか測る。
+2. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**
-   (P0 23/40 / P1 19/40、failure 0)。公開敗戦分析が整合すればproduction両席gateへ進む。
+   (P0 23/40 / P1 19/40、failure 0)。ただし公開31敗中17敗は特殊energy 0で、1100突破の本命ではない。
 3. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
 4. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
@@ -76,7 +76,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Codex + deck_audit: v4.3a公開78戦診断、Hammer4 production提出gate
+- Codex: bc_v6 recent8 (07-08〜15) のfeaturize・学習・bc_v2 A/B
 
 ## 今日の提出枠
 
