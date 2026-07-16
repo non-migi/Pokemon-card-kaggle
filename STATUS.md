@@ -85,6 +85,8 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
+- Codex: **Expert Rules基盤** — canonical Alakazam向けの宣言的ルール層、BC top-k外の
+  候補注入、発火/shadow計測、回帰テストを担当。進行中ExItには触れず、重いarenaは完了後に実施
 - Codex: arena watchdog/Dunsparce4組立て完了。bc_v6 fixed2順逆160戦とDuns4 screenはExIt完了後
 - Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
   探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
