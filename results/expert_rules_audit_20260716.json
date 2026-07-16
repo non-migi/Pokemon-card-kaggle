@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "ts": "2026-07-16T22:35:00+09:00",
+  "git_commit": "fc031a0",
+  "profile": "alakazam_v1",
+  "source": {
+    "pairs": "data/bc/pairs_0715.jsonl.gz",
+    "pairs_sha256": "a7327a9ddea0fad4fe46bcbaaa92c01354fc0f7093702393e1367411d617b968",
+    "rows_read": 369083,
+    "exact_deck": "decks/meta/snapshot_20260714_alakazam.csv",
+    "deck_sha256": "33f38523c965d5dd57eb806b51b4706fea476e4bfa96a1f314860f6413949b94",
+    "decisions_audited": 48501
+  },
+  "alignment_semantics": "positive rules match the teacher action; forbid rules align when the teacher avoids the forbidden action; equivalent blocker targets are treated as matching",
+  "rules": {
+    "AZ001_EMPTY_BENCH_BASIC": {"kind": "candidate", "hits": 286, "aligned": 175, "alignment_rate": 0.6119},
+    "AZ002_DRAW_EVOLUTION": {"kind": "candidate", "hits": 10946, "aligned": 4131, "alignment_rate": 0.3774},
+    "AZ003_HAMMER_BLOCKER_PLAY": {"kind": "candidate", "hits": 125, "aligned": 115, "alignment_rate": 0.92},
+    "AZ004_HAMMER_BLOCKER_TARGET": {"kind": "hard", "hits": 162, "aligned": 162, "alignment_rate": 1.0},
+    "AZ005_SOLE_DUDUN_GUARD": {"kind": "forbid", "hits": 5, "aligned": 5, "alignment_rate": 1.0},
+    "AZ006_UNBLOCK_EXACT_KO": {"kind": "candidate", "hits": 58, "aligned": 58, "alignment_rate": 1.0},
+    "AZ007_ASH_ZERO_DECK_MAX": {"kind": "hard", "hits": 1, "aligned": 1, "alignment_rate": 1.0},
+    "AZ008_DRAW_TO_EXACT_KO": {"kind": "candidate", "hits": 317, "aligned": 252, "alignment_rate": 0.795}
+  },
+  "decision": {
+    "floor": ["AZ004_HAMMER_BLOCKER_TARGET", "AZ005_SOLE_DUDUN_GUARD", "AZ007_ASH_ZERO_DECK_MAX"],
+    "search_candidates": ["AZ003_HAMMER_BLOCKER_PLAY", "AZ006_UNBLOCK_EXACT_KO", "AZ008_DRAW_TO_EXACT_KO"],
+    "ablation_only": ["AZ001_EMPTY_BENCH_BASIC"],
+    "shadow_only": ["AZ002_DRAW_EVOLUTION"]
+  }
+}

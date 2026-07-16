@@ -49,8 +49,36 @@ cp -r "data/simulation/sample_submission/sample_submission/cg" src/
 .venv/bin/python scripts/diagnose.py 60 first
 
 # arena回帰テスト
-.venv/bin/python -m unittest tests.test_arena
+.venv/bin/python -m unittest discover -s tests -v
+
+# Expert Rulesの強者行動監査（正規deck完全一致だけを対象）
+.venv/bin/python scripts/audit_expert_rules.py data/bc/pairs_0715.jsonl.gz \
+  --exact-deck decks/meta/snapshot_20260714_alakazam.csv
 ```
+
+### Expert Rulesの開発ループ
+
+agent設定例:
+
+```json
+{
+  "config": {
+    "algo": "bcs",
+    "expert_rules": "alakazam_v1",
+    "expert_rule_mode": "candidate",
+    "enabled_rule_ids": ["AZ006_UNBLOCK_EXACT_KO"]
+  }
+}
+```
+
+- `shadow`: 発火を計測するだけで、既存候補・行動を変えない
+- `candidate`: BC top-1を残し、BC top-5外のrule手を最大2つroot探索へ追加する
+- `enforce`: candidateに加え、hardを直接適用し、`forbid`を全フォールバック段から除く
+- `candidate/enforce`は`enabled_rule_ids`の明示が必須。最初は必ず1 ruleまたは因果が連続する最小rule組で測る
+- 新ruleは `公開敗戦fixture → 強者decision監査 → shadow → fixed-worlds A/B → 二層meta → production`
+  の順。強者一致率だけでhardへ昇格しない
+- `expert_rule_errors` / `expert_rule_invalid` はarena strict failure。成功時もhit/injected/selected/
+  guard-blockedを`agent_metrics_total`と`agent_metrics_by_seat`へ保存する
 
 ### 改善判定のルール
 
@@ -61,6 +89,7 @@ cp -r "data/simulation/sample_submission/sample_submission/cg" src/
 - fresh pairの既定watchdogは1ペア3600秒。短いscreenでは`--pair-timeout-sec`で明示的に短縮できるが、
   productionは席反転2戦の合計時間を十分上回る値にする。timeout/crashは台帳記録後にstrict failureとなる
 - searchはfixed-worldsで性能比較、production `-j 1`で本番設定の完走確認を分ける
+- 大量ExIt生成・学習中はsearch評価を開始しない。進行中jobが参照する`build/`も再buildしない
 - 採用する記録は`failure_count=0`、`run_failures=[]`、両席`DONE`を必須とする
 - gauntletの加重値は収載対面内の点推定。`weight_sum<1`なら全環境EVではない
 - 提出は**有意な改善があったときだけ**(1日5回制限)

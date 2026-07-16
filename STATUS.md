@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-16 21:10 JST (Codex) — arena watchdog完了、bc_v6/Duns4はExIt負荷解消待ち
+最終更新: 2026-07-16 22:35 JST (Codex) — Expert Rules床を実装・強者48,501判断でshadow監査、性能A/BはExIt負荷解消待ち
 
 ## ラダー状況(2026-07-16 19:32 JST、active = 最新2提出のみ)
 
@@ -36,20 +36,36 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
+1. **Expert FloorをExIt完了後に最優先で固定計算A/B**: 進行中ジョブが参照する
+   `build/v4.3a-fixed2`は触らない。完了後にbaselineと`v4.5a-floor-fixed2`を同一commitから再buildし、
+   load-order順逆各80戦。候補換算86/160以上、各席39/80以上、各順序38/80以上、failure/error/invalid 0を
+   満たした場合だけproduction候補へ進める。rule別hit/injected/selectedもledgerで確認する。
+2. **探索→ExItの天井をExpert Floorへ接続**: 現生成`bc_x1`はそのまま完走させ、次世代から
+   root候補に専門家ルールを保証した探索の選択をtrace付きで蒸留する。公式教師との混合を維持し、
+   `BC → Expert候補付きBCS → ExIt → 再探索`を1世代ずつA/Bする。
+3. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
    **442.5/800 = 55.31%**だがP0 59.0 / P1 51.63%と席差あり。順逆各80戦、candidate換算
    86/160以上・両席/両load-order下限・failure 0の事前gateを、ExIt完了後に最初から回す。
-2. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
+4. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**
    (P0 23/40 / P1 19/40、failure 0)。ただし公開31敗中17敗は特殊energy 0で、1100突破の本命ではない。
-3. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
+5. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
    公開31敗中7件のポケモン切れを狙うが、ExIt中は組立てまでで重いscreenは行わない。
-4. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
+6. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
-5. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
+7. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
    投入後はRocket/Kang/Grim/Festival別の実勝率と収束レートを追う。
 
 **確定した知見(今セッション)**:
+- **Expert Rulesを床、探索・ExItを天井にする基盤を実装**。`shadow/candidate/enforce`、
+  rule ID単位ablation、BC top-1を残した最大2候補注入（総数5のまま）、hard/negative guard、
+  実行時フォールバック、arenaのrule metrics集約まで追加。既存agentは設定なしでno-op、unit 36件通過。
+- 07-15強者データのcanonical Alakazam **48,501判断**を監査。`AZ004` Hammer対象162/162、
+  `AZ005`単独Dudunsparce自滅回避5/5、`AZ006`複数blocker exact-KO 58/58、
+  `AZ007`山札0 Sacred Ash 1/1が整合。`AZ008`draw-to-KOは252/317=79.5%、
+  `AZ003`Hammer playは115/125=92.0%なので探索候補。進化即実行`AZ002`は37.7%のためshadow専用。
+- Rock Fighting Energyは**闘Pokemonに付いた時だけ**Hand Powerを防ぐ。Great Tusk+Rockはblocker、
+  Crustle+Rockは非blockerとしてmetadata判定と回帰testを追加した。
 - bc_v6 recent8はcanonical 56.37%/400、Hammer4 54.25%/400、合算55.31%/800だが、
   P0 59.0 / P1 51.63%の席差がある。fixed2は順逆160戦の事前gateを負荷解消後に再実行する。
 - arena fresh-pairをProcess＋Pipe watchdog化。timeout/crashはschema互換failureとして台帳へ残し、
@@ -85,9 +101,6 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Codex: **Expert Rules基盤** — canonical Alakazam向けの宣言的ルール層、BC top-k外の
-  候補注入、発火/shadow計測、回帰テストを担当。進行中ExItには触れず、重いarenaは完了後に実施
-- Codex: arena watchdog/Dunsparce4組立て完了。bc_v6 fixed2順逆160戦とDuns4 screenはExIt完了後
 - Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
   探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
   **生成ジョブ実行中(07-16開始、4500試合≈35万決定、-j6、~19h、→ data/bc/exit_pairs_v1.jsonl.gz)**。

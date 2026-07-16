@@ -1,4 +1,4 @@
-# アーキテクチャ設計(2026-07-12更新: BC世代)
+# アーキテクチャ設計(2026-07-16更新: Expert Floor + Search/ExIt Ceiling)
 
 ## 全体像
 
@@ -26,7 +26,8 @@
 | モジュール | 責務 | 状態 |
 |---|---|---|
 | `ptcg/policy.py` + `policy_features.py` | **BC方策(現主力)**。2タワー(state塔×option塔の内積)のnumpy推論。単数・複数選択、1決定<1ms | v3.0〜 |
-| `ptcg/bc_search.py` | **BC×決定化探索(現主力)**。BC top-5候補をBCロールアウトで比較。`algo=bcs` | v4.0〜 |
+| `ptcg/expert_rules.py` | **Expert Floor**。デッキ署名付き宣言ruleを`shadow/candidate/enforce`で評価。hard・negative guard・戦術候補をrule ID単位でablation | v4.5〜 |
+| `ptcg/bc_search.py` | **Search Ceiling**。BC top候補とrule候補を最大5手のまま決定化探索。BC top-1を保持し、rule枠は最大2 | v4.0〜 |
 | `ptcg/heuristics.py` | 優先度ヒューリスティック。BC/探索の例外・分布外フォールバック | 全世代 |
 | `ptcg/search.py` | 旧・ヒューリスティック決定化フラットMC探索。value打ち切りは常時無効 | v2系互換 |
 | `ptcg/belief.py` + `meta_decks.py` | 相手デッキ推定(可視カード×メタライブラリ照合、ミラーフォールバック) | v2.1〜 |
@@ -38,6 +39,25 @@
 - **enumはintで比較**(コンペ中の追加に耐える)/ Kaggleローダーは`exec(code,{})`(`__file__`無し、最後のcallableがagent)
 - **BCはデッキとセット**: 方策は訓練分布内のデッキでのみ強い。デッキ変更時は再評価必須
 - **構成不良は落とす**: BC指定で`policy.ENABLED=False`なら起動失敗。実行中の例外だけを下段へ救済
+- **ルールは局所的な床**: hardは反例を閉じた局所支配手だけ。一般的な「良さそう」はcandidate、未検証はshadow。
+  candidate/enforceは`enabled_rule_ids`明示を必須にし、profile一括有効化による過適合を防ぐ
+
+### 1手のカスケード（v4.5）
+
+```text
+raw observation
+  → Expert Rulesを評価（canonical deck signatureで誤適用防止）
+      ├─ enforce: negative guardで破滅手を除外 / 証明済みhardを直接適用
+      └─ candidate: BC top-k外の戦術手を最大2つroot候補へ注入
+  → BCS（同じ最大5候補をsimulatorで比較）
+  → BC単体
+  → 汎用heuristic
+  → 合法先頭手
+```
+
+`shadow`は候補集合も行動も変えず、hit・既存判断との一致・BC top-5外率だけを計測する。
+`candidate`はBC top-1を維持して探索に選択権を渡す。`enforce`だけがhard/forbidを有効にする。
+異なるhardが異なる行動を要求した場合は強引にpriority解決せず、BCSへフォールバックする。
 
 ## 評価基盤（arena schema v2、2026-07-14）
 
@@ -47,7 +67,8 @@
   timeout/crash/protocol errorは両席分のsynthetic failure行へ変換し、strict ledgerを残して失敗する。
   payload取得後だけ子processが終了しない場合は強制回収し、取得済み対戦結果は維持する。
 - ledgerはW/D/L/unscored、P0/P1、failure、run ID/suite、git commit、kaggle-environments version、
-  agent tree/config/deck/model/cg SHA、watchdog eventを持つ。終了時rehashで評価中のbuild変更も検出する。
+  agent tree/config/deck/model/cg SHA、watchdog event、agent metricsの全体/席別合算を持つ。
+  終了時rehashで評価中のbuild変更も検出する。
 - `production`: wall-clock探索。本番と同じだがCPU負荷に敏感なため`jobs=1`強制。
 - `fixed-worlds`: ローカル比較専用。両search agentの`fixed_search_worlds`（2〜24）を一致させ、
   壁時計budgetから分離する。未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。
@@ -128,11 +149,12 @@ numpyへexportする。`META.json`にseed/best_epoch/holdout_top1を保存する
 - **デッキ最適化(Phase 3)**: デッキ候補の集団を総当たり自己対戦させ、勝率上位を変異(カード入替)させる進化的探索。プレイ方策とデッキは共進化させる
 - **学習(Phase 3)**: 特徴量→勝敗の価値回帰から始め、AlphaZero系(方策+価値でMCTSガイド)へ。**推論はKaggle CPU上で高速に動く形式(numpy)でエクスポート**
 
-## データフロー(1手の意思決定、Phase 2)
+## データフロー(1手の意思決定、v4.5)
 
 ```
-obs → belief更新(logsを消化) → 世界をKサンプル決定化
-    → 各候補手を search_begin/search_step で展開 → value評価
-    → K世界の平均値が最大の手を選択(時間予算内で反復深化)
-    → 予算切れ/例外時: heuristics.py にフォールバック
+obs → expert rule発火（forbid / hard / candidate）→ BC score
+    → BC top候補＋rule候補（最大5）→ 世界をKサンプル決定化
+    → 各候補手をsearch_begin/search_stepで展開 → rollout勝率を比較
+    → 探索選択＋候補Q＋rule IDをtrace → ExIt教師へ蓄積（次世代）
+    → 予算切れ/例外時: BC → heuristics.py → 合法先頭手
 ```

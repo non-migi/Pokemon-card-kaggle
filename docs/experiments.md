@@ -670,3 +670,37 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
 - timeout、crash、終了hang、protocol error、完了順と出力順の分離、strict ledgerを含む
   **19 unit testsが0.858秒で全通過**。実process smoke `random vs first` 2戦も両席`DONE`、
   failure/run failure 0、watchdog event 0、4.0秒で終了した。勝率は性能証拠に使わない。
+
+### Expert Floor基盤と強者行動監査（07-16 22:35）
+
+- 方針を **「専門家ルールを床、探索・ExItを天井」**へ修正。`src/ptcg/expert_rules.py`に
+  deck signature付きルールを集約し、`shadow/candidate/enforce`とrule ID単位ablationを実装した。
+  `candidate`はBC top-1を残し、BC top-5外のrule手を最大2つ追加するため、探索候補総数は従来と同じ5。
+  `enforce`だけが証明済みhardとnegative guardを有効にする。既存agentは設定なしで完全no-op。
+- 公開敗戦から4つの反例を採掘した。episode 86145779は単独active DudunsparceのRun Away Drawで即敗北、
+  86168713はMist Energy 2枚をHammer 2枚で剥がせたのに0 damage攻撃、86180231はdeck 0の
+  Sacred Ashで3体中2体しか戻さずdeckout、86132098はDudunsparce draw 3で320 exact KOへ届くのに
+  260 damage攻撃を選んだ。replayの観測`steps[S]`への返答は原則`steps[S+1].action`であり、一手ずれを補正した。
+- Rock Fighting Energy (20) は闘Pokemonに付いた場合だけattack effectを防ぐ。Great Tusk (58)+Rockは
+  blocker、Crustle (345)+Rockは非blocker、Mist (11)は全typeでblockerとしてcard metadataから判定する。
+- 07-15 Daily Top pairs 369,083行から、canonical Alakazam完全一致の **48,501判断**を監査した。
+  再現コマンドは`audit_expert_rules.py ... --exact-deck snapshot_20260714_alakazam.csv`、機械可読結果は
+  `results/expert_rules_audit_20260716.json`。
+
+| rule | 扱い | 発火 | 強者整合 | 判定 |
+|---|---|---:|---:|---|
+| AZ001 empty-bench Basic | candidate仮説 | 286 | 175 (61.2%) | 1-rule A/B専用 |
+| AZ002 draw evolution | shadow | 10,946 | 4,131 (37.7%) | 強制/合成から除外 |
+| AZ003 blocker Hammer play | candidate | 125 | 115 (92.0%) | 探索候補 |
+| AZ004 blocker target | hard | 162 | **162 (100%)** | 同価値のMist複数対象を同一視 |
+| AZ005 sole Dudun guard | forbid | 5 | **5回全て回避 (100%)** | 破滅手の床 |
+| AZ006 unblock exact KO | candidate | 58 | **58 (100%)** | 複数Hammer連鎖候補 |
+| AZ007 zero-deck Ash max | hard | 1 | **1 (100%)** | 公開敗戦fixture併用、発火希少 |
+| AZ008 draw-to-exact-KO | candidate | 317 | 252 (79.5%) | 探索で機会費用を比較 |
+
+- `arena`はrule metricsを全体・席別に保存し、error/invalidをstrict failure化。config無しno-op、候補数、
+  hard競合、negative guard、Rock条件、公開敗戦型fixture、build schemaを含む **unit 36件が全通過**。
+  commit `fc031a0`をpush済み。
+- 進行中のExIt 4,500試合生成が`build/v4.3a-fixed2`を参照しているため、そのbuildは変更せず、
+  search性能A/Bと正式buildは未実施。負荷解消後にbaseline/floorを同一commitから組み直し、順逆各80戦、
+  candidate換算86/160・各席39/80・各load-order 38/80・failure/error/invalid 0で判定する。
