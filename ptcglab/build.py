@@ -97,6 +97,28 @@ def _validate_spec(spec: dict, spec_path: str) -> None:
     if fixed is not None and (not isinstance(fixed, int) or isinstance(fixed, bool)
                               or not 2 <= fixed <= 24):
         raise ValueError(f"{spec_path}: fixed_search_worldsは2..24の整数")
+    rule_profile = config.get("expert_rules")
+    rule_mode = config.get("expert_rule_mode", "shadow")
+    enabled_rules = config.get("enabled_rule_ids")
+    if rule_profile is not None:
+        if not isinstance(rule_profile, str) or not rule_profile:
+            raise ValueError(f"{spec_path}: expert_rulesは非空profile名")
+        if rule_mode not in {"shadow", "candidate", "enforce"}:
+            raise ValueError(f"{spec_path}: expert_rule_modeはshadow/candidate/enforce")
+        if rule_mode in {"candidate", "enforce"} and algo != "bcs":
+            raise ValueError(f"{spec_path}: {rule_mode} expert rulesにはalgo=bcsが必要")
+        if rule_mode in {"candidate", "enforce"} and enabled_rules is None:
+            raise ValueError(f"{spec_path}: {rule_mode}ではenabled_rule_idsを明示する")
+        if enabled_rules is not None:
+            if (not isinstance(enabled_rules, list)
+                    or not enabled_rules
+                    or any(not isinstance(x, str) or not x for x in enabled_rules)
+                    or len(enabled_rules) != len(set(enabled_rules))):
+                raise ValueError(
+                    f"{spec_path}: enabled_rule_idsは1件以上・重複なしの文字列配列"
+                )
+    elif config.get("expert_rule_mode") is not None or enabled_rules is not None:
+        raise ValueError(f"{spec_path}: expert_rules未指定でrule設定は使えない")
 
 
 def _validate(agent_dir: str) -> None:

@@ -1,0 +1,1 @@
+{"label":"canonical Alakazam + bc_v2 + BCS fixed2 + Hammer exact-KO chain","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2,"expert_rules":"alakazam_v1","expert_rule_mode":"enforce","enabled_rule_ids":["AZ004_HAMMER_BLOCKER_TARGET","AZ006_UNBLOCK_EXACT_KO"]}}

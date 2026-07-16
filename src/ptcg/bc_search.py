@@ -22,6 +22,7 @@ from .simx import search_begin_dict, search_step_dict, search_end
 
 SEARCHABLE = {0, 6, 1}   # MAIN / ATTACK / 単数CARD
 TOP_K = 5
+RULE_SLOTS = 2
 MIN_WORLDS = 2
 ROLLOUT_MAX = 200
 # 価値網(route B)が有効なら: ロールアウトを短く打ち切り価値網でブートストラップ。
@@ -32,6 +33,69 @@ MAX_WORLDS = 96 if value.ENABLED else 24
 
 class FixedSearchIncomplete(RuntimeError):
     """固定計算量を完遂できず、比較用測定に採用できない。"""
+
+
+def _metric_inc(metrics: dict | None, key: str, amount: int = 1) -> None:
+    if metrics is not None:
+        metrics[key] = int(metrics.get(key, 0)) + amount
+
+
+def _candidate_actions(scores, option_count: int, rule_proposals=(),
+                       rule_mode: str = "shadow", metrics: dict | None = None,
+                       forbidden_actions=()) -> list[list[int]]:
+    """BC順位と専門家ルールから、計算量を変えず最大TOP_K候補を作る。
+
+    BC top-1は常に保持し、BC top-k外のrule候補を最大RULE_SLOTSだけ入れる。
+    shadow/off時は従来のBC top-kと完全に同じ。
+    """
+    order = [int(i) for i in np.argsort(-np.asarray(scores))]
+    order = [i for i in order if 0 <= i < option_count]
+    raw_baseline = [[i] for i in order[: min(TOP_K, option_count)]]
+    baseline_keys = {tuple(action) for action in raw_baseline}
+    forbidden = {tuple(action) for action in forbidden_actions or ()}
+    allowed_order = [i for i in order if (i,) not in forbidden]
+    baseline = [[i] for i in allowed_order[: min(TOP_K, len(allowed_order))]]
+
+    extras = []
+    seen = set()
+    for proposal in rule_proposals or ():
+        try:
+            action = tuple(proposal.action)
+            rule_id = str(proposal.rule_id)
+        except (AttributeError, TypeError):
+            _metric_inc(metrics, "expert_rule_invalid")
+            continue
+        if (len(action) != 1 or not isinstance(action[0], int)
+                or isinstance(action[0], bool) or not 0 <= action[0] < option_count):
+            _metric_inc(metrics, "expert_rule_invalid")
+            continue
+        if action not in baseline_keys:
+            _metric_inc(metrics, f"expert_rule_outside_topk.{rule_id}")
+        if action not in seen and action not in forbidden and proposal.kind != "forbid":
+            extras.append((action, rule_id))
+            seen.add(action)
+
+    if rule_mode not in {"candidate", "enforce"} or not baseline:
+        return baseline
+
+    result = [baseline[0]]
+    result_keys = {tuple(baseline[0])}
+    injected = 0
+    for action, rule_id in extras:
+        if action in baseline_keys or action in result_keys:
+            continue
+        if injected >= RULE_SLOTS or len(result) >= TOP_K:
+            break
+        result.append(list(action))
+        result_keys.add(action)
+        injected += 1
+        _metric_inc(metrics, f"expert_rule_injected.{rule_id}")
+    for action in baseline:
+        key = tuple(action)
+        if key not in result_keys and len(result) < TOP_K:
+            result.append(action)
+            result_keys.add(key)
+    return result
 
 
 def _policy_act(od: dict) -> list[int]:
@@ -82,7 +146,9 @@ def _rollout(state: dict, my_index: int) -> float:
 
 def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
            rng: random.Random | None = None,
-           fixed_worlds: int | None = None) -> list[int] | None:
+           fixed_worlds: int | None = None,
+           rule_proposals=(), rule_mode: str = "shadow",
+           metrics: dict | None = None, forbidden_actions=()) -> list[int] | None:
     """BC×探索。対象外・予算不足・世界不足ならNone(呼び手はBC単体へ)。
 
     fixed_worldsはローカルA/B用。同じworld数を必ず処理してCPU負荷による
@@ -97,8 +163,11 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
         if fixed_worlds is not None:
             raise FixedSearchIncomplete("searchableな選択でBC scoreを取得できない")
         return None
-    order = np.argsort(-scores)
-    cands = [[int(i)] for i in order[: min(TOP_K, len(opts))]]
+    cands = _candidate_actions(
+        scores, len(opts), rule_proposals=rule_proposals,
+        rule_mode=rule_mode, metrics=metrics,
+        forbidden_actions=forbidden_actions,
+    )
     if len(cands) < 2:
         return None
 

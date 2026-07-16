@@ -1,0 +1,1 @@
+{"label":"canonical Alakazam + bc_v2 + BCS fixed2 + AZ001 board-preservation candidate","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2,"expert_rules":"alakazam_v1","expert_rule_mode":"candidate","enabled_rule_ids":["AZ001_EMPTY_BENCH_BASIC"]}}

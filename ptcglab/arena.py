@@ -131,6 +131,31 @@ def _metric_delta(before: dict, after: dict) -> dict:
     return {key: after.get(key, 0) - before.get(key, 0) for key in keys}
 
 
+def _sum_agent_metrics(results: list[dict], side: str,
+                       seat: int | None = None) -> dict:
+    """各gameのflat numeric metricsをagent/席ごとに合算する。"""
+    if side not in {"a", "b"}:
+        raise ValueError(f"sideはa/b: {side}")
+    key = f"metrics_{side}"
+    total: dict[str, float] = {}
+    for row in results:
+        agent_seat = row.get("a_seat") if side == "a" else 1 - row.get("a_seat", 0)
+        if seat is not None and agent_seat != seat:
+            continue
+        metrics = row.get(key) or {}
+        if not isinstance(metrics, dict):
+            continue
+        for name, value in metrics.items():
+            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or not math.isfinite(float(value))):
+                continue
+            total[name] = total.get(name, 0) + value
+    return {
+        name: int(value) if float(value).is_integer() else round(float(value), 6)
+        for name, value in sorted(total.items())
+    }
+
+
 def _play(swap: bool) -> dict:
     # agent側cgはworker initializerで先にロード済み。cabt環境を先にimportすると、
     # macOSの共有native bufferへ別cgが先行登録されるため順序を維持する。
@@ -156,7 +181,10 @@ def _play(swap: bool) -> dict:
     metrics_a = _metric_delta(metrics_a_before, _agent_metrics(a))
     metrics_b = _metric_delta(metrics_b_before, _agent_metrics(b))
     for side, metrics in (("a", metrics_a), ("b", metrics_b)):
-        for key in ("fixed_search_incomplete", "fixed_search_errors"):
+        for key in (
+            "fixed_search_incomplete", "fixed_search_errors",
+            "expert_rule_errors", "expert_rule_invalid",
+        ):
             if metrics.get(key, 0):
                 failures.append(f"{side}_{key}={metrics[key]}")
     return {
@@ -638,6 +666,20 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         "min_remaining_overage_sec": {
             "a": _min_present(results, "remaining_overage_sec_a"),
             "b": _min_present(results, "remaining_overage_sec_b"),
+        },
+        "agent_metrics_total": {
+            "a": _sum_agent_metrics(results, "a"),
+            "b": _sum_agent_metrics(results, "b"),
+        },
+        "agent_metrics_by_seat": {
+            "a": {
+                "P0": _sum_agent_metrics(results, "a", 0),
+                "P1": _sum_agent_metrics(results, "a", 1),
+            },
+            "b": {
+                "P0": _sum_agent_metrics(results, "b", 0),
+                "P1": _sum_agent_metrics(results, "b", 1),
+            },
         },
         "failure_count": len(failure_rows),
         "failures": failure_rows[:20],

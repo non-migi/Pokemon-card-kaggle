@@ -236,6 +236,59 @@ class ArenaUnitTests(unittest.TestCase):
         self.assertEqual(arena._min_present(rows, "x"), 2.25)
         self.assertIsNone(arena._min_present(rows[:2], "x"))
 
+    def test_agent_metrics_are_summed_by_agent_and_seat(self):
+        rows = [
+            {"a_seat": 0,
+             "metrics_a": {"expert_rule_hit.AZ001": 2, "ignored": "x"},
+             "metrics_b": {"expert_rule_hit.AZ001": 3}},
+            {"a_seat": 1,
+             "metrics_a": {"expert_rule_hit.AZ001": 5},
+             "metrics_b": {"expert_rule_hit.AZ001": 7}},
+        ]
+        self.assertEqual(
+            arena._sum_agent_metrics(rows, "a"),
+            {"expert_rule_hit.AZ001": 7},
+        )
+        self.assertEqual(
+            arena._sum_agent_metrics(rows, "a", 0),
+            {"expert_rule_hit.AZ001": 2},
+        )
+        self.assertEqual(
+            arena._sum_agent_metrics(rows, "b", 0),
+            {"expert_rule_hit.AZ001": 7},
+        )
+
+    def test_build_validates_expert_rule_config_shape(self):
+        valid = {
+            "model": "bc_v2",
+            "config": {
+                "algo": "bcs",
+                "expert_rules": "alakazam_v1",
+                "expert_rule_mode": "candidate",
+                "enabled_rule_ids": ["AZ001_EMPTY_BENCH_BASIC"],
+            },
+        }
+        with mock.patch.object(os.path, "isfile", return_value=True):
+            build_module._validate_spec(valid, "valid.json")
+        for config in (
+            {"algo": "bc", "expert_rules": "alakazam_v1",
+             "expert_rule_mode": "candidate"},
+            {"algo": "bcs", "expert_rules": "alakazam_v1",
+             "expert_rule_mode": "bad"},
+            {"algo": "bcs", "expert_rule_mode": "shadow"},
+            {"algo": "bcs", "expert_rules": "alakazam_v1",
+             "expert_rule_mode": "candidate"},
+            {"algo": "bcs", "expert_rules": "alakazam_v1",
+             "enabled_rule_ids": ["x", "x"]},
+            {"algo": "bcs", "expert_rules": "alakazam_v1",
+             "enabled_rule_ids": []},
+        ):
+            spec = {"model": "bc_v2", "config": config}
+            with self.subTest(config=config), mock.patch.object(
+                os.path, "isfile", return_value=True,
+            ), self.assertRaises(ValueError):
+                build_module._validate_spec(spec, "bad.json")
+
     def test_fingerprint_ignores_pycache_but_covers_config(self):
         with tempfile.TemporaryDirectory() as d:
             with open(os.path.join(d, "main.py"), "w") as f:
