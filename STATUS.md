@@ -101,6 +101,8 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
+- Codex: **15分checkpoint** — ExIt v1を59,249判断で停止・健全性確認。旧teacher buildを保持したまま、
+  v4.5a同一commitのbaseline/floorを別名buildし、短期ExItへの再計画を記録する
 - Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
   探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
   **生成ジョブ実行中(07-16開始、4500試合≈35万決定、-j6、~19h、→ data/bc/exit_pairs_v1.jsonl.gz)**。
