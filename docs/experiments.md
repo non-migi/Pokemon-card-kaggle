@@ -704,3 +704,14 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
 - 進行中のExIt 4,500試合生成が`build/v4.3a-fixed2`を参照しているため、そのbuildは変更せず、
   search性能A/Bと正式buildは未実施。負荷解消後にbaseline/floorを同一commitから組み直し、順逆各80戦、
   candidate換算86/160・各席39/80・各load-order 38/80・failure/error/invalid 0で判定する。
+
+### 15分checkpoint: ExIt停止とExpert Floor build（07-17 15:45）
+
+- resumable ExIt v1は3 shard、**59,249判断**でcheckpoint停止。全gzip、全59,249 JSON、必須key、
+  team、deck 60枚を検査し異常0、`.tmp`/`.broken`も0。新規200試合は15,175判断だった。
+- 6 workerは各約99% CPUで健全だったが、スリープ込み実測では350k完走が約12日となり、その間の
+  search評価を塞ぐ機会費用が大きい。原子的に確定した59,249判断を保持し、追加生成は停止した。
+- 旧teacher `build/v4.3a-fixed2`を上書きせず、同一現行コードのno-op baseline
+  `v4.5a-base-fixed2`とExpert Floor `v4.5a-floor-fixed2`を新規build。両方ともファイルパスロード両席`DONE`。
+- 夜の再開点は、59k ExItの公式教師に対する重みを事前固定することと、base/floor順逆160戦。
+  350k生成をそのまま再開したり、途中結果を見てgateを変更したりしない。

@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-16 22:35 JST (Codex) — Expert Rules床を実装・強者48,501判断でshadow監査、性能A/BはExIt負荷解消待ち
+最終更新: 2026-07-17 15:45 JST (Codex) — ExIt v1を59,249判断でcheckpoint停止、v4.5a baseline/floor両席build完了
 
 ## ラダー状況(2026-07-16 19:32 JST、active = 最新2提出のみ)
 
@@ -36,11 +36,13 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **Expert FloorをExIt完了後に最優先で固定計算A/B**: 進行中ジョブが参照する
-   `build/v4.3a-fixed2`は触らない。完了後にbaselineと`v4.5a-floor-fixed2`を同一commitから再buildし、
+1. **Expert Floorを次回最優先で固定計算A/B**: 旧ExIt teacherの`build/v4.3a-fixed2`は保持したまま、
+   同一commitの`v4.5a-base-fixed2`と`v4.5a-floor-fixed2`を別名で両席build済み。
    load-order順逆各80戦。候補換算86/160以上、各席39/80以上、各順序38/80以上、failure/error/invalid 0を
    満たした場合だけproduction候補へ進める。rule別hit/injected/selectedもledgerで確認する。
-2. **探索→ExItの天井をExpert Floorへ接続**: 現生成`bc_x1`はそのまま完走させ、次世代から
+2. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
+   実測ペースで長すぎ、探索評価を塞ぐため停止した。夜は既存59kの重み付き混合比を先に固定し、
+   追加生成を盲目的に再開しない。次世代から
    root候補に専門家ルールを保証した探索の選択をtrace付きで蒸留する。公式教師との混合を維持し、
    `BC → Expert候補付きBCS → ExIt → 再探索`を1世代ずつA/Bする。
 3. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
@@ -57,6 +59,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    投入後はRocket/Kang/Grim/Festival別の実勝率と収束レートを追う。
 
 **確定した知見(今セッション)**:
+- ExIt v1は **59,249/350,000判断 (16.93%)**、3 shard。全gzip/JSON/必須key/deck60が正常、
+  `.tmp`/`.broken`なし。新規200試合は15,175判断（75.875/試合）。6 workerは健全だったが、
+  スリープ込みでは完走約12日となるためcheckpoint停止し、全CPUを解放した。
+- `v4.5a-base-fixed2`（Expert code no-op）と`v4.5a-floor-fixed2`を同一source/model/deckから組み、
+  ファイルパスロードを**両席DONE**で検証。旧ExIt teacher buildは上書きしていない。
 - **Expert Rulesを床、探索・ExItを天井にする基盤を実装**。`shadow/candidate/enforce`、
   rule ID単位ablation、BC top-1を残した最大2候補注入（総数5のまま）、hard/negative guard、
   実行時フォールバック、arenaのrule metrics集約まで追加。既存agentは設定なしでno-op、unit 36件通過。
@@ -101,16 +108,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Codex: **15分checkpoint** — ExIt v1を59,249判断で停止・健全性確認。旧teacher buildを保持したまま、
-  v4.5a同一commitのbaseline/floorを別名buildし、短期ExItへの再計画を記録する
-- Claude Code: **ExIt(探索の蒸留、1200戦略レバー1)** — v4.3a-fixed2同士の自己対戦から
-  探索エージェントの決定を収集(scripts/exit_gen.py)→ **bc_x1** を学習(bc_v6と名前分離)。
-  **生成ジョブ実行中(07-16開始、4500試合≈35万決定、-j6、~19h、→ data/bc/exit_pairs_v1.jsonl.gz)**。
-  **production `-j1` wall-clock確認とは並走不可**(fixed-worlds gateは併走OK)。
-  bc_x1の学習方針: 公式10日分(bc_v2と同一)+ExItミラー混合(ミラー単独は分布外崩壊のためNG)。
-  deck tech/Hammer4/belief/bc_v6には触れない。
-  ⚠️発見: cgネイティブは**同一パスの2回ロードでC++クラッシュ**(buffer full. capacity:7)。
-  ミラー自己対戦は別パスコピーからロードする(exit_gen.py参照)
+- なし。ExIt生成・評価・学習プロセスはすべて停止済み。夜は上記「次のアクション」から再開する。
 
 ## 今日の提出枠
 
