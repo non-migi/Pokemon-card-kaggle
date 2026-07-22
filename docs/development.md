@@ -19,7 +19,16 @@ kaggle competitions download -c pokemon-tcg-ai-battle-challenge-strategy -p data
 
 # 4. 公式ライブラリをsrc/に復元(git管理外のため)
 cp -r "data/simulation/sample_submission/sample_submission/cg" src/
+
+# 5. Kaggle上のnative engineが取得zipより新しくないか確認
+.venv/bin/python scripts/sync_cg_engine.py
+# DIFFなら、重い評価/buildを止めてから明示的に更新
+.venv/bin/python scripts/sync_cg_engine.py --apply
 ```
+
+`sync_cg_engine.py`は4 native binaryを全て一時領域へ取得してからSHA-256を比較する。通常実行は
+read-onlyで、差分/欠落時はexit 1。`--apply`だけが全download成功後に`src/cg`の各fileを原子的に置換し、
+取得失敗時は既存binaryを変更しない。更新後は既存`build/`を再利用せず、新しい名前で全て組み直す。
 
 ## 日常の開発ループ
 
@@ -91,6 +100,9 @@ agent設定例:
 - searchはfixed-worldsで性能比較、production `-j 1`で本番設定の完走確認を分ける
 - 大量ExIt生成・学習中はsearch評価を開始しない。進行中jobが参照する`build/`も再buildしない
 - 採用する記録は`failure_count=0`、`run_failures=[]`、両席`DONE`を必須とする
+- failure時はledgerの`pair_index/game_index`と`diagnostic.path`を確認する。raw環境/logは
+  gitignore済み`replays/arena-failures/`にだけ保存され、SHA-256でledgerと照合できる。
+  `native_seed`は取得不能なのでsidecarは事後診断用であり、完全な同一試合再実行は保証しない
 - gauntletの加重値は収載対面内の点推定。`weight_sum<1`なら全環境EVではない
 - 提出は**有意な改善があったときだけ**(1日5回制限)
 
@@ -109,6 +121,7 @@ kaggle competitions submissions -c pokemon-tcg-ai-battle | head -5
 
 ### 提出前チェックリスト
 
+- [ ] `.venv/bin/python scripts/sync_cg_engine.py`が4 native binaryとも`MATCH`（PyPI版だけを信用しない）
 - [ ] `ptcglab.build` の検証が通る(**ファイルパスロード検証込み**。importベースの評価だけでは不十分)
 - [ ] 純BCまたはfixed-worldsで旧版に有意勝ち越し、複数対面の弱点も記録
 - [ ] production profileを`-j 1`で完走し、failure 0を確認
@@ -120,9 +133,9 @@ kaggle competitions submissions -c pokemon-tcg-ai-battle | head -5
 - **Mac勢がDockerを使っていた理由は歴史的なもの**: 6/30更新まではエンジンにmacOS/ARM64バイナリが
   無く、Linux x86_64のDocker/エミュレーションが必須だった。現在は`libcg.dylib`が公式提供され、
   ネイティブMacで動作(うちは最初からこの恩恵を受けている)
-- **バージョン整合**: ローカルのkaggle-environments 1.32.0(7/8リリース)は6/30エンジン更新後の
-  最新公開版で、ラダーと整合していると考えてよい。バージョン更新の告知(Discussionの
-  Announcement)は週次で監視し、新版が出たら`pip install -U kaggle-environments`で追随する
+- **バージョン整合**: PyPIのkaggle-environments 1.32.0が最新でも、Kaggle competition data内の
+  native binaryだけが先に更新された事例が07-22に判明した。`pip install -U`だけでは不十分なので、
+  評価/build/提出前に`sync_cg_engine.py`で公式dataと直接SHA比較する。Announcementも週次監視する
 - **結論: 日常開発にDockerは不要**(ネイティブが高速で並列自己対戦に有利)。
   本番同等性の確認が必要な場面(最終フリーズ前など)は、Dockerより正確な手段がある:
   **Kaggleノートブック上で提出tarをロードして両席検証**(本物のKaggleイメージ+Linux x86_64)。

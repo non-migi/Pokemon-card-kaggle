@@ -20,6 +20,7 @@ import multiprocessing
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 import uuid
@@ -30,6 +31,7 @@ from multiprocessing.connection import wait as wait_connections
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEDGER = os.path.join(ROOT, "results", "arena.jsonl")
 GAUNTLET_LEDGER = os.path.join(ROOT, "results", "gauntlet.jsonl")
+FAILURE_REPLAY_DIRECTORY = os.path.join(ROOT, "replays", "arena-failures")
 DEFAULT_PAIR_TIMEOUT_SEC = 3600.0
 PAIR_EXIT_GRACE_SEC = 0.5
 PAIR_TERMINATE_GRACE_SEC = 1.0
@@ -40,6 +42,15 @@ _RESULT_KEYS = frozenset({
     "remaining_overage_sec_a", "remaining_overage_sec_b", "metrics_a", "metrics_b",
     "failures", "sec",
 })
+
+# workerから親へだけ渡す一時field。ledgerへ書く前に必ずpopする。
+_PRIVATE_FAILURE_REPLAY = "_arena_failure_replay"
+_PRIVATE_FAILURE_LOGS = "_arena_failure_logs"
+_PRIVATE_FAILURE_CAPTURE_ERROR = "_arena_failure_capture_error"
+_REPLAY_REPRODUCIBILITY_NOTE = (
+    "cabt native BattleStart does not expose an episode seed; this sidecar "
+    "supports post-hoc diagnosis but cannot guarantee an exact rerun"
+)
 
 _worker_agents = {}
 
@@ -156,6 +167,20 @@ def _sum_agent_metrics(results: list[dict], side: str,
     }
 
 
+def _attach_failure_diagnostic(row: dict, env) -> None:
+    """失敗時だけreplay/logsをworker内の一時payloadへ載せる。"""
+    if not row.get("failures"):
+        return
+    try:
+        row[_PRIVATE_FAILURE_REPLAY] = env.toJSON()
+        row[_PRIVATE_FAILURE_LOGS] = list(getattr(env, "logs", []) or [])
+    except Exception as exc:
+        # 診断採取の失敗で本来の対戦結果をworker_errorへ変えない。
+        row.pop(_PRIVATE_FAILURE_REPLAY, None)
+        row.pop(_PRIVATE_FAILURE_LOGS, None)
+        row[_PRIVATE_FAILURE_CAPTURE_ERROR] = f"{type(exc).__name__}: {exc}"[-1000:]
+
+
 def _play(swap: bool) -> dict:
     # agent側cgはworker initializerで先にロード済み。cabt環境を先にimportすると、
     # macOSの共有native bufferへ別cgが先行登録されるため順序を維持する。
@@ -187,7 +212,7 @@ def _play(swap: bool) -> dict:
         ):
             if metrics.get(key, 0):
                 failures.append(f"{side}_{key}={metrics[key]}")
-    return {
+    row = {
         "a_seat": a_seat,
         "reward": reward,
         # INVALIDはルールどおり即負けとして0点。ただしfailureを必ず表へ出す。
@@ -203,6 +228,8 @@ def _play(swap: bool) -> dict:
         "failures": failures,
         "sec": round(time.time() - t0, 4),
     }
+    _attach_failure_diagnostic(row, env)
+    return row
 
 
 def _play_seat_pair(pair_index: int) -> list[dict]:
@@ -271,6 +298,174 @@ def _validate_pair_payload(rows, pair_index: int) -> str | None:
         if row.get("a_seat") != expected_seat:
             return f"rows[{i}].a_seat={row.get('a_seat')!r}, expected={expected_seat}"
     return None
+
+
+def _flatten_annotated_pairs(paired: list[list[dict]]) -> list[dict]:
+    """親側でpair/game identityを付与し、pair順にflattenする。"""
+    results = []
+    for pair_index, pair in enumerate(paired):
+        for game_index, row in enumerate(pair):
+            row["pair_index"] = pair_index
+            row["game_index"] = game_index
+            results.append(row)
+    return results
+
+
+def _safe_run_id_component(run_id: str) -> str:
+    raw = str(run_id)
+    safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in raw)
+    if not safe:
+        safe = hashlib.sha256(raw.encode()).hexdigest()[:16]
+    if len(safe) > 96:
+        safe = f"{safe[:80]}-{hashlib.sha256(raw.encode()).hexdigest()[:12]}"
+    return safe
+
+
+def _diagnostic_counts(replay, logs) -> tuple[int, int]:
+    steps = replay.get("steps") if isinstance(replay, dict) else None
+    return (
+        len(steps) if isinstance(steps, list) else 0,
+        len(logs) if isinstance(logs, list) else 0,
+    )
+
+
+def _diagnostic_metadata(step_count: int, log_count: int,
+                         invocation_id: str) -> dict:
+    return {
+        "invocation_id": str(invocation_id),
+        "step_count": step_count,
+        "log_count": log_count,
+        "native_seed": None,
+        "python_random_state_captured": False,
+        "exact_rerun_supported": False,
+        "reproducibility_note": _REPLAY_REPRODUCIBILITY_NOTE,
+    }
+
+
+def _write_failure_sidecar(run_id: str, invocation_id: str,
+                           row: dict, replay, logs) -> dict:
+    """raw診断をgitignore済み領域へ原子的に保存し、ledger用metadataを返す。"""
+    pair_index = int(row["pair_index"])
+    game_index = int(row["game_index"])
+    step_count, log_count = _diagnostic_counts(replay, logs)
+    reproducibility = {
+        "native_seed": None,
+        "python_random_state_captured": False,
+        "exact_rerun_supported": False,
+        "note": _REPLAY_REPRODUCIBILITY_NOTE,
+    }
+    payload = {
+        "schema": 1,
+        "run_id": str(run_id),
+        "invocation_id": str(invocation_id),
+        "pair_index": pair_index,
+        "game_index": game_index,
+        "a_seat": row.get("a_seat"),
+        "reproducibility": reproducibility,
+        "environment": replay,
+        "logs": logs,
+    }
+    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()
+    digest = hashlib.sha256(data).hexdigest()
+    filename = (
+        f"{_safe_run_id_component(run_id)}-i{_safe_run_id_component(invocation_id)}"
+        f"-p{pair_index:02d}-g{game_index}.json"
+    )
+    destination = os.path.join(FAILURE_REPLAY_DIRECTORY, filename)
+
+    # JSON化を先に完了し、失敗時にdirectoryすら作らない。tempも同一filesystemへ置く。
+    os.makedirs(FAILURE_REPLAY_DIRECTORY, exist_ok=True)
+    descriptor, temporary_path = tempfile.mkstemp(
+        prefix=f".{filename}.", suffix=".tmp", dir=FAILURE_REPLAY_DIRECTORY,
+    )
+    try:
+        with os.fdopen(descriptor, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temporary_path, destination)
+    finally:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+
+    return {
+        "path": f"replays/arena-failures/{filename}",
+        "sha256": digest,
+        **_diagnostic_metadata(step_count, log_count, invocation_id),
+    }
+
+
+def _materialize_failure_diagnostics(results: list[dict], run_id: str,
+                                     invocation_id: str) -> list[str]:
+    """private raw payloadを除去・sidecar化し、診断系run failureを返す。"""
+    run_failures = []
+    missing = object()
+    for row in results:
+        replay = row.pop(_PRIVATE_FAILURE_REPLAY, missing)
+        logs = row.pop(_PRIVATE_FAILURE_LOGS, missing)
+        capture_error = row.pop(_PRIVATE_FAILURE_CAPTURE_ERROR, None)
+        pair_index = row.get("pair_index")
+        game_index = row.get("game_index")
+        identity = f"pair={pair_index} game={game_index}"
+
+        if capture_error:
+            row["diagnostic"] = {
+                "path": None,
+                "sha256": None,
+                **_diagnostic_metadata(0, 0, invocation_id),
+                "capture_error": str(capture_error),
+            }
+            run_failures.append(
+                f"failure diagnostic capture failed ({identity}): {capture_error}"
+            )
+            continue
+        if replay is missing and logs is missing:
+            continue
+        if replay is missing or logs is missing:
+            error = "worker payload is missing replay or logs"
+            row["diagnostic"] = {
+                "path": None,
+                "sha256": None,
+                **_diagnostic_metadata(0, 0, invocation_id),
+                "capture_error": error,
+            }
+            run_failures.append(
+                f"failure diagnostic capture failed ({identity}): {error}"
+            )
+            continue
+        if not row.get("failures"):
+            run_failures.append(
+                f"unexpected diagnostic payload on successful row ({identity})"
+            )
+            continue
+
+        step_count, log_count = _diagnostic_counts(replay, logs)
+        try:
+            row["diagnostic"] = _write_failure_sidecar(
+                run_id, invocation_id, row, replay, logs,
+            )
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"[-1000:]
+            row["diagnostic"] = {
+                "path": None,
+                "sha256": None,
+                **_diagnostic_metadata(step_count, log_count, invocation_id),
+                "save_error": detail,
+            }
+            run_failures.append(
+                f"failure diagnostic save failed ({identity}): {detail}"
+            )
+    return run_failures
+
+
+def _public_result_row(row: dict) -> dict:
+    """防御的にworker-private fieldを除いたledger用copyを作る。"""
+    return {
+        key: value for key, value in row.items()
+        if not key.startswith("_arena_failure_")
+    }
 
 
 def _reap_pair_process(process, exit_grace_sec: float, terminate_grace_sec: float,
@@ -608,6 +803,7 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
     pair_timeout_sec = float(pair_timeout_sec)
     t0 = time.time()
     run_id = run_id or uuid.uuid4().hex
+    invocation_id = uuid.uuid4().hex
     meta_a, meta_b = agent_fingerprint(agent_a), agent_fingerprint(agent_b)
     profile = _resolve_profile(meta_a, meta_b, jobs, profile)
     watchdog_events: list[dict] = []
@@ -618,7 +814,7 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         paired, watchdog_events, cleanup_run_failures = _run_fresh_seat_pairs(
             agent_a, agent_b, n // 2, jobs, pair_timeout_sec,
         )
-        results = [row for pair in paired for row in pair]
+        results = _flatten_annotated_pairs(paired)
     else:
         swaps = [i % 2 == 1 for i in range(n)]
         with ProcessPoolExecutor(
@@ -626,7 +822,12 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
             initializer=_init_worker,
             initargs=(agent_a, agent_b),
         ) as ex:
-            results = list(ex.map(_play, swaps, chunksize=4))
+            raw_results = list(ex.map(_play, swaps, chunksize=4))
+        paired = [raw_results[i:i + 2] for i in range(0, n, 2)]
+        results = _flatten_annotated_pairs(paired)
+    diagnostic_run_failures = _materialize_failure_diagnostics(
+        results, run_id, invocation_id,
+    )
     overall = _summarize(results)
     by_seat = {}
     for label, seat in (("P0", 0), ("P1", 1)):
@@ -635,9 +836,9 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
         by_seat[label]["a_min_remaining_overage_sec"] = _min_present(
             seat_rows, "remaining_overage_sec_a",
         )
-    failure_rows = [r for r in results if r["failures"]]
+    failure_rows = [_public_result_row(r) for r in results if r["failures"]]
     end_meta_a, end_meta_b = agent_fingerprint(agent_a), agent_fingerprint(agent_b)
-    run_failures = list(cleanup_run_failures)
+    run_failures = [*cleanup_run_failures, *diagnostic_run_failures]
     if end_meta_a["sha256"] != meta_a["sha256"]:
         run_failures.append("agent_a artifact changed during evaluation")
     if end_meta_b["sha256"] != meta_b["sha256"]:
@@ -645,6 +846,7 @@ def run_match_series(agent_a: str, agent_b: str, n: int = 200, jobs: int = 1,
     rec = {
         "schema": 2,
         "run_id": run_id,
+        "invocation_id": invocation_id,
         "ts": datetime.datetime.now().isoformat(timespec="seconds"),
         "suite": suite,
         "git_commit": _git_commit(),

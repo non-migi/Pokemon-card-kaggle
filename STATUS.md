@@ -3,27 +3,27 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-22 18:55 JST (Codex) — 公式最新情報を再取得し、Expert Floor固定計算A/Bを再開
+最終更新: 2026-07-22 21:25 JST (Codex) — 最新ラダーを再確認し、Expert Floor棄却後の診断基盤を完成
 
-## ラダー状況(2026-07-16 19:32 JST、active = 最新2提出のみ)
+## ラダー状況(2026-07-22 21:20 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
-| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **920.7 / 78戦47勝31敗 (60.3%)** |
-| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **725.3 / 86戦44勝42敗 (51.2%)** |
+| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **873.1 / 244戦125勝119敗 (51.2%)** |
+| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **712.2 / 203戦101勝102敗 (49.8%)** |
 | **v4.1a** (sub 54612885) | no | bc_v2 BCS + 旧Alakazam | **869.1 / 149戦79勝70敗 (53.0%)で凍結** |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
 | **v4.0a** (sub 54591345) | no | BC×探索 + bc_v2 + フーディン型 | **826.4 / 67戦** (07-12 23:25 JSTに停止) |
 
-`v4.2t`は68戦で平衡709.9へ低下。調査時62戦の28勝は全て相手deckoutだが、34敗は
+`v4.2t`は203戦で712.2へ収束。調査時62戦の28勝は全て相手deckoutだが、34敗は
 ポケモン無17/サイド10/自deckout 7。ポケモン無7敗で、ベンチ空・手札に出せるBasicがあるのに
 21の重要選択中15回出さず。timeoutではなく、**Great Tuskとbc_v2の分布不整合**が失敗の主因。
 
 `v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。純BC直接 **74.67%/300**、
 fixed2 BCS **75.0%/80**、二層meta加重 **88.95% vs baseline 83.23%**。最終production 8秒は
 凍結した実提出v4.1aに **8–2/10** (P0 3–2 / P1 5–0)、全戦`DONE`、failure 0、最小残りoverage
-**215.99秒**。両席buildを通し、07-16 00:48 JSTに提出、01:01 JSTに`COMPLETE`。19:32時点で
-78戦47勝31敗・920.7まで上昇し、旧v4.1aを+51.6上回ったが1100には未到達。
+**215.99秒**。両席buildを通し、07-16 00:48 JSTに提出、01:01 JSTに`COMPLETE`。早期78戦では
+920.7だったが、244戦で873.1へ収束。旧v4.1aを+4.0上回るに留まり、1100には未到達。
 
 **G3通過(予定より3週早い)**: v4.0a = BC×探索が純BC(v3.2a)に **58.1%/400戦**(有意)。
 本番ラダーで **826.4/67戦** — これまでの平衡750-780を上抜けしたが、v4.1a投入時にinactive化。
@@ -36,29 +36,44 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **Expert Floorを次回最優先で固定計算A/B**: 旧ExIt teacherの`build/v4.3a-fixed2`は保持したまま、
-   同一commitの`v4.5a-base-fixed2`と`v4.5a-floor-fixed2`を別名で両席build済み。
-   load-order順逆各80戦。候補換算86/160以上、各席39/80以上、各順序38/80以上、failure/error/invalid 0を
-   満たした場合だけproduction候補へ進める。rule別hit/injected/selectedもledgerで確認する。
-2. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
+1. **Expert Floorを分解**: 公式e0717 engineの統合gateはFloor換算**84/160**、P0 46/P1 38、
+   TIMEOUT 1で棄却。実発火した`r5` (sole Dudunsparce guard)を先に単独評価し、`r8` (draw-to-KO)は
+   25回選択・P1下振れ・長期化との関係をfailure traceで監査してから別A/Bする。両単独版は公式engineで
+   build・両席loader検証済み。統合版は提出しない。
+2. **最新Grimを主要meta wallへ追加**: 1100+の38.5%まで増加。最多60枚を
+   `snapshot_20260721_grim_canonical.csv`へ固定済み。旧二層重みを更新し、r5/Hammer4は
+   canonical mirrorだけでなくこのwallを含む複数対面で判定する。
+3. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
+   純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
+   現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
+4. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
    実測ペースで長すぎ、探索評価を塞ぐため停止した。夜は既存59kの重み付き混合比を先に固定し、
    追加生成を盲目的に再開しない。次世代から
    root候補に専門家ルールを保証した探索の選択をtrace付きで蒸留する。公式教師との混合を維持し、
    `BC → Expert候補付きBCS → ExIt → 再探索`を1世代ずつA/Bする。
-3. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
+5. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
    **442.5/800 = 55.31%**だがP0 59.0 / P1 51.63%と席差あり。順逆各80戦、candidate換算
    86/160以上・両席/両load-order下限・failure 0の事前gateを、ExIt完了後に最初から回す。
-4. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
-   純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**
-   (P0 23/40 / P1 19/40、failure 0)。ただし公開31敗中17敗は特殊energy 0で、1100突破の本命ではない。
-5. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
+6. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
    公開31敗中7件のポケモン切れを狙うが、ExIt中は組立てまでで重いscreenは行わない。
-6. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
+7. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
-7. **ラダー監視**: v4.3aは1100確約ではなく、874.4基準のElo中心は約1065–1070。
-   投入後はRocket/Kang/Grim/Festival別の実勝率と収束レートを追う。
+8. **ラダー監視**: v4.3a/v4.2tは各244/203戦でほぼ平衡。次の提出は上記gate通過時だけにし、
+   Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- 公式native engineはPyPI最新版とは別に更新されていた。Team Rocket Energyのindex bug修正版4 binaryを
+  `src/cg`へ同期し、`scripts/sync_cg_engine.py`の実動checkで4/4 `MATCH`。e0717 buildは両席`DONE`。
+- Expert Floor統合正式gateは **84/160=52.5%**、load-order 42/80ずつ、P0 46/P1 38、
+  TIMEOUT 1。総合86・各席39・failure 0の3条件を外したため棄却。AZ005 hit13/blocked4、
+  AZ008 hit35/selected25、他ruleはcanonical mirrorで発火0。次はr5/r8単独。
+- arena failure診断を追加。今後はpair/game identityとfailure-only replay/log sidecarを残し、同一gauntlet
+  run内も`invocation_id`で衝突しない。native seedは取得不能のため完全再実行ではなく事後診断用。
+  unit 44件＋意図的ERRORの実process 2戦でsidecar/SHA/raw非漏洩を確認。
+- 07-22現1100+全13 teamはGrim 38.5%、Alakazam/Kang各15.4%、Rocket/Dragapult/Cynthia/
+  Froslass-Lopunny各7.7%、Festival 0。Grim 10/11は同一18-Pokémon coreで、最多型6/11を保存した。
+- activeは21:20再確認でv4.3a **873.1/244戦**、v4.2t **712.2/203戦**。19:16時点のLBは5,497 team、
+  median 647.1、1000+ 90、1100+ 13、top-8境界1126.0、自チーム402位。
 - ExIt v1は **59,249/350,000判断 (16.93%)**、3 shard。全gzip/JSON/必須key/deck60が正常、
   `.tmp`/`.broken`なし。新規200試合は15,175判断（75.875/試合）。6 workerは健全だったが、
   スリープ込みでは完走約12日となるためcheckpoint停止し、全CPUを解放した。
@@ -79,7 +94,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   payload後の終了hangは強制回収する。unit 19件＋実process 2戦がfailure 0で完走。
 - 公開31敗のうちポケモン切れ7敗を狙うDunsparce4（Mine3→2 / Dunsparce3→4）を組立て、
   60枚差分と両席buildを検証済み。性能測定はExIt終了後。
-- メタは二層。1000–1099帯はAlakazam 58.3%、1100+全14チームはKang 28.6 / Alakazam 21.4 /
+- 07-15時点のメタは二層。1000–1099帯はAlakazam 58.3%、1100+全14チームはKang 28.6 / Alakazam 21.4 /
   Grim 21.4 / Rocket 14.3 / Festival 14.3%。昇格poolと1100+生存poolを分けて評価する。
 - v4.2tの失敗はデッキ単体ではなくBCとの共適応不足。canonical Alakazamの7枚差は
   純BC/fixed2/gauntlet/productionの4種で一貫して優位。
@@ -98,23 +113,22 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   `models/value_v1`へ退避し、実行時はフルロールアウトへフォールバック
 - Kaggleは目標48試合/日、各マッチ10%でランダム相手。短期レート/順位には対面運が残る
 
-## 外部情報スキャン(07-16 20:40 JST)
+## 外部情報スキャン(07-22 19:16–21:20 JST)
 
-- Leaderboardは5,120チーム、median 659.3、1000+ 89、1100+ 17、1200+ 3、top-8境界1156.8。
-  07-15 Daily Top 4,825 episodesはbc_v6へ取込済み。07-16版は未公開。
-- 公式DiscussionのRL/search手法は参考にするが、自己申告とreplayからの推測を分離する。
-- Xは通常検索で新しい検証可能情報を取得できず、署名済みbrowser sessionもunavailableだった。
-  今回はKaggle公式Leaderboard/episodes/replayだけを採用根拠にした。
+- Leaderboardは5,497 team、median 647.1、1000+ 90、1100+ 13、1200+ 0、top-8境界1126.0。
+  最新Daily Topは07-21版4,612 episodes。1100+全13 teamのdeckを公式replayで補完した。
+- Discussion 728071の模倣学習21–22k replayで1088帯という報告は短期ExIt設計を支持するが、参加者自己申告。
+  728068のNinetales #660 × Amarys #1207 SIGSEGVはhost未回答のため当面その組合せを避ける。
+- X通常検索ではユーザー提示投稿の完全一致原文や新しい具体的if-cascadeを取得できず、
+  「存在しない」とは断定しない。採用根拠はKaggle公式Leaderboard / episodes / replayとlocal A/B。
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-22 18:55 JST)**: `v4.5a-floor-fixed2` vs `v4.5a-base-fixed2`の
-  事前宣言済み順逆各80戦gateを担当。途中結果で停止せず、両load-order・両席・failure・rule metricsを判定する。
-  公式native engine差を検知したためe0717 buildで正式gateを再実行中。再発防止のengine同期検査CLIも同時に整備する。
-  正式gateは84/160かつTIMEOUT 1件で棄却。終了前に失敗pair identity/replay sidecarをarenaへ追加してから記録を引き継ぐ。
+- なし
 
 ## 今日の提出枠
 
+- 07-22: **0/5 使用**（提出なし）
 - 07-16: **1/5 使用** (`v4.3a`, sub 54731784, COMPLETE)
 - 07-15: 0/5使用
 - 07-14: 1/5使用 (`v4.2t`, sub 54688865, COMPLETE)

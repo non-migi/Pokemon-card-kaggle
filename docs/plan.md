@@ -80,14 +80,16 @@ Rocket 0.07 / Festival 0.07 / Froslass 0.05 の二層重みを使い、単一Top
 - [x] multi-select対応とBC×探索統合。G3を前倒し通過
 - [x] 独自メタ候補4種をscreenし、Great Tusk–Crustleを300戦＋fixed80戦で採用判定
 - [x] Expert Rules基盤: 宣言rule、shadow/candidate/enforce、negative guard、root候補注入、metrics、監査tool
-- [ ] ExIt生成終了後、`v4.5a-floor-fixed2`をclean baselineと順逆160戦で判定
+- [x] 公式e0717 engineで`v4.5a-floor-fixed2`相当をclean baselineと順逆160戦で判定。
+  Floor換算84/160、P1 38/80、TIMEOUT 1で統合版を棄却。次は実発火したr5/r8を分離する
 - [ ] v4.2tのラダー収束を観測し、Froslass弱点と長期戦時間を確認
 
 ### 7/21〜8/3 — BCを超える(Expert Floor付きExItを主路線にする)
 - [x] **路線A: BC×探索の統合** — BCをロールアウト方策にした決定化探索、
   または root-only(BCの上位候補だけを探索で検証)
-- [ ] **主路線B': Expert Floor付きExIt** — 現在の第1世代はv4.3a-fixed2探索判断をそのまま収集中。
-  完了後にbc_x1を公式教師との混合で学習・A/Bする。第2世代からはrule候補・探索Q・最終選択を同時に記録し、
+- [ ] **主路線B': Expert Floor付きExIt** — 第1世代は59,249判断でcheckpoint済み。350kへ盲目的に戻らず、
+  r5/r8分離とfailure trace整備後に公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
+  第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り
   Elo加算を計画値として扱わない。重い場合はGoogle Cloudクーポン($3,000)投入。
 - [ ] **独自性の核**: 公開トップのif文を複写するのでなく、自軍の公開敗戦から反例局面を採掘し、
@@ -139,6 +141,9 @@ Rocket 0.07 / Festival 0.07 / Froslass 0.05 の二層重みを使い、単一Top
 - **if文の過適合**: 強者一致率が高くても因果を保証しない → hardは破滅回避/対象選択など局所支配手だけ。
   candidateは必ず探索とA/Bに通し、低一致ルールはshadowから動かさない
 - **最新2枠の事故**(良提出の押し出し): 提出はイベント駆動+この計画のゲートに従う
-- **メタシフト**: 週次収集で追随
+- **メタシフト**: 週次収集で追随。07-22の1100+はGrim 38.5%へ増えたため、
+  `snapshot_20260721_grim_canonical.csv`を二層metaの主要wallにする
 - **測定の交絡**: 重負荷ジョブと時間依存評価の並走禁止。BC同士の評価は高速なので影響小
+- **公式engine drift**: PyPI版とKaggle配布native binaryの更新日は一致しないことがある →
+  search評価・build前に`scripts/sync_cg_engine.py`をread-only実行し、差分時だけ`--apply`後に全buildを作り直す
 - **提出事故**: 500エラー/認証失効の経験あり → 最終提出は8/14までのバッファ運用

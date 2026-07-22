@@ -715,3 +715,77 @@ v4.0a vs 壁ボットの実戦リプレイを生成(1試合目=勝ち)→ replay
   `v4.5a-base-fixed2`とExpert Floor `v4.5a-floor-fixed2`を新規build。両方ともファイルパスロード両席`DONE`。
 - 夜の再開点は、59k ExItの公式教師に対する重みを事前固定することと、base/floor順逆160戦。
   350k生成をそのまま再開したり、途中結果を見てgateを変更したりしない。
+
+### 07-22公式メタ更新・engine同期・Expert Floor正式gate
+
+- 19:15–19:16 JSTの公式Leaderboardは **5,497 team、median 647.1、1000+ 90、1100+ 13、
+  top-8境界1126.0**、自チーム402位。21:20の再確認ではactiveが`v4.3a`
+  **873.1 / 244戦125勝119敗**、`v4.2t` **712.2 / 203戦101勝102敗**。07-16の早期値だけで
+  強さを判断しない。
+- 最新の公式Daily Topは07-21版4,612 episodes。そこからのreplayと07-22公開replayで現1100+全13 teamを
+  同定した結果、Grim **5/13=38.5%**、Alakazam **2/13=15.4%**、Kang **2/13=15.4%**、
+  Rocket / Dragapult / Cynthia Garchomp / Froslass–Mega Lopunnyが各1/13、Festival 0。
+  07-15全14 teamのGrim 21.4%から+17.1ptで、次の二層metaはGrim重みを上げる。
+- Grimは乱立ではなく、取得11 team中10 teamが
+  `Impidimp4/Morgrem3/Grimmsnarl3/Snorunt2/Froslass2/Munkidori4`の18-Pokémon coreで一致。
+  最多fingerprint `e2e03fe8ef95`は6/11で、07-15 bono型から
+  **Aoki's Search (1206) -1 / Hikari (1231) +1**だけ。60枚を
+  `decks/meta/snapshot_20260721_grim_canonical.csv`へ固定した。
+- 現1100+の`aaa`が使うAlakazamは、こちらが07-16に独立発見したHammer4
+  (`Nighttime Mine -1 / Enhanced Hammer +1`)と完全一致。Hammer4を保持する外的根拠にはなるが、
+  差別化の核はdeck copyではなくExpert Floor＋search＋反例駆動ExItとする。
+- X通常検索では、ユーザー提示の「強者行動を愚直にルール化」投稿を完全一致で再取得できなかった。
+  新しい具体的if-cascadeも検証不能だったため、Xは方向づけに留め、採否は公式replayとlocal A/Bで決める。
+  Discussion 728071では約21–22k replayの模倣学習で1088帯へ到達した参加者報告があり、
+  59k ExItを盲目的に350kへ増やすより、デッキ共適応と少量高品質traceを先に測る方針と整合する。
+  ただし手法・GPU時間は参加者自己申告であり、公式episodeから検証できる成績と分離する。
+
+#### 公式native engine差
+
+- 公式dataのnative binaryと旧`src/cg`が不一致だった。macOSの`libcg.dylib`は旧
+  `77bb978a...`に対し公式 **`00154aee...`**。Linux x86/ARM64とWindows DLLも全て更新されていた。
+  source差では`EffectProc.h`のTeam Rocket Energy処理が、shadowされたindexを使う実装から正しい
+  owner/card indexへ修正されていた（公式Discussion 727094）。
+- 公式4 binaryを`src/cg`へ反映し、`v4.5a-{base,floor}-fixed2-e0717`を別名でbuild。
+  main/deck/modelは双方同一、configだけがExpert Floor差で、ファイルパスloaderは両席`DONE`。
+  `scripts/sync_cg_engine.py`を追加し、通常はread-only SHA比較、`--apply`時だけ全download成功後に
+  各fileを原子的置換する。unit 4件と公式Kaggleへの実動check（4/4 `MATCH`, exit 0）を通した。
+- 公式engine発見前の旧build順方向80戦はFloor **40/80=50.0%**、failure 0だったが、
+  engine hashが本番と異なるため正式gateには混ぜない。
+
+#### Expert Floor統合gate（公式engine、順逆各80）
+
+事前gateは候補合計86/160以上、各席39/80以上、各load-order 38/80以上、failure/run failure/
+rule error/invalid 0。途中結果に関係なく両方向を実行した。
+
+| load order | A側score | Floor換算 | Floor P0/P1寄与 | failure |
+|---|---:|---:|---:|---:|
+| Floor A vs Base B | 42/80 | 42/80 | 20 / 22 | **1 TIMEOUT** |
+| Base A vs Floor B | 38/80 | 42/80 | 26 / 16 | 0 |
+| **合算** | — | **84/160 (52.5%)** | **46 / 38** | **1** |
+
+- Floor換算はreverseの補数。総合は閾値へ-2、P1は下限へ-1、failure 0にも違反したため
+  **統合Floorを棄却し、production/提出へ進めない**。load-order自体は42/80ずつで下限を満たした。
+- rule error/invalid/fixed-search error/incompleteは全て0。実際に発火したのはAZ005とAZ008だけで、
+  AZ005はhit 13 / guard blocked 4、AZ008はhit **35** / search selected **25**。
+  AZ003/004/006/007はcanonical mirrorでは0回で、対blocker/山札0の専用fixtureまたは新Grim wallで測る。
+- TIMEOUTはFloorがP0の1戦で、749.719秒、remaining overage **-0.021秒**。相手は467.079秒を残した。
+  watchdog timeoutや例外ではなくcabtのagent `TIMEOUT`で、現ledgerはpair/game identity・replay/logを
+  保存していなかったため該当episodeの完全再現は不可能。arenaへfailure-only sidecarとpair/game identityを
+  追加してから、長期戦の時間安全性を再評価する。
+- arenaを更新し、今後のfailure行には親側で`pair_index/game_index`を付け、失敗時だけ
+  `replays/arena-failures/`へ環境JSONとlogsをsidecar保存するようにした。ledgerはpath/SHA/countだけを持ち、
+  raw payloadを含めない。同じgauntlet `run_id`でも呼出し固有`invocation_id`で衝突しない。native seedは
+  取得不能なので完全再実行は保証せず、事後診断用と明記した。全unit **44件**と`git diff --check`に加え、
+  意図的にagent ERRORを起こす実process 2戦でsidecar生成・SHA一致・raw payload非漏洩を確認した。
+- 分解用の既存`v4.5a-r5-fixed2`と`v4.5a-r8-fixed2`も公式engineから再buildし、ファイルパスloaderを
+  両席`DONE`で検証した。まだ性能A/Bは行っておらず、次回はr5単独の順逆gateから開始する。
+- 次は複合を押し込まず、発火した **r5 (sole Dudunsparce negative guard)** と
+  **r8 (draw-to-exact-KO candidate)** を分離する。r5は局所的な破滅回避として優先、r8は25回選択・席差・
+  長期化との関係を反例traceで調べる。統合gateの閾値を事後変更しない。
+
+参照: <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>、
+<https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-21>、
+<https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/726690>、
+<https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/727094>、
+<https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/728071>。

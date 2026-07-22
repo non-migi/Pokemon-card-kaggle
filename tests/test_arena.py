@@ -117,8 +117,10 @@ class ArenaUnitTests(unittest.TestCase):
             "random", "first", pair_count=2, jobs=2, pair_timeout_sec=5,
             worker_target=_watchdog_order_worker, exit_grace_sec=0.1,
         )
-        rows = [row for pair in paired for row in pair]
+        rows = arena._flatten_annotated_pairs(paired)
         self.assertEqual([row["pair_marker"] for row in rows], [0, 0, 1, 1])
+        self.assertEqual([row["pair_index"] for row in rows], [0, 0, 1, 1])
+        self.assertEqual([row["game_index"] for row in rows], [0, 1, 0, 1])
         self.assertEqual([row["a_seat"] for row in rows], [0, 1, 1, 0])
         self.assertEqual(run_failures, [])
 
@@ -133,6 +135,9 @@ class ArenaUnitTests(unittest.TestCase):
         self.assertEqual(len(paired[0]), 2)
         self.assertEqual([row["a_seat"] for row in paired[0]], [0, 1])
         self.assertTrue(all(set(row) == arena._RESULT_KEYS for row in paired[0]))
+        rows = arena._flatten_annotated_pairs(paired)
+        self.assertEqual([row["pair_index"] for row in rows], [0, 0])
+        self.assertEqual([row["game_index"] for row in rows], [0, 1])
         self.assertTrue(all(row["reward"] is None for row in paired[0]))
         self.assertTrue(all(row["status_a"] == "ERROR" for row in paired[0]))
         self.assertEqual([event["kind"] for event in events], ["timeout"])
@@ -174,32 +179,170 @@ class ArenaUnitTests(unittest.TestCase):
 
     def test_watchdog_failure_is_written_before_strict_error(self):
         failed_pair = arena._synthetic_failed_pair(0, "timeout", "test timeout", 0.1)
+        private_marker = "private replay content must not enter ledger"
+        failed_pair[0][arena._PRIVATE_FAILURE_REPLAY] = {
+            "steps": [{"marker": private_marker}, {"status": "TIMEOUT"}],
+        }
+        failed_pair[0][arena._PRIVATE_FAILURE_LOGS] = [{"duration": 600.021}]
         event = {"pair_index": 0, "kind": "timeout"}
         with tempfile.TemporaryDirectory() as d:
             ledger = os.path.join(d, "arena.jsonl")
-            with mock.patch.object(arena, "LEDGER", ledger), mock.patch.object(
-                arena, "_run_fresh_seat_pairs", return_value=([failed_pair], [event], []),
-            ):
+            replay_dir = os.path.join(d, "replays", "arena-failures")
+            with mock.patch.object(arena, "LEDGER", ledger), \
+                    mock.patch.object(arena, "FAILURE_REPLAY_DIRECTORY", replay_dir), \
+                    mock.patch.object(
+                        arena, "_run_fresh_seat_pairs",
+                        return_value=([failed_pair], [event], []),
+                    ):
                 with self.assertRaises(arena.ArenaRunError) as raised:
                     arena.run_match_series(
                         "random", "first", n=2, jobs=1, profile="standard",
-                        pair_timeout_sec=1,
+                        pair_timeout_sec=1, run_id="diagnostic-test",
                     )
             with open(ledger) as f:
-                saved = json.loads(f.readline())
+                raw_ledger = f.readline()
+                saved = json.loads(raw_ledger)
+            diagnostic = saved["failures"][0]["diagnostic"]
+            sidecar_path = os.path.join(replay_dir, os.path.basename(diagnostic["path"]))
+            with open(sidecar_path) as f:
+                sidecar = json.load(f)
+            self.assertEqual(diagnostic["sha256"], arena._sha256_file(sidecar_path))
         self.assertEqual(saved["schema"], 2)
         self.assertEqual(saved["n"], 2)
         self.assertEqual(saved["failure_count"], 2)
         self.assertEqual(saved["overall"]["unscored"], 2)
         self.assertEqual(saved["statuses_a"], {"ERROR": 2})
         self.assertEqual(saved["watchdog"]["event_count"], 1)
+        self.assertEqual(
+            [(row["pair_index"], row["game_index"]) for row in saved["failures"]],
+            [(0, 0), (0, 1)],
+        )
+        self.assertEqual(
+            diagnostic["path"],
+            f"replays/arena-failures/diagnostic-test-i{saved['invocation_id']}"
+            "-p00-g0.json",
+        )
+        self.assertEqual(diagnostic["invocation_id"], saved["invocation_id"])
+        self.assertEqual((diagnostic["step_count"], diagnostic["log_count"]), (2, 1))
+        self.assertIsNone(diagnostic["native_seed"])
+        self.assertFalse(diagnostic["exact_rerun_supported"])
+        self.assertEqual(sidecar["environment"]["steps"][0]["marker"], private_marker)
+        self.assertEqual(sidecar["logs"], [{"duration": 600.021}])
+        self.assertEqual(sidecar["invocation_id"], saved["invocation_id"])
+        self.assertIsNone(sidecar["reproducibility"]["native_seed"])
+        self.assertFalse(sidecar["reproducibility"]["exact_rerun_supported"])
+        self.assertNotIn(private_marker, raw_ledger)
+        self.assertNotIn(arena._PRIVATE_FAILURE_REPLAY, raw_ledger)
+        self.assertNotIn(arena._PRIVATE_FAILURE_LOGS, raw_ledger)
         self.assertEqual(raised.exception.record["run_id"], saved["run_id"])
+
+    def test_failure_sidecar_write_error_preserves_result_and_is_run_failure(self):
+        failed_pair = arena._synthetic_failed_pair(0, "timeout", "keep me", 0.1)
+        failed_pair[0][arena._PRIVATE_FAILURE_REPLAY] = {
+            "steps": [{"marker": "private-sidecar-only"}],
+        }
+        failed_pair[0][arena._PRIVATE_FAILURE_LOGS] = [{"duration": 1.0}]
+        with tempfile.TemporaryDirectory() as d:
+            ledger = os.path.join(d, "arena.jsonl")
+            with mock.patch.object(arena, "LEDGER", ledger), \
+                    mock.patch.object(
+                        arena, "_run_fresh_seat_pairs",
+                        return_value=([failed_pair], [], []),
+                    ), mock.patch.object(
+                        arena, "_write_failure_sidecar",
+                        side_effect=OSError("disk full"),
+                    ):
+                record = arena.run_match_series(
+                    "random", "first", n=2, jobs=1, profile="standard",
+                    pair_timeout_sec=1, run_id="save-error-test", strict=False,
+                )
+            with open(ledger) as f:
+                raw_ledger = f.readline()
+        self.assertEqual(record["failure_count"], 2)
+        self.assertIn("arena_pair_timeout: keep me",
+                      record["failures"][0]["failures"][0])
+        self.assertEqual((record["failures"][0]["pair_index"],
+                          record["failures"][0]["game_index"]), (0, 0))
+        self.assertIn("OSError: disk full",
+                      record["failures"][0]["diagnostic"]["save_error"])
+        self.assertTrue(any("failure diagnostic save failed (pair=0 game=0)" in error
+                            for error in record["run_failures"]))
+        self.assertNotIn("private-sidecar-only", raw_ledger)
+        self.assertNotIn(arena._PRIVATE_FAILURE_REPLAY, raw_ledger)
+
+    def test_same_run_id_reused_by_gauntlet_gets_distinct_failure_sidecars(self):
+        def failed_result(marker):
+            pair = arena._synthetic_failed_pair(0, "timeout", marker, 0.1)
+            pair[0][arena._PRIVATE_FAILURE_REPLAY] = {
+                "steps": [{"marker": marker}],
+            }
+            pair[0][arena._PRIVATE_FAILURE_LOGS] = [{"duration": 1.0}]
+            return ([pair], [], [])
+
+        responses = [failed_result("opponent-a"), failed_result("opponent-b")]
+        with tempfile.TemporaryDirectory() as d:
+            ledger = os.path.join(d, "arena.jsonl")
+            replay_dir = os.path.join(d, "replays", "arena-failures")
+            with mock.patch.object(arena, "LEDGER", ledger), \
+                    mock.patch.object(arena, "FAILURE_REPLAY_DIRECTORY", replay_dir), \
+                    mock.patch.object(
+                        arena, "_run_fresh_seat_pairs", side_effect=responses,
+                    ):
+                records = [
+                    arena.run_match_series(
+                        "random", "first", n=2, jobs=1, profile="standard",
+                        pair_timeout_sec=1, run_id="shared-gauntlet-run", strict=False,
+                    )
+                    for _ in range(2)
+                ]
+            with open(ledger) as f:
+                saved_records = [json.loads(line) for line in f]
+
+            self.assertNotEqual(records[0]["invocation_id"],
+                                records[1]["invocation_id"])
+            paths = [record["failures"][0]["diagnostic"]["path"]
+                     for record in records]
+            self.assertEqual(2, len(set(paths)))
+            self.assertEqual(2, len(os.listdir(replay_dir)))
+            for marker, record, saved, relative_path in zip(
+                    ("opponent-a", "opponent-b"), records, saved_records, paths):
+                diagnostic = record["failures"][0]["diagnostic"]
+                sidecar_path = os.path.join(replay_dir, os.path.basename(relative_path))
+                with open(sidecar_path) as f:
+                    sidecar = json.load(f)
+                self.assertEqual("shared-gauntlet-run", sidecar["run_id"])
+                self.assertEqual(record["invocation_id"], sidecar["invocation_id"])
+                self.assertEqual(record["invocation_id"], diagnostic["invocation_id"])
+                self.assertEqual(marker, sidecar["environment"]["steps"][0]["marker"])
+                self.assertEqual(diagnostic["sha256"], arena._sha256_file(sidecar_path))
+                self.assertEqual(relative_path,
+                                 saved["failures"][0]["diagnostic"]["path"])
+
+    def test_reuse_path_assigns_deterministic_pair_and_game_indices(self):
+        rows = _watchdog_test_rows(0) + _watchdog_test_rows(0)
+        rows[2]["failures"] = ["reuse failure"]
+        executor = mock.MagicMock()
+        executor.__enter__.return_value = executor
+        executor.map.return_value = rows
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(arena, "LEDGER", os.path.join(d, "arena.jsonl")), \
+                mock.patch.object(arena, "ProcessPoolExecutor", return_value=executor), \
+                mock.patch.object(arena, "_write_failure_sidecar") as writer:
+            record = arena.run_match_series(
+                "random", "first", n=4, jobs=2, profile="standard",
+                fresh_process_per_pair=False, strict=False,
+            )
+        self.assertEqual(record["failure_count"], 1)
+        self.assertEqual((record["failures"][0]["pair_index"],
+                          record["failures"][0]["game_index"]), (1, 0))
+        writer.assert_not_called()
 
     def test_forced_cleanup_metadata_is_nonfatal(self):
         valid_pair = _watchdog_test_rows(0)
         event = {"pair_index": 0, "kind": "forced_cleanup_after_payload"}
         with tempfile.TemporaryDirectory() as d:
             with mock.patch.object(arena, "LEDGER", os.path.join(d, "arena.jsonl")), \
+                    mock.patch.object(arena, "_write_failure_sidecar") as writer, \
                     mock.patch.object(
                         arena, "_run_fresh_seat_pairs",
                         return_value=([valid_pair], [event], []),
@@ -211,6 +354,22 @@ class ArenaUnitTests(unittest.TestCase):
         self.assertEqual(record["failure_count"], 0)
         self.assertEqual(record["run_failures"], [])
         self.assertEqual(record["watchdog"]["event_count"], 1)
+        writer.assert_not_called()
+
+    def test_worker_attaches_raw_replay_and_logs_only_to_failure(self):
+        replay = {"steps": [{"status": "TIMEOUT"}]}
+        logs = [{"duration": 600.1}]
+        env = SimpleNamespace(toJSON=lambda: replay, logs=logs)
+
+        success = {"failures": []}
+        arena._attach_failure_diagnostic(success, env)
+        self.assertNotIn(arena._PRIVATE_FAILURE_REPLAY, success)
+        self.assertNotIn(arena._PRIVATE_FAILURE_LOGS, success)
+
+        failure = {"failures": ["a_status=TIMEOUT"]}
+        arena._attach_failure_diagnostic(failure, env)
+        self.assertEqual(failure[arena._PRIVATE_FAILURE_REPLAY], replay)
+        self.assertEqual(failure[arena._PRIVATE_FAILURE_LOGS], logs)
 
     def test_pair_timeout_must_be_finite_and_positive(self):
         for value in (0, -1, float("nan"), float("inf"), True, "1"):

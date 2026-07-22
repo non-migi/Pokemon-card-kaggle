@@ -65,3 +65,29 @@ Kaggleディスカッション・note/X・Qiitaを横断調査。他の参加者
   <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/726690>
 - Xは通常検索・ドメイン指定検索とも、当日メタを裏付ける検証可能な投稿を取得できなかった。
   「投稿がない」とは推論せず、今回もKaggle公式CSV / dataset / replayを採用判断の主根拠にする。
+
+## 7. 2026-07-22 更新
+
+- 19:16の公式Leaderboardは5,497 teams、median 647.1、1000+ 90、1100+ 13、top-8 cutoff 1126.0。
+  前回より全体にratingが圧縮され、21:20再確認ではv4.3a 873.1（244戦）、v4.2t 712.2（203戦）。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>
+- 最新07-21 Daily Top 4,612 episodesと07-22公開replayで1100+全13 teamを同定。Grim 38.5%、
+  Alakazam/Kang各15.4%、Rocket/Dragapult/Cynthia Garchomp/Froslass–Mega Lopunny各7.7%、Festival 0。
+  Grimは11 team中10 teamが同じ18-Pokémon coreで、最多型は07-15 bono型から
+  `Aoki's Search -1 / Hikari +1`だけ。最新meta wallとして保存した。
+  <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-21>
+- Tony Li氏らは約21–22k replayのpure imitation learningで1088帯へ到達し、同一checkpointでもdeck差が
+  大きいと報告。少量高品質ILとdeck共適応の価値を支持するが、学習詳細・計算量は参加者自己申告である。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/728071>
+- host説明では約4分ごとのmatchmaking、rating/sigma/経過時間/新しさでpriorityを調整し、rating差だけで
+  最大約8倍、10% random、全submit最低48 games/dayを期待。最終評価でも新episodeを生成する。
+  未回答の公平性質問が残るため、public ladderの単発A/Bよりlocal multi-meta leagueを主証拠にする。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/726690>
+- 公式native engineはPyPI 1.32.0とは独立に更新され、Team Rocket Energyのshadowed index bugが修正された。
+  competition dataのnative binaryと毎回SHA比較する。別件のNinetales #660 × Amarys #1207 SIGSEGV報告は
+  host未回答なので、当面その組合せを候補deckから除外する。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/727094>
+  / <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/728068>
+- Xではユーザー提示の「強者行動をルールベース化」投稿の完全一致原文や、その後の具体的if-cascadeを
+  再取得できなかった。方向性はExpert Floorへ反映済みだが、個々のrule採否は公式強者decision監査と
+  順逆local A/Bで決める。

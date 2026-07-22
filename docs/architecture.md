@@ -1,4 +1,4 @@
-# アーキテクチャ設計(2026-07-16更新: Expert Floor + Search/ExIt Ceiling)
+# アーキテクチャ設計(2026-07-22更新: Expert Floor + failure diagnostics)
 
 ## 全体像
 
@@ -69,6 +69,10 @@ raw observation
 - ledgerはW/D/L/unscored、P0/P1、failure、run ID/suite、git commit、kaggle-environments version、
   agent tree/config/deck/model/cg SHA、watchdog event、agent metricsの全体/席別合算を持つ。
   終了時rehashで評価中のbuild変更も検出する。
+- failure行には親側で`pair_index/game_index`を付け、失敗したgameだけ環境JSON/logを
+  `replays/arena-failures/`へ原子的にsidecar保存する。ledgerにはpath/SHA/countのみを残し、raw payloadは
+  書かない。run IDを共有するgauntletでも呼出し固有`invocation_id`で衝突を防ぐ。native seedは取得不能のため、
+  sidecarは完全再実行ではなく事後診断の証拠である。
 - `production`: wall-clock探索。本番と同じだがCPU負荷に敏感なため`jobs=1`強制。
 - `fixed-worlds`: ローカル比較専用。両search agentの`fixed_search_worlds`（2〜24）を一致させ、
   壁時計budgetから分離する。未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。
