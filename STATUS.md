@@ -3,19 +3,19 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-22 21:25 JST (Codex) — 最新ラダーを再確認し、Expert Floor棄却後の診断基盤を完成
+最終更新: 2026-07-23 00:15 JST (Codex) — AZ005単独gateをREJECT、深夜ラダーを再確認
 
-## ラダー状況(2026-07-22 21:20 JST、active = 最新2提出のみ)
+## ラダー状況(2026-07-23 00:10 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
-| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **873.1 / 244戦125勝119敗 (51.2%)** |
-| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **712.2 / 203戦101勝102敗 (49.8%)** |
+| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **862.8 / 249戦126勝123敗 (50.6%)** |
+| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **708.6 / 204戦101勝103敗 (49.5%)** |
 | **v4.1a** (sub 54612885) | no | bc_v2 BCS + 旧Alakazam | **869.1 / 149戦79勝70敗 (53.0%)で凍結** |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
 | **v4.0a** (sub 54591345) | no | BC×探索 + bc_v2 + フーディン型 | **826.4 / 67戦** (07-12 23:25 JSTに停止) |
 
-`v4.2t`は203戦で712.2へ収束。調査時62戦の28勝は全て相手deckoutだが、34敗は
+`v4.2t`は204戦で708.6へ収束。調査時62戦の28勝は全て相手deckoutだが、34敗は
 ポケモン無17/サイド10/自deckout 7。ポケモン無7敗で、ベンチ空・手札に出せるBasicがあるのに
 21の重要選択中15回出さず。timeoutではなく、**Great Tuskとbc_v2の分布不整合**が失敗の主因。
 
@@ -23,7 +23,7 @@
 fixed2 BCS **75.0%/80**、二層meta加重 **88.95% vs baseline 83.23%**。最終production 8秒は
 凍結した実提出v4.1aに **8–2/10** (P0 3–2 / P1 5–0)、全戦`DONE`、failure 0、最小残りoverage
 **215.99秒**。両席buildを通し、07-16 00:48 JSTに提出、01:01 JSTに`COMPLETE`。早期78戦では
-920.7だったが、244戦で873.1へ収束。旧v4.1aを+4.0上回るに留まり、1100には未到達。
+920.7だったが、249戦で862.8へ収束。旧v4.1aの凍結869.1も下回り、1100には未到達。
 
 **G3通過(予定より3週早い)**: v4.0a = BC×探索が純BC(v3.2a)に **58.1%/400戦**(有意)。
 本番ラダーで **826.4/67戦** — これまでの平衡750-780を上抜けしたが、v4.1a投入時にinactive化。
@@ -36,13 +36,13 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **Expert Floorを分解**: 公式e0717 engineの統合gateはFloor換算**84/160**、P0 46/P1 38、
-   TIMEOUT 1で棄却。実発火した`r5` (sole Dudunsparce guard)を先に単独評価し、`r8` (draw-to-KO)は
-   25回選択・P1下振れ・長期化との関係をfailure traceで監査してから別A/Bする。両単独版は公式engineで
-   build・両席loader検証済み。統合版は提出しない。
-2. **最新Grimを主要meta wallへ追加**: 1100+の38.5%まで増加。最多60枚を
-   `snapshot_20260721_grim_canonical.csv`へ固定済み。旧二層重みを更新し、r5/Hammer4は
-   canonical mirrorだけでなくこのwallを含む複数対面で判定する。
+1. **AZ008を単独gateへ**: 統合Floor 84/160に続き、`r5` (sole Dudunsparce guard)も
+   **68/160、P0 37/P1 31、探索不完全1**で事前REJECT。enforce/production/ExIt floorから外した。
+   次は探索不完全のstage/context metricを追加してから、`r8` (draw-to-KO)だけを標準86/160 gateで測る。
+   r5や統合Floorの戦績を混ぜず、途中結果にかかわらず順逆を完走する。
+2. **最新Grimを主要meta wallへ追加**: 21:43の1100+ 17 teamでは41.2%、トップ3もGrim。
+   最多60枚を`snapshot_20260721_grim_canonical.csv`へ固定済み。r8がcanonical gateを通った時だけ、
+   exact deck＋bc_v2 BCS proxyを共通壁にしたbase/candidate各40戦へ進む。
 3. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
    現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
@@ -58,21 +58,28 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    公開31敗中7件のポケモン切れを狙うが、ExIt中は組立てまでで重いscreenは行わない。
 7. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
-8. **ラダー監視**: v4.3a/v4.2tは各244/203戦でほぼ平衡。次の提出は上記gate通過時だけにし、
+8. **ラダー監視**: v4.3a/v4.2tは各249/204戦でほぼ平衡。次の提出は上記gate通過時だけにし、
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- AZ005単独gateはr5換算 **68/160=42.5%**、load-order 35/33、P0 37/P1 31で、
+  事前REJECT条件69以下。hit9/blocked2、全160 scored/DONE、最小overage 564.24秒。
+  forwardの`fixed_search_incomplete` 1件はsidecarでrollout系へ絞ったがrule因果未確定。
+  性能条件だけでREJECTが成立するため再試験せず、次のr8へ混ぜない。
+- 00:10公式LBは5,521 team、median 647.2、1000+ 95、1100+ 18、1200+ 0、
+  top-8境界1120.5、首位1194.1、自チーム493位/862.8。21:43に分類済みの17 teamは
+  Grim 41.2%（トップ3全て）、Rocket/Dragapult/Cynthia各11.8%。新規18番目は未分類。
 - 公式native engineはPyPI最新版とは別に更新されていた。Team Rocket Energyのindex bug修正版4 binaryを
   `src/cg`へ同期し、`scripts/sync_cg_engine.py`の実動checkで4/4 `MATCH`。e0717 buildは両席`DONE`。
 - Expert Floor統合正式gateは **84/160=52.5%**、load-order 42/80ずつ、P0 46/P1 38、
   TIMEOUT 1。総合86・各席39・failure 0の3条件を外したため棄却。AZ005 hit13/blocked4、
-  AZ008 hit35/selected25、他ruleはcanonical mirrorで発火0。次はr5/r8単独。
+  AZ008 hit35/selected25、他ruleはcanonical mirrorで発火0。分離したr5もREJECTとなり、次はr8単独。
 - arena failure診断を追加。今後はpair/game identityとfailure-only replay/log sidecarを残し、同一gauntlet
   run内も`invocation_id`で衝突しない。native seedは取得不能のため完全再実行ではなく事後診断用。
   unit 44件＋意図的ERRORの実process 2戦でsidecar/SHA/raw非漏洩を確認。
-- 07-22現1100+全13 teamはGrim 38.5%、Alakazam/Kang各15.4%、Rocket/Dragapult/Cynthia/
+- 07-22 19:16時点の1100+全13 teamはGrim 38.5%、Alakazam/Kang各15.4%、Rocket/Dragapult/Cynthia/
   Froslass-Lopunny各7.7%、Festival 0。Grim 10/11は同一18-Pokémon coreで、最多型6/11を保存した。
-- activeは21:20再確認でv4.3a **873.1/244戦**、v4.2t **712.2/203戦**。19:16時点のLBは5,497 team、
+- activeは00:10再確認でv4.3a **862.8/249戦**、v4.2t **708.6/204戦**。19:16時点のLBは5,497 team、
   median 647.1、1000+ 90、1100+ 13、top-8境界1126.0、自チーム402位。
 - ExIt v1は **59,249/350,000判断 (16.93%)**、3 shard。全gzip/JSON/必須key/deck60が正常、
   `.tmp`/`.broken`なし。新規200試合は15,175判断（75.875/試合）。6 workerは健全だったが、
@@ -113,10 +120,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   `models/value_v1`へ退避し、実行時はフルロールアウトへフォールバック
 - Kaggleは目標48試合/日、各マッチ10%でランダム相手。短期レート/順位には対面運が残る
 
-## 外部情報スキャン(07-22 19:16–21:20 JST)
+## 外部情報スキャン(07-22 19:16–07-23 00:10 JST)
 
-- Leaderboardは5,497 team、median 647.1、1000+ 90、1100+ 13、1200+ 0、top-8境界1126.0。
-  最新Daily Topは07-21版4,612 episodes。1100+全13 teamのdeckを公式replayで補完した。
+- 00:10 Leaderboardは5,521 team、median 647.2、1000+ 95、1100+ 18、1200+ 0、top-8境界1120.5。
+  最新Daily Topは07-21版4,612 episodesで、07-22版は未公開。21:43時点の1100+全17 teamを分類したが、
+  00:10に増えた1 teamはreplay取得停止のため未分類とし、比率へ推測で混ぜない。
 - Discussion 728071の模倣学習21–22k replayで1088帯という報告は短期ExIt設計を支持するが、参加者自己申告。
   728068のNinetales #660 × Amarys #1207 SIGSEGVはhost未回答のため当面その組合せを避ける。
 - X通常検索ではユーザー提示投稿の完全一致原文や新しい具体的if-cascadeを取得できず、
@@ -124,15 +132,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-22 21:33 JST)**: 公式engineの`v4.5a-r5-fixed2`（AZ005だけ）を
-  `v4.5a-base-fixed2-e0717`から分離評価する。既存ledger重複なしを確認済み。評価前に採否gateを固定し、
-  順逆・両席・failure・guard hit/blockedを記録する。rare safety rule用にSAFE-KEEP 76/160＋4区分34/80、
-  REJECT 69/160以下または区分29/80以下、その間はINCONCLUSIVEと事前固定。同時に公式ラダー/最新メタを
-  read-only再確認する。開始前監査でdeck>0＋合法END存在へ発火条件を狭め、violation/conflictをstrict化。
-  unit 47件、同一sourceからのbase/r5再build、両席loader `DONE`まで完了。
+- なし
 
 ## 今日の提出枠
 
+- 07-23: **0/5 使用**（提出なし）
 - 07-22: **0/5 使用**（提出なし）
 - 07-16: **1/5 使用** (`v4.3a`, sub 54731784, COMPLETE)
 - 07-15: 0/5使用

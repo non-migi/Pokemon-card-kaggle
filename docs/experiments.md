@@ -822,3 +822,32 @@ deck 0 / 能力のみ / 能力＋終了の境界testを追加した。arenaも`e
 `expert_rule_violation.*`をstrict failure化。全unit **47件**通過後、r5/baseを同じsourceから再buildし、
 両席loader `DONE`。fingerprintはr5 `797f46dd...`、base `b05c7316...`、deck/model/cg hashは一致し、
 config差だけである。
+
+#### AZ005単独gateの実測結果（07-22 23:03–07-23 00:01）
+
+途中結果にかかわらず事前宣言どおり両方向を完走した。逆方向はbase Aのscoreを補数へ変換し、
+candidateの席も相手席から変換した。
+
+| load order | 表示A score | r5換算 | r5 P0/P1寄与 | failure |
+|---|---:|---:|---:|---:|
+| r5 A vs base B | 35/80 | **35/80** | 19 / 16 | 1 `fixed_search_incomplete` |
+| base A vs r5 B | 47/80 | **33/80** | 18 / 15 | 0 |
+| **合算** | — | **68/160 (42.5%)** | **37 / 31** | **1** |
+
+- `C_fwd=35`、`C_rev=80-47=33`、`C_P0=19+(40-22)=37`、
+  `C_P1=16+(40-25)=31`。合計 **68/160** は事前REJECT条件の69以下であり、
+  r5を**棄却**する。SAFE-KEEP/Grim wall/production/提出へ進めず、統合Floorや旧engineの結果とも合算しない。
+- 全160戦はscored、両agentのstatusは全て`DONE`、watchdog timeout 0、rule error/invalid/violation 0。
+  r5はhit **9**、guard blocked **2**、最小remaining overage **564.2353秒**。deck/model/cg SHAと
+  r5/base fingerprintは両runの開始終了で一致した。
+- forwardの1件はpair 20 / game 0で、試合自体は両者`DONE`、timeout/invalid/例外ではない。
+  fixed2の「2 worlds×全候補」を1判断だけ完遂できずfallbackした測定品質failureで、sidecarは
+  `replays/arena-failures/1547f8f3...-p20-g0.json`（SHA `74950957...`、127 steps / 128 logs）。
+  記録観測のBC score欠落は0/76、当該agentの総消費15.26秒なので、30秒hard stopは除外できた。
+- sidecar中でAZ005条件が成立したのは1局面だけ。base候補`[3,4,5,0,6]`から自滅能力`[5]`を外し、
+  r5候補`[3,4,0,6,1]`にしたが、実選択は両者共通の合法なBC top-1 `[3]`だった。
+  内部例外とrule発火decisionの対応を保存していないため、この1件をAZ005因果とは断定しない。
+  ただし性能REJECTはfailure分類に依存せず成立するため再試験しない。将来のcandidate評価では
+  `world_begin` / `candidate_rollout`段階とactive rule contextをmetric化する。
+- AZ005のコードとfixtureは反例知識として残すが、enforce config、production、ExItのExpert Floorから外す。
+  次はr5を混ぜず、AZ008 draw-to-exact-KO candidateを標準の86/160 gateで単独評価する。

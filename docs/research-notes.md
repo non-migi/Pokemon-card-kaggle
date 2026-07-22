@@ -91,3 +91,20 @@ Kaggleディスカッション・note/X・Qiitaを横断調査。他の参加者
 - Xではユーザー提示の「強者行動をルールベース化」投稿の完全一致原文や、その後の具体的if-cascadeを
   再取得できなかった。方向性はExpert Floorへ反映済みだが、個々のrule採否は公式強者decision監査と
   順逆local A/Bで決める。
+
+## 8. 2026-07-23 00:10 JST 更新
+
+- Kaggle公式Leaderboard CSV（snapshot `2026-07-22T15:10:10Z`）は **5,521 teams**、median 647.2、
+  1000+ 95、1100+ 18、1200+ 0、top-8 cutoff 1120.5、leader 1194.1。自チームは
+  **493位 / 862.8**で、1100まで237.2、top-8まで257.7の差がある。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>
+- active 2枠はv4.3a **862.8 / 249戦126勝123敗 (50.6%)**、v4.2t
+  **708.6 / 204戦101勝103敗 (49.5%)**。v4.3aは旧v4.1aの凍結869.1も下回り、
+  canonical deck模倣＋現行BCSだけでは上位へ届かないことが収束値でも明確になった。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/submissions>
+- 21:43時点の1100+全17 teamを現公開replayで分類すると、Grim 7 (41.2%、トップ3全て)、
+  Rocket / Dragapult / Cynthia Garchomp各2 (11.8%)、Alakazam / Kang / Lopunny–Dudunsparce /
+  Mega Starmie系各1 (5.9%)。00:10には新たに1 teamが1100へ入り18 teamになったため、
+  17-team分類は時刻付きsnapshotとして扱い、新規1 teamを未分類のまま既存比率へ混ぜない。
+- 07-22 Daily Top datasetは00:10時点で未公開。最新の公式学習・検証用datasetは引き続き07-21版。
+  <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-21>
