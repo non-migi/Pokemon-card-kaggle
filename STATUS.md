@@ -126,7 +126,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 - **Codex (2026-07-22 21:33 JST)**: 公式engineの`v4.5a-r5-fixed2`（AZ005だけ）を
   `v4.5a-base-fixed2-e0717`から分離評価する。既存ledger重複なしを確認済み。評価前に採否gateを固定し、
-  順逆・両席・failure・guard hit/blockedを記録する。同時に公式ラダー/最新メタをread-only再確認する。
+  順逆・両席・failure・guard hit/blockedを記録する。rare safety rule用にSAFE-KEEP 76/160＋4区分34/80、
+  REJECT 69/160以下または区分29/80以下、その間はINCONCLUSIVEと事前固定。同時に公式ラダー/最新メタを
+  read-only再確認する。開始前監査でdeck>0＋合法END存在へ発火条件を狭め、violation/conflictをstrict化。
+  unit 47件、同一sourceからのbase/r5再build、両席loader `DONE`まで完了。
 
 ## 今日の提出枠
 

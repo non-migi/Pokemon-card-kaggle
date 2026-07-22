@@ -224,6 +224,30 @@ class ExpertRuleTests(unittest.TestCase):
             obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ005_SOLE_DUDUN_GUARD"],
         ), [])
 
+    def test_sole_dudunsparce_guard_requires_cards_to_draw(self):
+        mine = player(active=[pokemon(66)], bench=[], deck_count=0)
+        obs = observation([
+            {"type": 10, "area": 4, "index": 0},
+            {"type": 14},
+        ], mine=mine)
+        self.assertEqual(rules.evaluate(
+            obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ005_SOLE_DUDUN_GUARD"],
+        ), [])
+
+    def test_sole_dudunsparce_guard_requires_a_legal_end_action(self):
+        mine = player(active=[pokemon(66)], bench=[], deck_count=1)
+        ability = {"type": 10, "area": 4, "index": 0}
+        obs = observation([ability], mine=mine)
+        self.assertEqual(rules.evaluate(
+            obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ005_SOLE_DUDUN_GUARD"],
+        ), [])
+
+        obs["select"]["option"].append({"type": 14})
+        got = rules.evaluate(
+            obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ005_SOLE_DUDUN_GUARD"],
+        )
+        self.assertEqual((got[0].action, got[0].kind), ((0,), "forbid"))
+
     def test_multiple_blockers_with_enough_hammers_propose_exact_ko_chain(self):
         mine = player(
             hand=[1081, 1081],

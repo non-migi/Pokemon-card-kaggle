@@ -417,6 +417,21 @@ class ArenaUnitTests(unittest.TestCase):
             {"expert_rule_hit.AZ001": 7},
         )
 
+    def test_rule_conflict_and_forbidden_violation_are_strict_failures(self):
+        metrics = {
+            "expert_rule_hit.AZ005": 3,
+            "expert_rule_guard_blocked.AZ005": 1,
+            "expert_rule_conflicts": 1,
+            "expert_rule_violation.AZ005": 1,
+        }
+        self.assertEqual(
+            arena._strict_agent_metric_failures("a", metrics),
+            [
+                "a_expert_rule_conflicts=1",
+                "a_expert_rule_violation.AZ005=1",
+            ],
+        )
+
     def test_build_validates_expert_rule_config_shape(self):
         valid = {
             "model": "bc_v2",

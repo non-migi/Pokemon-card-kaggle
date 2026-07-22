@@ -19,7 +19,7 @@ from typing import Callable, Iterable, Mapping
 
 # SelectType / OptionType / AreaType。コンペ中にenumが増えても未知intは非発火にする。
 ST_MAIN, ST_CARD, ST_ENERGY = 0, 1, 4
-OT_CARD, OT_PLAY, OT_EVOLVE, OT_ABILITY, OT_ATTACK = 3, 7, 9, 10, 13
+OT_CARD, OT_PLAY, OT_EVOLVE, OT_ABILITY, OT_ATTACK, OT_END = 3, 7, 9, 10, 13, 14
 AR_HAND, AR_DISCARD, AR_ACTIVE, AR_BENCH = 2, 3, 4, 5
 CTX_TO_DECK = 9
 
@@ -301,7 +301,11 @@ def _az004_hammer_blocker_target(
 def _az005_sole_dudun_guard(
     obs: dict, _card_energy_types: Mapping[int, int],
 ) -> RuleProposal | None:
-    """場の唯一のDudunsparceを山札へ戻して即敗北する手を禁止する。"""
+    """場の唯一のDudunsparceを山札へ戻して即敗北する手を禁止する。
+
+    Run Away Drawは1枚以上引いた場合だけ自身を戻すためdeck残数を確認する。
+    また禁止後も合法なターン終了を残し、negative guardだけで合法手を尽くさない。
+    """
     sel = obs.get("select") or {}
     players = _players(obs)
     if sel.get("type") != ST_MAIN or sel.get("maxCount") != 1 or players is None:
@@ -310,7 +314,20 @@ def _az005_sole_dudun_guard(
     active = _active(mine)
     if active is None or active.get("id") != DUDUNSPARCE or len(_field(mine)) != 1:
         return None
-    for i, option in enumerate(sel.get("option") or []):
+    try:
+        if int(mine.get("deckCount", 0) or 0) <= 0:
+            return None
+    except (TypeError, ValueError):
+        return None
+    options = sel.get("option") or []
+    has_legal_end = any(
+        isinstance(option, dict) and option.get("type") == OT_END
+        and legal_action(obs, (i,))
+        for i, option in enumerate(options)
+    )
+    if not has_legal_end:
+        return None
+    for i, option in enumerate(options):
         if (isinstance(option, dict) and option.get("type") == OT_ABILITY
                 and option.get("area") == AR_ACTIVE
                 and int(option.get("index", -1)) == 0):

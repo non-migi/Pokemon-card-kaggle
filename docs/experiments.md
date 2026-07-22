@@ -789,3 +789,36 @@ rule error/invalid 0。途中結果に関係なく両方向を実行した。
 <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/726690>、
 <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/727094>、
 <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/728071>。
+
+### AZ005単独negative guardの事前gate（07-22 21:40、結果確認前）
+
+統合Floorの84/160はAZ008を含むため合算しない。公式e0717 engine、fixed2、他の重負荷jobなしで、
+順方向80戦（r5 A / base B）と逆方向80戦（base A / r5 B）を途中結果にかかわらず実行する。
+各runは両席40戦。候補換算は、順方向を`F0/F1`、逆方向のbase Aを`R0/R1`として以下で固定する。
+
+- load-order: `C_fwd=F0+F1`、`C_rev=80-(R0+R1)`
+- candidate seat: `C_P0=F0+(40-R1)`、`C_P1=F1+(40-R0)`
+- total: `C_total=C_fwd+C_rev=C_P0+C_P1`
+
+AZ005は発火が希少で、証明済み自滅手を除く安全則なので、86/160のsuperiorityを必須にしない。
+この160戦は勝率向上の証明ではなくgross regressionと実装事故の検出に使う。判定は次で固定する。
+
+- **SAFE-KEEP（次のmulti-meta wallへ進むだけ）**: `C_total>=76/160`、かつ`C_fwd/C_rev/C_P0/C_P1`
+  が各34/80以上。160/160 scored、全status `DONE`、failure/run failure/rule・search error/invalid/conflict 0、
+  candidateのAZ005 hit>=1かつguard blocked>=1、violation 0、他rule metric 0、最小overage 60秒以上も必須。
+  これはproduction採用や全体勝率改善の主張ではない。
+- **REJECT**: `C_total<=69/160`、任意区分<=29/80、またはcandidate起因のTIMEOUT/ERROR/invalid/
+  forbidden最終選択。実装を無効化してtraceを調査する。
+- **INCONCLUSIVE**: total 70–75、任意区分30–33、hit/block 0、baseline/infraだけのfailure、または
+  sidecar診断失敗。productionへ入れず、閾値を変更せず事前宣言した再試験へ回す。
+
+unscoredが1件でもあれば補数scoreで性能判定しない。valid payload後のforced cleanupだけは記録するが、
+単独ではfailureにしない。開始終了fingerprintを照合し、main/deck/model/cg同一・config差がAZ005だけであることを
+再確認する。SAFE-KEEP後は最新Grim wallを含むmulti-meta評価が別途必須。
+
+開始前監査で、旧AZ005はdeck 0でも発火し得ることと、合成入力で禁止手しかない場合にfallbackが空になり得る
+ことを発見した。結果を見る前に`deckCount>0`かつ合法なターン終了手が存在する時だけ発火するよう狭め、
+deck 0 / 能力のみ / 能力＋終了の境界testを追加した。arenaも`expert_rule_conflicts`と動的な
+`expert_rule_violation.*`をstrict failure化。全unit **47件**通過後、r5/baseを同じsourceから再buildし、
+両席loader `DONE`。fingerprintはr5 `797f46dd...`、base `b05c7316...`、deck/model/cg hashは一致し、
+config差だけである。

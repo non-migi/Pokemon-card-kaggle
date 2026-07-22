@@ -142,6 +142,22 @@ def _metric_delta(before: dict, after: dict) -> dict:
     return {key: after.get(key, 0) - before.get(key, 0) for key in keys}
 
 
+def _strict_agent_metric_failures(side: str, metrics: dict) -> list[str]:
+    """証拠測定を無効にするagent metricをfailure表現へ変換する。"""
+    exact = {
+        "fixed_search_incomplete",
+        "fixed_search_errors",
+        "expert_rule_errors",
+        "expert_rule_invalid",
+        "expert_rule_conflicts",
+    }
+    return [
+        f"{side}_{key}={value}"
+        for key, value in sorted(metrics.items())
+        if value and (key in exact or key.startswith("expert_rule_violation."))
+    ]
+
+
 def _sum_agent_metrics(results: list[dict], side: str,
                        seat: int | None = None) -> dict:
     """各gameのflat numeric metricsをagent/席ごとに合算する。"""
@@ -206,12 +222,7 @@ def _play(swap: bool) -> dict:
     metrics_a = _metric_delta(metrics_a_before, _agent_metrics(a))
     metrics_b = _metric_delta(metrics_b_before, _agent_metrics(b))
     for side, metrics in (("a", metrics_a), ("b", metrics_b)):
-        for key in (
-            "fixed_search_incomplete", "fixed_search_errors",
-            "expert_rule_errors", "expert_rule_invalid",
-        ):
-            if metrics.get(key, 0):
-                failures.append(f"{side}_{key}={metrics[key]}")
+        failures.extend(_strict_agent_metric_failures(side, metrics))
     row = {
         "a_seat": a_seat,
         "reward": reward,
