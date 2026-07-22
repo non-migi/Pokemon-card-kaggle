@@ -132,7 +132,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- なし
+- **Codex (2026-07-23 00:18 JST)**: `AZ008_DRAW_TO_EXACT_KO`単独の公式e0717 fixed2 gateを準備する。
+  r5/統合Floorの結果は混ぜない。先に`FixedSearchIncomplete`へworld begin / candidate step / rollout /
+  hard-stopとactive rule contextの診断metricを追加し、AZ008の境界fixtureを監査する。unit・同一sourceからの
+  base/r8再build・両席loader・fingerprint/config-only差を確認後、標準gate（86/160、各席39、
+  各load-order38、全failure/error/incomplete/invalid/conflict/violation 0、最小overage60秒）を結果前に固定する。
 
 ## 今日の提出枠
 
