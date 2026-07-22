@@ -111,7 +111,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 - **Codex (2026-07-22 18:55 JST)**: `v4.5a-floor-fixed2` vs `v4.5a-base-fixed2`の
   事前宣言済み順逆各80戦gateを担当。途中結果で停止せず、両load-order・両席・failure・rule metricsを判定する。
   公式native engine差を検知したためe0717 buildで正式gateを再実行中。再発防止のengine同期検査CLIも同時に整備する。
-  評価中はExIt生成・学習・別search評価を並走させない。
+  正式gateは84/160かつTIMEOUT 1件で棄却。終了前に失敗pair identity/replay sidecarをarenaへ追加してから記録を引き継ぐ。
 
 ## 今日の提出枠
 
