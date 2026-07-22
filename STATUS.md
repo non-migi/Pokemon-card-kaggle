@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 00:15 JST (Codex) — AZ005単独gateをREJECT、深夜ラダーを再確認
+最終更新: 2026-07-23 00:41 JST (Codex) — AZ008監査を修正し、治療差を測るGrim壁gateを事前登録
 
 ## ラダー状況(2026-07-23 00:10 JST、active = 最新2提出のみ)
 
@@ -36,13 +36,16 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **AZ008を単独gateへ**: 統合Floor 84/160に続き、`r5` (sole Dudunsparce guard)も
-   **68/160、P0 37/P1 31、探索不完全1**で事前REJECT。enforce/production/ExIt floorから外した。
-   次は探索不完全のstage/context metricを追加してから、`r8` (draw-to-KO)だけを標準86/160 gateで測る。
-   r5や統合Floorの戦績を混ぜず、途中結果にかかわらず順逆を完走する。
-2. **最新Grimを主要meta wallへ追加**: 21:43の1100+ 17 teamでは41.2%、トップ3もGrim。
-   最多60枚を`snapshot_20260721_grim_canonical.csv`へ固定済み。r8がcanonical gateを通った時だけ、
-   exact deck＋bc_v2 BCS proxyを共通壁にしたbase/candidate各40戦へ進む。
+1. **AZ008を治療差のある単独gateへ**: Articuno aura等の見えるHand Power blockerを追加し、
+   48,501判断の再監査は287 hit / 教師一致247 (86.06%)。bc_v2 top-5外は2件だけで、旧canonical
+   mirrorの35 hit / 25 selectedは候補集合がbaselineと同一だった。探索不完全のstage/contextに加え、
+   `injected_selected`を計測する。実注入2件がともにGrim対面だったため、exact 07-21 Grim＋bc_v2 BCSを
+   共通壁にbase/r8を各40戦、途中結果にかかわらず同一load-orderで完走する。
+2. **Grim壁の事前screenを判定**: `C>=B-4`、各席`C>=B-3`、全40 scored/DONE、全failure/error/
+   incomplete/invalid/conflict/violation 0、最小overage 60秒、AZ008 hit/injected/**injected_selected**各1以上を
+   全て満たした時だけ逆load-order各40戦へ延長する。注入0はno-treatment、注入あり・注入手選択0は
+   direct-use coverage不足として、いずれも勝率にかかわらずINCONCLUSIVE。これはgross-regression screenで、
+   優越性やproduction採用の証明ではない。
 3. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
    現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
@@ -62,6 +65,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- AZ008の旧317 hitには、Team Rocket's Articunoの場全体aura等によりHand Power効果が通らない30件が
+  混入していた。見えるblockerとCarracostaの特殊Energy条件を実装し、修正後は287 hit / 教師一致247。
+  bc_v2 rankは1位200、2位59、3位16、4位8、5位2、6位2で、真の候補注入は2/287だけ。
+  以後はhit/selectedではなく`injected`と`injected_selected`を因果的な機構指標にする。
 - AZ005単独gateはr5換算 **68/160=42.5%**、load-order 35/33、P0 37/P1 31で、
   事前REJECT条件69以下。hit9/blocked2、全160 scored/DONE、最小overage 564.24秒。
   forwardの`fixed_search_incomplete` 1件はsidecarでrollout系へ絞ったがrule因果未確定。
@@ -132,11 +139,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-23 00:18 JST)**: `AZ008_DRAW_TO_EXACT_KO`単独の公式e0717 fixed2 gateを準備する。
-  r5/統合Floorの結果は混ぜない。先に`FixedSearchIncomplete`へworld begin / candidate step / rollout /
-  hard-stopとactive rule contextの診断metricを追加し、AZ008の境界fixtureを監査する。unit・同一sourceからの
-  base/r8再build・両席loader・fingerprint/config-only差を確認後、標準gate（86/160、各席39、
-  各load-order38、全failure/error/incomplete/invalid/conflict/violation 0、最小overage60秒）を結果前に固定する。
+- **Codex (2026-07-23 00:41 JST)**: `AZ008_DRAW_TO_EXACT_KO`のArticuno/Carracosta/static blocker境界、
+  複数Dudunsparce付属最小化、fixed-search stage/context、`injected_selected`まで実装・監査済み。
+  公式e0717・同一sourceのbase/r8とexact 07-21 Grim proxyをbuild済み。上記の事前登録gateに従い、
+  baseline 40戦→r8 40戦を他の重負荷jobなしで順次実行する。r5/統合Floor/旧canonical結果は混ぜない。
 
 ## 今日の提出枠
 

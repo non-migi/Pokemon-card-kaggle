@@ -1,0 +1,35 @@
+{
+  "enabled_rule_ids": [
+    "AZ008_DRAW_TO_EXACT_KO"
+  ],
+  "exact_deck": "decks/meta/snapshot_20260714_alakazam.csv",
+  "policy_build": "build/v4.5a-r8-fixed2",
+  "policy_build_sha256": "00c663fa741b55db142dc3642af556f10a337738bd4977c798e7ed39f55d2710",
+  "policy_enabled": true,
+  "profile": "alakazam_v1",
+  "rules": {
+    "AZ008_DRAW_TO_EXACT_KO": {
+      "bc_outside_top5": 2,
+      "bc_rank_1": 200,
+      "bc_rank_2": 59,
+      "bc_rank_3": 16,
+      "bc_rank_4": 8,
+      "bc_rank_5": 2,
+      "bc_rank_6": 2,
+      "bc_top1": 200,
+      "bc_top5": 285,
+      "candidate_injected": 2,
+      "candidate_injected_teacher_disagree": 1,
+      "candidate_injected_teacher_match": 1,
+      "hits": 287,
+      "kind_candidate": 287,
+      "teacher_alignment_rate": 0.8606,
+      "teacher_disagree": 40,
+      "teacher_match": 247
+    }
+  },
+  "totals": {
+    "decisions_audited": 48501,
+    "rows_read": 369083
+  }
+}

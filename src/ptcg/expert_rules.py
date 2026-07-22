@@ -32,6 +32,8 @@ ENHANCED_HAMMER = 1081
 SACRED_ASH = 1129
 HAND_POWER = 1072
 MIST_ENERGY, ROCK_FIGHTING_ENERGY = 11, 20
+TEAM_ROCKET_ARTICUNO = 414
+CARRACOSTA = 504
 PSYCHIC_ENERGY_TYPE = 5
 FIGHTING_ENERGY_TYPE = 6
 
@@ -50,7 +52,34 @@ class RuleProposal:
     equivalent_actions: tuple[tuple[int, ...], ...] = ()
 
 
-RuleFn = Callable[[dict, Mapping[int, int]], RuleProposal | None]
+CardTraits = Mapping[int, Mapping[str, bool]]
+RuleFn = Callable[
+    [dict, Mapping[int, int], CardTraits], RuleProposal | None,
+]
+
+
+def build_card_traits(cards: Mapping[int, object]) -> dict[int, dict[str, bool]]:
+    """cg card metadataからrule判定に必要な安定booleanだけを抽出する。"""
+    result = {}
+    for raw_id, card in cards.items():
+        try:
+            card_id = int(raw_id)
+        except (TypeError, ValueError):
+            continue
+        name = str(getattr(card, "name", "") or "")
+        skills = getattr(card, "skills", ()) or ()
+        skill_texts = [str(getattr(skill, "text", "") or "") for skill in skills]
+        result[card_id] = {
+            "attack_effect_immune": any(
+                "Prevent all effects of attacks" in text for text in skill_texts
+            ),
+            "basic_team_rocket": bool(
+                getattr(card, "basic", False)
+                and name.startswith(("Team Rocket's ", "Team Rocket’s "))
+            ),
+            "special_energy": int(getattr(card, "cardType", -1)) == 6,
+        }
+    return result
 
 
 def proposal_matches(proposal: RuleProposal, action: Iterable[int]) -> bool:
@@ -135,7 +164,7 @@ def _is_alakazam_deck(deck: Iterable[int]) -> bool:
 
 
 def _az001_empty_bench_basic(
-    obs: dict, _card_energy_types: Mapping[int, int],
+    obs: dict, _card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """場が1体だけのとき、非exの展開先を探索候補へ残す。"""
     sel = obs.get("select") or {}
@@ -170,7 +199,7 @@ def _az001_empty_bench_basic(
 
 
 def _az002_draw_evolution(
-    obs: dict, _card_energy_types: Mapping[int, int],
+    obs: dict, _card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """Alakazam系とDudunsparceのドロー進化を探索候補へ残す。"""
     sel = obs.get("select") or {}
@@ -223,6 +252,37 @@ def _effect_blocker_on_active(
     return bool(_blocker_energy_indices(player, card_energy_types))
 
 
+def _hand_power_effect_blocked(
+    mine: dict, opp: dict, card_energy_types: Mapping[int, int],
+    card_traits: CardTraits,
+) -> bool:
+    """観測から確定できるPowerful Hand（damage counter効果）の無効条件。"""
+    if _effect_blocker_on_active(opp, card_energy_types):
+        return True
+    target = _active(opp)
+    if target is None:
+        return False
+    target_id = target.get("id")
+    target_traits = card_traits.get(target_id, {})
+    if target_traits.get("attack_effect_immune"):
+        return True
+    articuno_present = any(
+        pokemon.get("id") == TEAM_ROCKET_ARTICUNO
+        for pokemon in _field(opp)
+    )
+    if articuno_present and target_traits.get("basic_team_rocket"):
+        return True
+    if target_id == CARRACOSTA:
+        attacker = _active(mine)
+        if attacker is not None and any(
+            isinstance(card, dict)
+            and card_traits.get(card.get("id"), {}).get("special_energy")
+            for card in attacker.get("energyCards") or []
+        ):
+            return True
+    return False
+
+
 def _alakazam_ready(player: dict) -> bool:
     active = _active(player)
     return bool(
@@ -232,7 +292,7 @@ def _alakazam_ready(player: dict) -> bool:
 
 
 def _az003_hammer_blocker_play(
-    obs: dict, card_energy_types: Mapping[int, int],
+    obs: dict, card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """Hand Powerを無効化するenergyがactiveにあればHammerを候補化する。"""
     sel = obs.get("select") or {}
@@ -254,7 +314,7 @@ def _az003_hammer_blocker_play(
 
 
 def _az004_hammer_blocker_target(
-    obs: dict, card_energy_types: Mapping[int, int],
+    obs: dict, card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """Hammer使用後は相手activeの効果無効energyを確実に選ぶ。"""
     sel = obs.get("select") or {}
@@ -299,7 +359,7 @@ def _az004_hammer_blocker_target(
 
 
 def _az005_sole_dudun_guard(
-    obs: dict, _card_energy_types: Mapping[int, int],
+    obs: dict, _card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """場の唯一のDudunsparceを山札へ戻して即敗北する手を禁止する。
 
@@ -339,7 +399,7 @@ def _az005_sole_dudun_guard(
 
 
 def _az006_unblock_exact_ko(
-    obs: dict, card_energy_types: Mapping[int, int],
+    obs: dict, card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """全blockerをHammerで剥がせばHand Power KOになる連鎖を候補化する。"""
     sel = obs.get("select") or {}
@@ -365,7 +425,7 @@ def _az006_unblock_exact_ko(
 
 
 def _az007_ash_zero_deck_max(
-    obs: dict, _card_energy_types: Mapping[int, int],
+    obs: dict, _card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
     """山札0枚のSacred Ashで、全候補を戻せる局面をshadow監査する。"""
     sel = obs.get("select") or {}
@@ -397,9 +457,9 @@ def _az007_ash_zero_deck_max(
 
 
 def _az008_draw_to_exact_ko(
-    obs: dict, card_energy_types: Mapping[int, int],
+    obs: dict, card_energy_types: Mapping[int, int], card_traits: CardTraits,
 ) -> RuleProposal | None:
-    """Dudunsparceの3 drawでHand Power KOへ届くとき能力を候補化する。"""
+    """Dudunsparceの3 drawでHand Power KO打点圏へ入る能力を候補化する。"""
     sel = obs.get("select") or {}
     players = _players(obs)
     if sel.get("type") != ST_MAIN or sel.get("maxCount") != 1 or players is None:
@@ -407,7 +467,9 @@ def _az008_draw_to_exact_ko(
     mine, opp = players
     target = _active(opp)
     if (not _alakazam_ready(mine) or target is None
-            or _effect_blocker_on_active(opp, card_energy_types)
+            or _hand_power_effect_blocked(
+                mine, opp, card_energy_types, card_traits,
+            )
             or int(mine.get("deckCount", 0) or 0) < 3):
         return None
     hand_count = int(mine.get("handCount", len(mine.get("hand") or [])) or 0)
@@ -421,6 +483,7 @@ def _az008_draw_to_exact_ko(
     ):
         return None
     bench = mine.get("bench") or []
+    candidates = []
     for i, option in enumerate(sel.get("option") or []):
         if (not isinstance(option, dict) or option.get("type") != OT_ABILITY
                 or option.get("area") != AR_BENCH):
@@ -430,11 +493,17 @@ def _az008_draw_to_exact_ko(
         except (KeyError, TypeError, ValueError, IndexError):
             continue
         if isinstance(pokemon, dict) and pokemon.get("id") == DUDUNSPARCE:
-            return RuleProposal(
-                "AZ008_DRAW_TO_EXACT_KO", (i,), 230, "candidate",
-                "3枚draw後のHand Powerでactiveを確定KOできる",
+            attached = len(pokemon.get("energyCards") or []) + len(
+                pokemon.get("tools") or []
             )
-    return None
+            candidates.append((attached, i))
+    if not candidates:
+        return None
+    _, option_index = min(candidates)
+    return RuleProposal(
+        "AZ008_DRAW_TO_EXACT_KO", (option_index,), 230, "candidate",
+        "3枚draw後にHand PowerのKO打点圏へ入る",
+    )
 
 
 RULES: dict[str, RuleFn] = {
@@ -483,18 +552,20 @@ def validate_config(profile: str | None, mode: str,
 def evaluate(obs_dict: dict, deck: Iterable[int], profile: str | None,
              enabled_rule_ids: Iterable[str] = (),
              card_energy_types: Mapping[int, int] | None = None,
+             card_traits: CardTraits | None = None,
              ) -> list[RuleProposal]:
     """現在局面で発火した合法ルールを優先度順に返す。例外は呼び手が救済する。"""
     if not profile or profile not in PROFILES or not _is_alakazam_deck(deck):
         return []
     enabled = tuple(enabled_rule_ids) or PROFILES[profile]
     energy_types = card_energy_types or {}
+    traits = card_traits or {}
     proposals = []
     for rule_id in enabled:
         fn = RULES.get(rule_id)
         if fn is None:
             continue
-        proposal = fn(obs_dict, energy_types)
+        proposal = fn(obs_dict, energy_types, traits)
         if proposal is not None and legal_action(obs_dict, proposal.action):
             proposals.append(proposal)
     return sorted(proposals, key=lambda p: (-p.priority, p.rule_id))

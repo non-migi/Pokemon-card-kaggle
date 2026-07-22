@@ -64,6 +64,7 @@ CARD_ENERGY_TYPES = {
     int(card_id): int(card.energyType)
     for card_id, card in heuristics.CARDS.items()
 }
+CARD_TRAITS = expert_rules.build_card_traits(heuristics.CARDS)
 
 # ---- 時間管理(探索使用時のみ意味を持つ) ----
 TOTAL_OVERAGE_SEC = 600.0
@@ -123,6 +124,7 @@ def _rule_proposals(obs_dict: dict):
         proposals = expert_rules.evaluate(
             obs_dict, DECK, EXPERT_RULE_PROFILE, ENABLED_RULE_IDS,
             card_energy_types=CARD_ENERGY_TYPES,
+            card_traits=CARD_TRAITS,
         )
         for proposal in proposals:
             _metric_inc(f"expert_rule_hit.{proposal.rule_id}")
@@ -218,8 +220,10 @@ def agent(obs_dict: dict) -> list[int]:
                     forbidden_actions=forbidden,
                 )
                 act = _reject_forbidden(proposals, forbidden, act)
-        except bc_search.FixedSearchIncomplete:
-            AGENT_METRICS["fixed_search_incomplete"] += 1
+        except bc_search.FixedSearchIncomplete as exc:
+            bc_search.record_fixed_search_incomplete(
+                AGENT_METRICS, exc, proposals,
+            )
             act = None
         except Exception:
             if FIXED_SEARCH_WORLDS is not None:

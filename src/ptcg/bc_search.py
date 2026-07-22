@@ -34,15 +34,42 @@ MAX_WORLDS = 96 if value.ENABLED else 24
 class FixedSearchIncomplete(RuntimeError):
     """固定計算量を完遂できず、比較用測定に採用できない。"""
 
+    def __init__(self, message: str, stage_counts: dict[str, int] | None = None):
+        super().__init__(message)
+        self.stage_counts = {
+            str(stage): int(count)
+            for stage, count in (stage_counts or {}).items()
+            if int(count) > 0
+        }
+
 
 def _metric_inc(metrics: dict | None, key: str, amount: int = 1) -> None:
     if metrics is not None:
         metrics[key] = int(metrics.get(key, 0)) + amount
 
 
+def record_fixed_search_incomplete(
+    metrics: dict | None, exc: FixedSearchIncomplete, rule_proposals=(),
+) -> None:
+    """fixed-worlds failureの段階と、その判断で発火中のruleを台帳へ残す。"""
+    _metric_inc(metrics, "fixed_search_incomplete")
+    for stage, count in sorted(exc.stage_counts.items()):
+        _metric_inc(metrics, f"fixed_search_incomplete_stage.{stage}", count)
+    rule_ids = sorted({
+        str(proposal.rule_id)
+        for proposal in rule_proposals
+        if getattr(proposal, "rule_id", None)
+    })
+    if not rule_ids:
+        rule_ids = ["none"]
+    for rule_id in rule_ids:
+        _metric_inc(metrics, f"fixed_search_incomplete_rule_context.{rule_id}")
+
+
 def _candidate_actions(scores, option_count: int, rule_proposals=(),
                        rule_mode: str = "shadow", metrics: dict | None = None,
-                       forbidden_actions=()) -> list[list[int]]:
+                       forbidden_actions=(), injected_actions=None,
+                       ) -> list[list[int]]:
     """BC順位と専門家ルールから、計算量を変えず最大TOP_K候補を作る。
 
     BC top-1は常に保持し、BC top-k外のrule候補を最大RULE_SLOTSだけ入れる。
@@ -90,12 +117,26 @@ def _candidate_actions(scores, option_count: int, rule_proposals=(),
         result_keys.add(action)
         injected += 1
         _metric_inc(metrics, f"expert_rule_injected.{rule_id}")
+        if injected_actions is not None:
+            injected_actions.setdefault(action, set()).add(rule_id)
     for action in baseline:
         key = tuple(action)
         if key not in result_keys and len(result) < TOP_K:
             result.append(action)
             result_keys.add(key)
     return result
+
+
+def _record_injected_selection(
+    injected_actions, action, metrics: dict | None,
+) -> None:
+    """候補生成時に実注入したrule actionを探索が選んだ時だけ記録する。"""
+    try:
+        chosen = tuple(action)
+    except TypeError:
+        return
+    for rule_id in sorted((injected_actions or {}).get(chosen, ())):
+        _metric_inc(metrics, f"expert_rule_injected_selected.{rule_id}")
 
 
 def _policy_act(od: dict) -> list[int]:
@@ -161,12 +202,17 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
     scores = policy.scores(obs_dict)
     if scores is None:
         if fixed_worlds is not None:
-            raise FixedSearchIncomplete("searchableな選択でBC scoreを取得できない")
+            raise FixedSearchIncomplete(
+                "searchableな選択でBC scoreを取得できない",
+                {"bc_scores": 1},
+            )
         return None
+    injected_actions = {}
     cands = _candidate_actions(
         scores, len(opts), rule_proposals=rule_proposals,
         rule_mode=rule_mode, metrics=metrics,
         forbidden_actions=forbidden_actions,
+        injected_actions=injected_actions,
     )
     if len(cands) < 2:
         return None
@@ -188,22 +234,37 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
     else:
         hard_stop = deadline + budget_sec * 0.5
     worlds = 0
+    incomplete_stages: dict[str, int] = {}
+
+    def mark_incomplete(stage: str) -> None:
+        incomplete_stages[stage] = incomplete_stages.get(stage, 0) + 1
+
     try:
         while worlds < world_limit and (fixed_worlds is not None or time.time() < deadline):
             try:
                 world = sample_world(obs_dc, my_deck, rng)
+            except Exception:
+                mark_incomplete("belief_sample")
+                break
+            try:
                 root = search_begin_dict(obs_dict, *world)
             except Exception:
+                mark_incomplete("world_begin")
                 break
             for ci, act in enumerate(cands):
                 if time.time() > hard_stop:
+                    mark_incomplete("hard_stop")
                     break
                 try:
                     child = search_step_dict(root["searchId"], act)
+                except Exception:
+                    mark_incomplete("candidate_step")
+                    continue
+                try:
                     totals[ci] += _rollout(child, my_index)
                     counts[ci] += 1
                 except Exception:
-                    pass
+                    mark_incomplete("candidate_rollout")
             worlds += 1
     finally:
         try:
@@ -215,9 +276,14 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
         worlds != world_limit or not all(c == world_limit for c in counts)
     ):
         raise FixedSearchIncomplete(
-            f"固定world未完遂: worlds={worlds}/{world_limit}, counts={counts}"
+            f"固定world未完遂: worlds={worlds}/{world_limit}, counts={counts}",
+            incomplete_stages,
         )
     if worlds < MIN_WORLDS or not all(counts):
         return None  # 探索不十分: BC単体の判断に任せる
     best = max(range(len(cands)), key=lambda i: totals[i] / counts[i])
-    return cands[best]
+    selected = cands[best]
+    _record_injected_selection(
+        injected_actions, selected, metrics,
+    )
+    return selected

@@ -3,7 +3,8 @@
 > **07-23の現在地**: canonical Alakazam＋BC×探索のv4.3aは249戦で862.8へ収束し、模倣だけでは
 > 1100の壁を越えられていない。中核は **「専門家ルールを床、探索・ExItを天井」**。
 > ルールは強者を丸ごとコピーせず、破滅手の禁止と戦術候補の保証に限定し、探索の比較結果をExItで蒸留する。
-> r5は単独gate 68/160で棄却済みのため、失敗もrule ID単位で切り離して次へ進む。
+> r5は単独gate 68/160で棄却済み。r8は強者一致だけでなく、BC top-5外への実注入と探索採用を
+> 機構指標にしてrule ID単位で評価する。
 
 目標: **Strategy部門トップ8**(各$30,000 + ファイナル進出)。
 残り: Simulation締切(8/16)まで24日 / Strategy Writeup締切(9/13)まで52日。
@@ -42,8 +43,9 @@ Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算�
 - **BCはデッキとセット**: Great Tuskは全カードがbc_v2語彙内で直接A/Bにも勝ったが、公開戦では
   Basic展開を15/21回逃して失速した。語彙内であるだけでは行動分布内を保証せず、デッキ変更と方策改善を分けて測る。
 - **専門家ルール監査**: 07-15強者データのcanonical Alakazam 48,501判断で、Hammer対象162/162、
-  単独Dudunsparce自滅回避5/5、複数blocker exact-KO 58/58が整合。一方「進化をすぐ行う」は
-  4,131/10,946=37.7%に留まるため、if文は件数でなく条件の証明度でhard/candidate/shadowへ分ける。
+  単独Dudunsparce自滅回避5/5、複数blocker exact-KO 58/58が整合。AZ008はArticuno aura等の
+  偽KO 30件を除くと287 hit / 教師一致247 (86.06%)だが、bc_v2 top-5外は2件だけ。一方「進化をすぐ行う」は
+  4,131/10,946=37.7%に留まるため、if文は件数でなく条件の証明度と実治療差でhard/candidate/shadowへ分ける。
 
 ## 1100突破の中核: Expert Floor → Search Ceiling → ExIt
 
@@ -53,9 +55,10 @@ Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算�
    ルールは探索を置換せず、BCがtop-k外へ落とした独自手を読む権利だけを保証する。
 3. **ExIt Ceiling**: 探索の最終選択と候補Qをtraceし、公式強者データと混合して次世代方策へ蒸留する。
    次世代でもExpert Floorを残して再探索し、`BC → BCS → ExIt → BCS`を一世代ずつ改善判定する。
-4. **昇格gate**: ルールIDを一つずつshadow→candidate/enforceへ進め、fixed2順逆160戦で候補換算
-   86/160以上、各席39/80以上、各load-order 38/80以上、failure/error/invalid 0。通過後に二層meta、
-   production `-j 1`、最終300戦/Wilson下限>50%へ延長する。
+4. **昇格gate**: ルールIDを一つずつshadow→candidate/enforceへ進める。まず対象ruleが
+   `BC top-k外へ注入 → searchで選択`された機構指標を共通meta wallで確認する。治療差0の勝率は昇格根拠にしない。
+   治療差がある候補だけfixed2順逆160戦で候補換算86/160以上、各席39/80以上、各load-order38/80以上、
+   failure/error/invalid 0へ進め、その後に二層meta、production `-j 1`、最終300戦/Wilson下限>50%へ延長する。
 
 ## 提出運用ポリシー
 
@@ -92,7 +95,8 @@ Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算�
 - [x] **路線A: BC×探索の統合** — BCをロールアウト方策にした決定化探索、
   または root-only(BCの上位候補だけを探索で検証)
 - [ ] **主路線B': Expert Floor付きExIt** — 第1世代は59,249判断でcheckpoint済み。350kへ盲目的に戻らず、
-  r5は分離gateで棄却済み。r8分離とfailure trace整備後に公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
+  r5は分離gateで棄却済み。r8はArticuno等の反例修正後、Grim壁で`injected_selected`を含む因果screenを行う。
+  failure traceと実治療差を確認後に、公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
   第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り
   Elo加算を計画値として扱わない。重い場合はGoogle Cloudクーポン($3,000)投入。

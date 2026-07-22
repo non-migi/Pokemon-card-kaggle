@@ -850,4 +850,73 @@ candidateの席も相手席から変換した。
   ただし性能REJECTはfailure分類に依存せず成立するため再試験しない。将来のcandidate評価では
   `world_begin` / `candidate_rollout`段階とactive rule contextをmetric化する。
 - AZ005のコードとfixtureは反例知識として残すが、enforce config、production、ExItのExpert Floorから外す。
-  次はr5を混ぜず、AZ008 draw-to-exact-KO candidateを標準の86/160 gateで単独評価する。
+  この時点では次にAZ008を標準86/160 gateで測る計画だったが、r8対戦前の下記監査で旧mirrorに
+  治療差がないと判明したため、結果を見る前にGrim壁の機構screenへ置き換えた。
+
+### AZ008反例修正・実注入Grim壁gate（07-23 00:41、結果確認前）
+
+旧統合Floorのcanonical mirrorではAZ008が35回発火し探索が25回提案手を選んだが、
+`expert_rule_outside_topk` / `candidate_injected`は0だった。すなわち提案手は全て元からBC top-5内で、
+baseとr8の探索候補集合は同一だった。したがって旧35/25は実装経路の監査には使えるが、AZ008の性能を
+測る治療差ではない。r5/統合Floor/旧engineの勝敗も今回へ合算しない。
+
+07-15 canonical Alakazamの48,501判断をカード効果境界込みで再監査した。旧317 hitのうち30件は、
+Team Rocket's Articuno #414のRepelling VeilがBasic Team Rocket activeを守る局面で、Hand Powerの
+damage-counter効果が通らない偽KO前提だった。次も見えるblockerとして非発火にした。
+
+- Mist Energy、および闘Pokemon上のRock Fighting Energy
+- active自身のattack-effect immunity（Skeledirge #203、Articuno #414、Empoleon ex #835、
+  Antique Cover Fossil #1136）
+- 相手場のArticuno #414 aura＋Basic Team Rocket active
+- Carracosta #504 active＋攻撃側AlakazamにSpecial Energy
+
+複数Dudunsparceでは、Run Away Drawで山札へ戻る付属cardを減らすため`energyCards + tools`最小の個体を選ぶ。
+一時的なDig/coin由来の保護flagは観測にないため「確定KO」とは呼ばず、ルールはKO打点圏への候補化だけを行い、
+最終的な残余価値はsearchへ委ねる。
+
+修正後の監査は287 hit、教師一致247 / 不一致40（86.06%）。bc_v2順位は1位200、2位59、3位16、
+4位8、5位2、6位2で、top-5内285、top-5外の実注入機会は **2/287**だけだった。
+2件はいずれもGrim対面で、教師一致/不一致は1/1。機械可読結果は
+`results/expert_rules_audit_az008_v2_20260723.json`へ保存した。
+今後は発火数や、元からtop-5内だった提案手の選択数だけでなく、
+`expert_rule_injected_selected.AZ008_DRAW_TO_EXACT_KO`を記録する。
+
+同時に`FixedSearchIncomplete`へ`bc_scores / belief_sample / world_begin / candidate_step /
+candidate_rollout / hard_stop`のstage countと、その判断で発火中のrule contextを追加した。
+全unit **57件**と`git diff --check`を通過。公式native engine read-only checkは4/4 `MATCH`。
+同一sourceから再buildしたfingerprintはbase `ac6df6fa...`、r8 `00c663fa...`、Grim壁
+`c7fd1a98...`。base/r8はmain/deck/model/cgが一致し、差は`agent_config.json`のAZ008設定だけ。
+Grim壁は`decks/meta/snapshot_20260721_grim_canonical.csv`のexact 60枚＋bc_v2 BCS fixed2であり、
+トップの非公開if-policyそのものではないproxyである。
+
+#### 事前登録するPhase 1（同一load-order common-wall、各40戦）
+
+他の重負荷jobを走らせず、公式e0717・fixed-worlds・`-j 4`で次を順次実行する。baselineの途中結果に
+かかわらずcandidateも実行する。
+
+1. `v4.5a-base-fixed2-e0717` A vs `screen-20260721-grim-canonical-fixed2` B、40戦
+2. `v4.5a-r8-fixed2` A vs同じGrim B、40戦
+
+baseline scoreを`B`、r8 scoreを`C`、各席20戦のscoreを`B_P0/B_P1/C_P0/C_P1`とする。
+
+- 判定優先順位は、(1) candidate異常、(2) baseline/壁だけの異常、(3) coverage、(4) scoreとする。
+  したがってcoverage不足とscore REJECT条件が同時でも、candidate自体が健康ならINCONCLUSIVEを優先する。
+- **SAFE-SCREEN（逆load-orderへ進むだけ）**: coverageを満たした上で`C>=B-4`、`C_P0>=B_P0-3`、
+  `C_P1>=B_P1-3`。両run 40/40 scored、全status `DONE`、failure/run failure 0、fixed-search/ruleの
+  error/incomplete/invalid/conflict/violation 0、両runの最小overage 60秒以上、開始終了fingerprint一致も必須。
+  candidateのrule ID metricはAZ008だけで、hit>=1、`candidate_injected`>=1、
+  **`injected_selected`>=1**を全て満たす。優越性やproduction採用の証明ではなくgross-regression screen。
+- **REJECT**: candidate runにTIMEOUT/ERROR/fixed-search error・incomplete/invalid/conflict/violationが
+  1件以上。health正常かつcoverageありの場合は`C<=B-9`、`C_P0<=B_P0-7`、`C_P1<=B_P1-7`もREJECT。
+  実装を昇格させない。
+- **INCONCLUSIVE**: baseline/壁だけの異常、hit/injected/injected-selectedのいずれか0、またはcoverageありで
+  overall差が-8〜-5 / 任意席差が-6〜-4。`injected=0`は候補集合差のない**no-treatment**。
+  `injected>0, injected_selected=0`はBC #5を外した候補集合差はあるが**direct rule use未観測**であり、
+  no-treatmentとは呼ばない。いずれもAZ008昇格の性能根拠にせず、閾値を事後変更しない。
+
+#### SAFE-SCREEN時だけ行うPhase 2（逆load-order各40戦）
+
+Grim A vs base B、Grim A vs r8 Bを途中結果にかかわらず両方実行し、Grim Aのscoreを補数にして
+各variantのcandidate scoreへ変換する。Phase 1と合わせ各variant 80戦で、r8合計がbase合計より8点以上
+落ちず、r8のP0/P1がbase各席より6点以上落ちず、全health条件を満たし、累積AZ008 injection / injected-selected
+が各1以上なら次の標準canonical順逆gateを検討する。ここでもsuperiorityは主張せず、提出は行わない。

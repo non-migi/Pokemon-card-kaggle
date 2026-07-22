@@ -312,15 +312,82 @@ class ExpertRuleTests(unittest.TestCase):
             {"type": 10, "area": 5, "index": 1},
             {"type": 13, "attackId": 1072},
         ], mine=mine, opp=opp)
-        got = rules.evaluate(
-            obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ008_DRAW_TO_EXACT_KO"],
-        )
+        traits = {
+            19: {"special_energy": True},
+            203: {"attack_effect_immune": True},
+            414: {
+                "attack_effect_immune": True,
+                "basic_team_rocket": True,
+            },
+            431: {"basic_team_rocket": True},
+            835: {"attack_effect_immune": True},
+            1136: {"attack_effect_immune": True},
+        }
+
+        def evaluate():
+            return rules.evaluate(
+                obs, ALAKAZAM_DECK, "alakazam_v1",
+                ["AZ008_DRAW_TO_EXACT_KO"], card_traits=traits,
+            )
+
+        got = evaluate()
         self.assertEqual((got[0].action, got[0].kind), ((0,), "candidate"))
 
+        mine["deckCount"] = 2
+        self.assertEqual(evaluate(), [])
+        mine["deckCount"] = 18
+
+        mine["handCount"] = 16
+        self.assertEqual(evaluate(), [])
+        mine["handCount"] = 13
+
+        opp["active"][0]["hp"] = 340
+        self.assertEqual(evaluate(), [])
+        opp["active"][0]["hp"] = 320
+
+        attack_option = obs["select"]["option"].pop()
+        self.assertEqual(evaluate(), [])
+        obs["select"]["option"].append(attack_option)
+
         opp["active"][0]["energyCards"] = [{"id": 11}]
-        self.assertEqual(rules.evaluate(
-            obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ008_DRAW_TO_EXACT_KO"],
-        ), [])
+        self.assertEqual(evaluate(), [])
+        opp["active"][0]["energyCards"] = []
+
+        for immune_id in (203, 835, 1136):
+            opp["active"] = [pokemon(immune_id)]
+            opp["active"][0]["hp"] = 320
+            self.assertEqual(evaluate(), [])
+
+        opp["active"] = [pokemon(431)]
+        opp["active"][0]["hp"] = 320
+        opp["bench"] = [pokemon(414)]
+        self.assertEqual(evaluate(), [])
+        opp["active"] = [pokemon(449)]
+        opp["active"][0]["hp"] = 320
+        self.assertEqual(evaluate()[0].action, (0,))
+        opp["active"] = [pokemon(431)]
+        opp["active"][0]["hp"] = 320
+        opp["bench"] = []
+        self.assertEqual(evaluate()[0].action, (0,))
+
+        opp["active"] = [pokemon(504)]
+        opp["active"][0]["hp"] = 320
+        mine["active"][0]["energyCards"] = [{"id": 19}]
+        self.assertEqual(evaluate(), [])
+        mine["active"][0]["energyCards"] = [{"id": 5}]
+        self.assertEqual(evaluate()[0].action, (0,))
+
+        mine["bench"][0]["energyCards"] = [{"id": 19}]
+        self.assertEqual(evaluate()[0].action, (1,))
+
+    def test_card_traits_cover_current_hand_power_blockers(self):
+        traits = rules.build_card_traits(bc_search.heuristics.CARDS)
+        for card_id in (203, 414, 835, 1136):
+            self.assertTrue(traits[card_id]["attack_effect_immune"])
+        self.assertTrue(traits[431]["basic_team_rocket"])
+        self.assertFalse(traits[449]["basic_team_rocket"])
+        self.assertTrue(traits[19]["special_energy"])
+        self.assertFalse(traits[5]["special_energy"])
 
     def test_wrong_profile_or_deck_is_non_firing(self):
         obs = observation([{"type": 14}])
