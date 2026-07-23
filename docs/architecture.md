@@ -75,7 +75,8 @@ raw observation
   sidecarは完全再実行ではなく事後診断の証拠である。
 - `production`: wall-clock探索。本番と同じだがCPU負荷に敏感なため`jobs=1`強制。
 - `fixed-worlds`: ローカル比較専用。両search agentの`fixed_search_worlds`（2〜24）を一致させ、
-  壁時計budgetから分離する。未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。
+  壁時計budgetから分離する。deadline/hard-stopはmonotonic clockでMac sleepを経過時間へ含めない。
+  未完遂はmetricsでfailure。buildはこの設定入りtarを拒否する。productionのwall-clock挙動は変えない。
 - `standard`: 純BC/heuristic用の高速並列screen。
 - 本番時間制御のgate用に、全stepの`remainingOverageTime`最小値を全体・席別でledgerへ記録する。
 - gauntletの加重勝率は入力対面内の点推定。pooled Wilson CIは重みなしで別表示する。

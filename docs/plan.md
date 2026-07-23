@@ -3,8 +3,8 @@
 > **07-23の現在地**: canonical Alakazam＋BC×探索のv4.3aは249戦で862.8へ収束し、模倣だけでは
 > 1100の壁を越えられていない。中核は **「専門家ルールを床、探索・ExItを天井」**。
 > ルールは強者を丸ごとコピーせず、破滅手の禁止と戦術候補の保証に限定し、探索の比較結果をExItで蒸留する。
-> r5は単独gate 68/160で棄却済み。r8は強者一致だけでなく、BC top-5外への実注入と探索採用を
-> 機構指標にしてrule ID単位で評価する。
+> r5は単独gate 68/160で棄却。r8はGrim壁で26/40対18/40でも実注入0のためINCONCLUSIVEとして停止した。
+> 次は教師100%整合かつ実注入5/5整合のAZ006を、AZ004 hardから分離した3群因果screenで評価する。
 
 目標: **Strategy部門トップ8**(各$30,000 + ファイナル進出)。
 残り: Simulation締切(8/16)まで24日 / Strategy Writeup締切(9/13)まで52日。
@@ -34,6 +34,11 @@ Mega Starmie系1。**→ 1100到達にはAlakazam中心の昇格pool、首位争
 生存poolの両方が必要。** まずcanonical Alakazamとexact 07-21 Grimを二層sentinelにし、
 Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算する。単一Top12へ過適合しない。
 
+07-23 19:29の公式LBは1100+が9 team、Top 8境界1108.9。最新上位25 replayの選択標本では
+Grim core 18/50枠、canonical Alakazam core 17/50枠、Cynthia 5/50枠。現6位junlee789のCynthia
+exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確認した。これは最新の対策壁には使うが、
+上位公開対戦からの標本なので環境採用率へは外挿しない。
+
 ### 確定した技術知見(experiments.md詳細)
 - **有効(現主力)**: bc_v2方策＋BC×決定化探索。G3は純BC比58.1%/400で通過し、ラダー826.4。
 - **最新再学習は中立**: bc_v5(07-08〜13、195万手、best top-1 63.144%)はbc_v2に53.0%/400
@@ -46,6 +51,9 @@ Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算�
   単独Dudunsparce自滅回避5/5、複数blocker exact-KO 58/58が整合。AZ008はArticuno aura等の
   偽KO 30件を除くと287 hit / 教師一致247 (86.06%)だが、bc_v2 top-5外は2件だけ。一方「進化をすぐ行う」は
   4,131/10,946=37.7%に留まるため、if文は件数でなく条件の証明度と実治療差でhard/candidate/shadowへ分ける。
+- **実治療差を勝率より先に判定**: r8はGrim壁でbase比+8勝でもAZ008注入0だったため停止。
+  次のr46はbase / AZ004のみ / AZ004+AZ006の3群にし、AZ006の`outside→injected→injected_selected`が
+  1件以上なければ勝敗を採用しない。AZ006は教師58/58、top-5外注入5/5教師一致。
 
 ## 1100突破の中核: Expert Floor → Search Ceiling → ExIt
 
@@ -95,8 +103,9 @@ Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算�
 - [x] **路線A: BC×探索の統合** — BCをロールアウト方策にした決定化探索、
   または root-only(BCの上位候補だけを探索で検証)
 - [ ] **主路線B': Expert Floor付きExIt** — 第1世代は59,249判断でcheckpoint済み。350kへ盲目的に戻らず、
-  r5は分離gateで棄却済み。r8はArticuno等の反例修正後、Grim壁で`injected_selected`を含む因果screenを行う。
-  failure traceと実治療差を確認後に、公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
+  r5は棄却、r8は実注入0でHOLD。次は最新Cynthia壁にbase / r4 / r46を各40戦当て、
+  AZ004 hardとAZ006候補注入を分離する。AZ006の実注入・探索採用と安全性を確認後にだけ、
+  公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
   第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り
   Elo加算を計画値として扱わない。重い場合はGoogle Cloudクーポン($3,000)投入。

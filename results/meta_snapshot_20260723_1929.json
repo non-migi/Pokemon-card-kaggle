@@ -1,0 +1,40 @@
+{
+  "captured_at_jst": "2026-07-23 19:29:30 JST",
+  "competition": "pokemon-tcg-ai-battle",
+  "leaderboard": {
+    "csv_name": "pokemon-tcg-ai-battle-publicleaderboard-2026-07-23T10:29:30.csv",
+    "teams": 5560,
+    "median": 646.45,
+    "score_ge_1000": 95,
+    "score_ge_1100": 9,
+    "score_ge_1200": 0,
+    "leader": 1182.2,
+    "top8_cutoff": 1108.9
+  },
+  "active_submission_scores": {
+    "v4.3a": 873.6,
+    "v4.2t": 699.5
+  },
+  "latest_top_replay_sample": {
+    "replays": 25,
+    "deck_slots": 50,
+    "selection_note": "latest official replays fetched from current top teams; not an unbiased population sample",
+    "archetypes": {
+      "grimmsnarl_core": {"slots": 18, "score_rate": 0.556, "teams": 8},
+      "canonical_alakazam_core": {"slots": 17, "score_rate": 0.706, "teams": 8},
+      "cynthia_garchomp": {"slots": 5, "score_rate": 0.0, "teams": 1},
+      "archaludon_cinderace": {"slots": 4, "score_rate": 0.5, "teams": 2}
+    }
+  },
+  "cynthia_wall": {
+    "team": "junlee789",
+    "leaderboard_rank": 6,
+    "leaderboard_score": 1111.3,
+    "identical_deck_replays": 5,
+    "deck_sha256": "0d5cb0303a955a0432ed73eec60a3dfcfd01c88ab7d7758597605bd8297bfb2f",
+    "unique_card_ids": 20,
+    "bc_v2_vocab_missing_ids": [],
+    "fighting_active_with_rock_observed": 3,
+    "note": "targeted current wall; recent 5-game score is too selected and small to estimate deck strength"
+  }
+}

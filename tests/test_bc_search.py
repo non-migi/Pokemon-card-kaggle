@@ -108,7 +108,7 @@ class FixedSearchDiagnosticTests(unittest.TestCase):
         ), mock.patch.object(
             bc_search, "search_begin_dict", return_value={"searchId": "s"},
         ), mock.patch.object(
-            bc_search.time, "time", side_effect=[0.0, 31.0, 31.0],
+            bc_search.time, "monotonic", side_effect=[0.0, 31.0, 31.0],
         ), mock.patch.object(bc_search, "search_end"):
             with self.assertRaises(bc_search.FixedSearchIncomplete) as caught:
                 bc_search.decide(
@@ -211,6 +211,9 @@ class FixedSearchDiagnosticTests(unittest.TestCase):
             bc_search, "search_step_dict", side_effect=step,
         ), mock.patch.object(
             bc_search, "_rollout", side_effect=rollout,
+        ), mock.patch.object(
+            bc_search.time, "time",
+            side_effect=AssertionError("wall clock must not gate search"),
         ), mock.patch.object(bc_search, "search_end"):
             selected = bc_search.decide(
                 obs, object(), [], 1.0, fixed_worlds=2,

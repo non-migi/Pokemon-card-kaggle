@@ -62,7 +62,9 @@ read-onlyで、差分/欠落時はexit 1。`--apply`だけが全download成功�
 
 # Expert Rulesの強者行動監査（正規deck完全一致だけを対象）
 .venv/bin/python scripts/audit_expert_rules.py data/bc/pairs_0715.jsonl.gz \
-  --exact-deck decks/meta/snapshot_20260714_alakazam.csv
+  --exact-deck decks/meta/snapshot_20260714_alakazam.csv \
+  --rule AZ006_UNBLOCK_EXACT_KO --rule-mode enforce \
+  --policy-build build/v4.5a-r46-fixed2 --injected-example-limit 10
 ```
 
 ### Expert Rulesの開発ループ
@@ -86,8 +88,9 @@ agent設定例:
 - `candidate/enforce`は`enabled_rule_ids`の明示が必須。最初は必ず1 ruleまたは因果が連続する最小rule組で測る
 - 新ruleは `公開敗戦fixture → 強者decision監査 → shadow → fixed-worlds A/B → 二層meta → production`
   の順。強者一致率だけでhardへ昇格しない
-- `expert_rule_errors` / `expert_rule_invalid` はarena strict failure。成功時もhit/injected/selected/
-  guard-blockedを`agent_metrics_total`と`agent_metrics_by_seat`へ保存する
+- `expert_rule_errors` / `expert_rule_invalid` はarena strict failure。成功時もhit/outside-topk/injected/
+  injected-selected/selected/guard-blockedを`agent_metrics_total`と`agent_metrics_by_seat`へ保存する。
+  監査は実agentの`rule-mode`を指定し、複数ruleを全提案一括で渡して共有2枠の競合も再現する
 
 ### 改善判定のルール
 
@@ -98,6 +101,8 @@ agent設定例:
 - fresh pairの既定watchdogは1ペア3600秒。短いscreenでは`--pair-timeout-sec`で明示的に短縮できるが、
   productionは席反転2戦の合計時間を十分上回る値にする。timeout/crashは台帳記録後にstrict failureとなる
 - searchはfixed-worldsで性能比較、production `-j 1`で本番設定の完走確認を分ける
+- fixed-worldsのdeadline/hard-stopはmonotonic clock。Mac sleepを実探索時間と誤認しない。
+  productionのwall-clock経路は別であり、蓋閉じを含む実時間安全性はproduction profileで確認する
 - 大量ExIt生成・学習中はsearch評価を開始しない。進行中jobが参照する`build/`も再buildしない
 - 採用する記録は`failure_count=0`、`run_failures=[]`、両席`DONE`を必須とする
 - failure時はledgerの`pair_index/game_index`と`diagnostic.path`を確認する。raw環境/logは

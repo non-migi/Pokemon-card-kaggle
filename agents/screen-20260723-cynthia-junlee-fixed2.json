@@ -1,0 +1,1 @@
+{"label":"exact 2026-07-23 junlee789 Cynthia Garchomp + bc_v2 BCS fixed2 wall","deck":"decks/meta/snapshot_20260723_cynthia_junlee.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}

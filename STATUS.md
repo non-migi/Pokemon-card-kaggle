@@ -3,27 +3,27 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 00:41 JST (Codex) — AZ008監査を修正し、治療差を測るGrim壁gateを事前登録
+最終更新: 2026-07-23 19:41 JST (Codex) — AZ008をno-treatmentで停止し、AZ004→AZ006のCynthia三群gateを事前登録
 
-## ラダー状況(2026-07-23 00:10 JST、active = 最新2提出のみ)
+## ラダー状況(2026-07-23 19:29 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
-| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **862.8 / 249戦126勝123敗 (50.6%)** |
-| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **708.6 / 204戦101勝103敗 (49.5%)** |
+| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **873.6** / 249戦126勝123敗 (50.6%、対戦集計00:10) |
+| **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **699.5** / 204戦101勝103敗 (49.5%、対戦集計00:10) |
 | **v4.1a** (sub 54612885) | no | bc_v2 BCS + 旧Alakazam | **869.1 / 149戦79勝70敗 (53.0%)で凍結** |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
 | **v4.0a** (sub 54591345) | no | BC×探索 + bc_v2 + フーディン型 | **826.4 / 67戦** (07-12 23:25 JSTに停止) |
 
-`v4.2t`は204戦で708.6へ収束。調査時62戦の28勝は全て相手deckoutだが、34敗は
+`v4.2t`は204戦で49.5%、現在score 699.5。調査時62戦の28勝は全て相手deckoutだが、34敗は
 ポケモン無17/サイド10/自deckout 7。ポケモン無7敗で、ベンチ空・手札に出せるBasicがあるのに
 21の重要選択中15回出さず。timeoutではなく、**Great Tuskとbc_v2の分布不整合**が失敗の主因。
 
-`v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。純BC直接 **74.67%/300**、
+`v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。現在score 873.6。純BC直接 **74.67%/300**、
 fixed2 BCS **75.0%/80**、二層meta加重 **88.95% vs baseline 83.23%**。最終production 8秒は
 凍結した実提出v4.1aに **8–2/10** (P0 3–2 / P1 5–0)、全戦`DONE`、failure 0、最小残りoverage
 **215.99秒**。両席buildを通し、07-16 00:48 JSTに提出、01:01 JSTに`COMPLETE`。早期78戦では
-920.7だったが、249戦で862.8へ収束。旧v4.1aの凍結869.1も下回り、1100には未到達。
+920.7だったが1100には未到達し、現在も旧v4.1a凍結869.1と同格帯。
 
 **G3通過(予定より3週早い)**: v4.0a = BC×探索が純BC(v3.2a)に **58.1%/400戦**(有意)。
 本番ラダーで **826.4/67戦** — これまでの平衡750-780を上抜けしたが、v4.1a投入時にinactive化。
@@ -36,35 +36,50 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **AZ008を治療差のある単独gateへ**: Articuno aura等の見えるHand Power blockerを追加し、
-   48,501判断の再監査は287 hit / 教師一致247 (86.06%)。bc_v2 top-5外は2件だけで、旧canonical
-   mirrorの35 hit / 25 selectedは候補集合がbaselineと同一だった。探索不完全のstage/contextに加え、
-   `injected_selected`を計測する。実注入2件がともにGrim対面だったため、exact 07-21 Grim＋bc_v2 BCSを
-   共通壁にbase/r8を各40戦、途中結果にかかわらず同一load-orderで完走する。
-2. **Grim壁の事前screenを判定**: `C>=B-4`、各席`C>=B-3`、全40 scored/DONE、全failure/error/
-   incomplete/invalid/conflict/violation 0、最小overage 60秒、AZ008 hit/injected/**injected_selected**各1以上を
-   全て満たした時だけ逆load-order各40戦へ延長する。注入0はno-treatment、注入あり・注入手選択0は
-   direct-use coverage不足として、いずれも勝率にかかわらずINCONCLUSIVE。これはgross-regression screenで、
-   優越性やproduction採用の証明ではない。
-3. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
+1. **Cynthia三群screenを順次実行**: exact 07-23 junlee789 Cynthia＋bc_v2 BCS fixed2を共通壁に、
+   base (`B`) / AZ004 hardのみ (`H`) / AZ004+AZ006 (`C`) をA側で各40戦・各席20、`-j 4`、
+   他の重負荷jobなしで途中結果にかかわらず完走する。開始前にledger重複を再確認する。
+2. **因果gateを判定**: H/CのAZ004 `hit=enforced=selected>=1`、CのAZ006
+   `hit>=1`, `outside_topk=injected>=1`, `injected_selected>=1`を必須にする。coverageを満たし、
+   H–B / C–H / C–Bがoverall -4以上・各席-3以上、全health正常ならSAFE-SCREEN。
+   coverage 0や中間差はINCONCLUSIVE、候補health異常またはcoverageありでoverall -9/席-7以下はREJECT。
+3. **SAFE時だけ逆load-order**: Cynthia A vs base/r4/r46 Bを各40戦追加し、各variant計80戦へ変換する。
+   これは局所的gross-regression screenで、優越性・production採用・提出の証明ではない。
+4. **AZ008はHOLD**: Grim壁candidate 26/40、base 18/40でも実注入0のためno-treatment。
+   Phase 2/production/ExItを停止し、付属なしDudunsparceのtop-5外独立正例が5–10件集まるまで再戦しない。
+5. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
    現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
-4. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
+6. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
    実測ペースで長すぎ、探索評価を塞ぐため停止した。夜は既存59kの重み付き混合比を先に固定し、
    追加生成を盲目的に再開しない。次世代から
    root候補に専門家ルールを保証した探索の選択をtrace付きで蒸留する。公式教師との混合を維持し、
    `BC → Expert候補付きBCS → ExIt → 再探索`を1世代ずつA/Bする。
-5. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
+7. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
    **442.5/800 = 55.31%**だがP0 59.0 / P1 51.63%と席差あり。順逆各80戦、candidate換算
    86/160以上・両席/両load-order下限・failure 0の事前gateを、ExIt完了後に最初から回す。
-6. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
+8. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
    公開31敗中7件のポケモン切れを狙うが、ExIt中は組立てまでで重いscreenは行わない。
-7. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
+9. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
-8. **ラダー監視**: v4.3a/v4.2tは各249/204戦でほぼ平衡。次の提出は上記gate通過時だけにし、
+10. **ラダー監視**: v4.3a/v4.2tは各249/204戦でほぼ平衡。次の提出は上記gate通過時だけにし、
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- AZ008 Phase 1はbase 18/40、r8 26/40（両席13/20）だが、r8のhit9 / selected4は全てBC top-5内で
+  **injected=0 / injected-selected=0**。勝差をruleへ帰属できず事前規則どおりINCONCLUSIVE、Phase 2なし。
+- baseのfixed-search incomplete 3件は08:16:05–08:28:00のClamshell Sleep約715秒と、sidecarの
+  `game sec - log合計`713.68–713.85秒が一致したfalse hard-stop。各call最大1.368秒、全試合DONE。
+  fixed評価だけmonotonic clockへ直しproduction経路を不変とした。全unit **60件**通過。
+- 19:29公式LBは5,560 team、median 646.45、1000+ 95、1100+ 9、1200+ 0、首位1182.2、
+  Top 8境界1108.9。active scoreはv4.3a 873.6 / v4.2t 699.5。
+- 最新上位25 replay / 50枠の選択標本はGrim core 18、canonical Alakazam core 17、Cynthia 5、
+  Archaludon–Cinderace 4。現6位junlee789のCynthiaは5 replay同一60枚、闘active＋Rockを3件観測。
+  20 unique IDはbc_v2語彙内だが、方策共適応は未証明なのでtargeted proxy壁としてだけ使う。
+- r46実行mode再監査はAZ004 162/162教師一致、AZ006 58/58。AZ006はtop-5外5件を全件注入し、
+  **5/5教師一致**。監査toolは複数proposal共有2枠・hard bypass・forbidを実行時と同じにし、行SHAも保存。
+- base/r4/r46/Cynthia壁を現sourceからbuildしファイルパス両席DONE。fingerprintは順に
+  `09e4c497...` / `5c1f74c0...` / `fac34f85...` / `7dad42a2...`。
 - AZ008の旧317 hitには、Team Rocket's Articunoの場全体aura等によりHand Power効果が通らない30件が
   混入していた。見えるblockerとCarracostaの特殊Energy条件を実装し、修正後は287 hit / 教師一致247。
   bc_v2 rankは1位200、2位59、3位16、4位8、5位2、6位2で、真の候補注入は2/287だけ。
@@ -127,22 +142,20 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   `models/value_v1`へ退避し、実行時はフルロールアウトへフォールバック
 - Kaggleは目標48試合/日、各マッチ10%でランダム相手。短期レート/順位には対面運が残る
 
-## 外部情報スキャン(07-22 19:16–07-23 00:10 JST)
+## 外部情報スキャン(07-23 19:29 JST)
 
-- 00:10 Leaderboardは5,521 team、median 647.2、1000+ 95、1100+ 18、1200+ 0、top-8境界1120.5。
-  最新Daily Topは07-21版4,612 episodesで、07-22版は未公開。21:43時点の1100+全17 teamを分類したが、
-  00:10に増えた1 teamはreplay取得停止のため未分類とし、比率へ推測で混ぜない。
-- Discussion 728071の模倣学習21–22k replayで1088帯という報告は短期ExIt設計を支持するが、参加者自己申告。
-  728068のNinetales #660 × Amarys #1207 SIGSEGVはhost未回答のため当面その組合せを避ける。
-- X通常検索ではユーザー提示投稿の完全一致原文や新しい具体的if-cascadeを取得できず、
-  「存在しない」とは断定しない。採用根拠はKaggle公式Leaderboard / episodes / replayとlocal A/B。
+- 公式Leaderboard CSVは5,560 team、1100+ 9、Top 8境界1108.9。scoreは短時間でも変動するため、
+  `results/meta_snapshot_20260723_1929.json`へ観測時刻とCSV名を固定した。
+- 07-22 Daily Top datasetが公開済み。最新上位replayのCynthia exactを保存したが、公開replay標本の
+  deck比率や5戦勝率を母集団の強さへ外挿しない。
+- X通常検索では提示投稿の完全一致や新しい具体的if-cascadeを再取得できず、ログイン済みブラウザも利用不可。
+  「存在しない」とは断定せず、新規の未検証情報は採用根拠へ混ぜない。主根拠は公式LB/replayとlocal因果A/B。
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-23 00:41 JST)**: `AZ008_DRAW_TO_EXACT_KO`のArticuno/Carracosta/static blocker境界、
-  複数Dudunsparce付属最小化、fixed-search stage/context、`injected_selected`まで実装・監査済み。
-  公式e0717・同一sourceのbase/r8とexact 07-21 Grim proxyをbuild済み。上記の事前登録gateに従い、
-  baseline 40戦→r8 40戦を他の重負荷jobなしで順次実行する。r5/統合Floor/旧canonical結果は混ぜない。
+- **Codex (2026-07-23 19:41 JST)**: AZ008をno-treatmentで停止。fixed評価のsleep false hard-stopを修正し、
+  最新exact Cynthia壁、base/r4/r46をbuild・両席検証済み。上記事前登録どおり3群各40戦を順次実行し、
+  AZ004 hardとAZ006注入を分離する。旧r5/r8/統合Floorの勝敗は混ぜず、提出もしない。
 
 ## 今日の提出枠
 

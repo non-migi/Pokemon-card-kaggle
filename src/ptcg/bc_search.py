@@ -221,7 +221,10 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
     my_index = obs_dict["current"]["yourIndex"]
     totals = [0.0] * len(cands)
     counts = [0] * len(cands)
-    start = time.time()
+    # fixed評価はMacのsleepを跨いでも期限判定が跳ばない経過時間clockを使う。
+    # 提出版のwall-clock挙動はこの測定品質修正では変えない。
+    clock = time.monotonic if fixed_worlds is not None else time.time
+    start = clock()
     deadline = start + budget_sec
     world_limit = MAX_WORLDS
     if fixed_worlds is not None:
@@ -240,7 +243,9 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
         incomplete_stages[stage] = incomplete_stages.get(stage, 0) + 1
 
     try:
-        while worlds < world_limit and (fixed_worlds is not None or time.time() < deadline):
+        while worlds < world_limit and (
+            fixed_worlds is not None or clock() < deadline
+        ):
             try:
                 world = sample_world(obs_dc, my_deck, rng)
             except Exception:
@@ -252,7 +257,7 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
                 mark_incomplete("world_begin")
                 break
             for ci, act in enumerate(cands):
-                if time.time() > hard_stop:
+                if clock() > hard_stop:
                     mark_incomplete("hard_stop")
                     break
                 try:

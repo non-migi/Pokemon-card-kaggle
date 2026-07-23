@@ -920,3 +920,75 @@ Grim A vs base B、Grim A vs r8 Bを途中結果にかかわらず両方実行�
 各variantのcandidate scoreへ変換する。Phase 1と合わせ各variant 80戦で、r8合計がbase合計より8点以上
 落ちず、r8のP0/P1がbase各席より6点以上落ちず、全health条件を満たし、累積AZ008 injection / injected-selected
 が各1以上なら次の標準canonical順逆gateを検討する。ここでもsuperiorityは主張せず、提出は行わない。
+
+#### AZ008 Phase 1結果と停止判断（07-23 08:14–08:52）
+
+事前宣言どおりbase、r8を各40戦完走した。両runのdeck/model/cgは同一で、壁fingerprintも一致した。
+
+| A側 | score | P0 / P1 | AZ008 hit / selected | injected / injected-selected | strict failure |
+|---|---:|---:|---:|---:|---:|
+| base | 18/40 | 9 / 9 | — | — | 3 fixed-search incomplete |
+| r8 | 26/40 | 13 / 13 | 9 / 4 | **0 / 0** | 0 |
+
+- r8の提案9件は全て元からbc_v2 top-5内で、候補集合の変更は0だった。したがって+8勝をAZ008の効果と
+  帰属できず、事前規則どおり **INCONCLUSIVE / no-treatment**。Phase 2、production、提出、ExIt教師への
+  混入を停止した。現行AZ008は棄却ではなくHOLDとし、付属なしDudunsparceへ狭めた独立例を5–10件
+  集めるまで通常対戦を繰り返さない。
+- top-5外の監査2例は、付属なしDudunsparceで教師一致1件と、Enriching Energy付きで教師不一致1件。
+  全hitを分けると付属なし232/264=87.9%、付属あり15/23=65.2%だったが、実注入正例はまだ1件だけである。
+- base側3件は実探索の遅さではなかった。`pmset`は08:16:05 Clamshell Sleep、08:28:00 Wakeを記録し、
+  failure sidecar 3件の`game sec - agent log合計`は713.68–713.85秒でsleep約715秒と一致した。
+  各agent call最大は1.368秒、全試合は両agent `DONE`、最小overage 541.93秒。旧hard-stopが
+  `time.time()`でsleepを経過時間へ算入したfalse failureである。
+- fixed-worlds評価だけdeadline/hard-stop clockを`time.monotonic()`へ変更し、productionの
+  `time.time()`経路は不変とした。wall clockを例外化するend-to-end testを含む全unit 60件が通過。
+  rollout step capはQ値を変えるため変更していない。
+
+### 最新Cynthia壁とAZ004→AZ006三群因果screen（07-23 19:29、結果確認前）
+
+19:29 JSTの公式Leaderboard CSVは5,560 team、median 646.45、1000+ 95、1100+ 9、1200+ 0、
+首位1182.2、Top 8境界1108.9。active提出はv4.3a 873.6、v4.2t 699.5。最新上位から取得した
+公式25 replay / 50 deck slotはGrim core 18、canonical Alakazam core 17、Cynthia 5、
+Archaludon–Cinderace 4だった。ただし上位teamの最新公開対戦を集めた選択標本であり、環境全体の採用率とは
+解釈しない。機械可読snapshotは`results/meta_snapshot_20260723_1929.json`。
+
+現6位junlee789（1111.3）の5 replayは全て同じCynthia Garchomp 60枚で、20 unique card IDは
+bc_v2語彙に全件存在した。5件中3件で闘active＋Rock Fighting Energyを観測し、Hammerによる
+Hand Power unblockを測る最新の標的壁として
+`decks/meta/snapshot_20260723_cynthia_junlee.csv`へ固定した。直近5件は0勝なので強さの推定には使わず、
+非公開の本人方策ではないbc_v2 BCS proxyであることも明記する。
+
+48,501 canonical判断をr46の実行mode（`enforce`）と全proposal共有2枠で再監査した。
+AZ004 hardは162/162教師一致。AZ006 candidateは58/58教師一致、bc_v2 top-5外5件を全て実注入し、
+5/5教師一致（Kangaskhan 3、Crustle 1、Cynthia Gible 1）。行SHAを含む機械可読結果は
+`results/expert_rules_audit_r46_20260723.json`。各proposalを単独評価して枠競合を無視しないよう監査toolも修正した。
+
+base対r46だけではAZ004 hardとAZ006 candidateが交絡するため、次の同一Cynthia壁3群を途中結果に
+かかわらず各40戦（各席20）、公式e0717、fixed2、`-j 4`、他の重負荷jobなしで順に実行する。
+
+1. `B`: base A vs Cynthia wall B
+2. `H`: r4（AZ004のみ）A vs同じwall B
+3. `C`: r46（AZ004+AZ006）A vs同じwall B
+
+build fingerprintはbase `09e4c497...`、r4 `5c1f74c0...`、r46 `fac34f85...`、wall
+`7dad42a2...`。Alakazam 3群はmain/deck/model/cgが同一でconfig差だけ、全buildをファイルパス両席`DONE`で検証した。
+
+- 判定優先は **candidate health → control/wall infra → coverage → score**。
+- health必須条件は各40/40 scored、全status `DONE`、failure/run failure 0、fixed-search/ruleの
+  error/incomplete/invalid/conflict/violation 0、最小overage 60秒、開始終了fingerprint一致。
+- coverageはH/CでAZ004 `hit = enforced = selected >= 1`、CでAZ006 `hit >= 1`、
+  `outside_topk = injected >= 1`、`injected_selected >= 1`。AZ006 coverage 0なら勝敗にかかわらず
+  INCONCLUSIVEとし、同じ40戦を盲目的に繰り返さない。
+- **SAFE-SCREEN**: `H>=B-4`、`C>=H-4`、`C>=B-4`、かつ三比較の各席差が-3以上。
+- **REJECT**: H/C起因health異常、またはcoverageありで任一比較overall差が-9以下、任一席差が-7以下。
+- **INCONCLUSIVE**: control/wallだけのinfra異常、coverage不足、またはoverall差-8〜-5 / 席差-6〜-4。
+
+SAFE-SCREEN時だけCynthia A vs base/r4/r46 Bを各40戦追加する。各variant計80戦へ補数変換し、
+H–B、C–H、C–Bが各-8以上、各席-6以上、全healthと累積coverageを満たした場合にだけmulti-metaへ進む。
+これは局所的gross-regression screenで、優越性・production採用・提出の証明ではない。
+
+Xは通常検索でも提示文の完全一致や新しい具体的if-cascadeを再取得できず、利用可能なログイン済みブラウザも
+無かった。新規の未検証情報は採用根拠へ混ぜず、方向性だけを公式replay・教師監査・local因果A/Bへ落とす。
+
+参照: <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>、
+<https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-22>。
