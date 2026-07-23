@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 20:48 JST (Codex) — r46をno-treatmentで停止し、AZ003→AZ004 Hammer連鎖gateを事前登録
+最終更新: 2026-07-23 21:47 JST (Codex) — AZ003→AZ004のCynthia順逆gateをSAFE-KEEP、次は介入trace
 
 ## ラダー状況(2026-07-23 19:29 JST、active = 最新2提出のみ)
 
@@ -36,36 +36,44 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **AZ003→AZ004を単独screen**: 直前の健康なAZ004-only H run（21/40、P0 11/P1 10）を固定controlに、
-   `v4.5a-r34-fixed2`を同じexact Cynthia壁へ40戦・各席20、`-j 4`、他の重負荷jobなしで実行する。
-2. **機構gateを判定**: AZ004 `hit=enforced=selected>=1`、AZ003
-   `hit>=1`, `outside_topk=injected>=1`, `injected_selected>=1`を必須にする。全health正常かつ
-   score>=17、P0>=8、P1>=7ならSAFE-SCREEN。coverage 0/中間差はINCONCLUSIVE、candidate health異常または
-   coverageありでscore<=12/P0<=4/P1<=3はREJECT。
-3. **SAFE時だけ逆load-order**: Cynthia A vs r4/r34 Bを各40戦追加し、各variant計80戦へ変換する。
-   これは局所的gross-regression screenで、優越性・production採用・提出の証明ではない。
-4. **AZ006/AZ008はHOLD**: r46は26/40対H 21/40、r8は26/40対base 18/40でも実注入0。
+1. **AZ003のdecision-level介入traceを実装**: 監査で凍結したtop-5外10行をrow SHAで再同定し、
+   元BC top-5、注入で落ちた#5、同一fixed2 worlds上の候補Q、最終選択をlocal専用traceへ残す。
+   raw観測や非公開札は保存せず、現行5候補の選択を変えないshadow計測にする。
+2. **勝敗より先に反実仮想gate**: 10/10合法注入・trace/metric一致・error/incomplete 0を必須にし、
+   AZ003が3つ以上の異なるrowで選ばれ、選択全件が元top-5最大Q以上（うち2件strict）なら次へ進む。
+   選択0–2件はHOLD、選択とQの矛盾や違法手はREJECT。同じCynthia戦を再抽選しない。
+3. **trace SAFE時だけ最大80戦multi-meta**: exact 07-21 Grimへr4/r34を各20戦。双方完走後、
+   Grim gate通過時だけcanonical Alakazam negative sentinelへ各20戦。Cynthiaは既に順逆80戦ずつのため再戦しない。
+4. **multi-metaの局所安全gate**: 各壁r34-r4がoverall -3/20、各席-2/10以上、二壁poolが
+   overall -4/40、各席-3/20以上。Grimは実注入・採用>=1、canonicalはAZ003/004発火0を要求する。
+   通過しても`SAFE-MULTI-META / ExIt trace source`までで、標準160戦・production・提出とは分ける。
+5. **AZ006/AZ008はHOLD**: r46は26/40対H 21/40、r8は26/40対base 18/40でも実注入0。
    Phase 2/production/ExItを停止。AZ006はより広いAZ003へ分解し、AZ008は付属なしDudunsparceの
    top-5外独立正例が5–10件集まるまで再戦しない。
-5. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
+6. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
    現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
-6. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
+7. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
    実測ペースで長すぎ、探索評価を塞ぐため停止した。夜は既存59kの重み付き混合比を先に固定し、
    追加生成を盲目的に再開しない。次世代から
    root候補に専門家ルールを保証した探索の選択をtrace付きで蒸留する。公式教師との混合を維持し、
    `BC → Expert候補付きBCS → ExIt → 再探索`を1世代ずつA/Bする。
-7. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
+8. **bc_v6 fixed2を負荷解消後に最終判定**: canonical/Hammer純BCの合算は
    **442.5/800 = 55.31%**だがP0 59.0 / P1 51.63%と席差あり。順逆各80戦、candidate換算
    86/160以上・両席/両load-order下限・failure 0の事前gateを、ExIt完了後に最初から回す。
-8. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
+9. **Dunsparce 4枚案を次の低距離techとして準備**: `-1 Nighttime Mine / +1 Dunsparce`。
    公開31敗中7件のポケモン切れを狙うが、ExIt中は組立てまでで重いscreenは行わない。
-9. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
+10. **belief更新は別枝**: Rocket/Festival等のexact library追加は、旧候補との同率時に
    暗默priorが変わる問題を先に解決する。v4.3a提出物には含めない。
-10. **ラダー監視**: v4.3a/v4.2tは各249/204戦でほぼ平衡。次の提出は上記gate通過時だけにし、
+11. **ラダー監視**: v4.3a/v4.2tは各249/204戦でほぼ平衡。次の提出は上記gate通過時だけにし、
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- AZ003+004のexact Cynthia順逆screenは、r34 **46/80（P0 23/P1 23）**、固定r4 control
+  **48/80（25/23）**。差-2（席-2/0）は事前許容overall -8・各席-6内。全160戦scored/DONE、
+  failure/error/incomplete 0、最小overage 496.41秒。r34累積はAZ003 hit93 / selected30 /
+  outside=injected 4 / injected-selected 2、AZ004 hit=enforced=selected 73で、**SAFE-KEEP_TO_MULTI_META**。
+  ただし単一proxy壁の局所安全性で、標準160戦昇格・優越性・production・提出の証明ではない。
 - Cynthia三群はB 22/40（12/10）、H 21/40（11/10）、C 26/40（15/11）。全120戦DONE、failure 0、
   最小overage 306.59秒以上。HのAZ004はhit=enforced=selected=32、Cは35で直接介入した。
 - CのAZ006はhit25 / selected13でも`outside_topk=injected=injected_selected=0`。C–H +5は候補集合差がなく
@@ -159,9 +167,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-23 20:48 JST)**: Cynthia三群を完走し、AZ006をno-treatmentで停止。
-  AZ003+004を監査・build・両席検証済み。上記事前登録どおりr34を固定H controlと比較する。
-  旧r5/r8/r46/統合Floorの勝敗は混ぜず、提出もしない。
+- **なし**。重負荷jobは停止中。次は上記decision-level traceを実装してから、条件付きmulti-metaへ進む。
 
 ## 今日の提出枠
 

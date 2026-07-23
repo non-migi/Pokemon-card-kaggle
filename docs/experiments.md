@@ -1013,7 +1013,7 @@ Hは32回直接介入しforwardのscore/health条件を満たしたが、事前�
 この結果だけを事後的に切り出してAZ004を昇格させない。機械可読判定は
 `results/expert_rules_cynthia_phase1_20260723.json`、生runは`results/arena.jsonl`の3 suite。
 
-### AZ003→AZ004 Hammer連鎖の実注入screen（07-23 20:48、結果確認前）
+### AZ003→AZ004 Hammer連鎖の実注入screen（07-23 20:48–21:45、結果）
 
 AZ006は「Hammerを使えばexact KO」の狭い部分集合だったが現壁で実注入0。次は同じ阻害Energyに対し、
 exact KOに限定せずEnhanced Hammerを**使う選択肢**をrootへ保証するAZ003を候補化し、AZ004が対象を固定する
@@ -1042,3 +1042,61 @@ SAFE時だけCynthia A vs r4 B、Cynthia A vs r34 Bを各40戦、途中結果に
 forwardを合わせ各variant 80戦へ補数変換し、r34–r4がoverall -8以上・各席-6以上、全healthと累積coverageを
 満たした時だけmulti-metaへ進む。これは広いHammer使用を強制するruleではなく、BCが読まなかった候補を
 searchが選べるかの機構screenであり、優越性・production採用・提出の証明ではない。
+
+#### Phase 1 / 逆load-orderの実測と判定
+
+事前宣言どおり、Phase 1がSAFE-SCREENだったため逆順のr4/r34を途中結果にかかわらず両方完走した。
+逆順は表示A=Cynthiaのscoreを補数化し、candidate席は`P0=20-R1`、`P1=20-R0`と相手席から変換した。
+
+| variant | forward | reverse（候補換算） | 合算 | P0 / P1 |
+|---|---:|---:|---:|---:|
+| r4 AZ004-only | 21/40 | 27/40（raw Cynthia 13） | **48/80** | **25 / 23** |
+| r34 AZ003+004 | 23/40 | 23/40（raw Cynthia 17） | **46/80** | **23 / 23** |
+| r34-r4 | +2 | -4 | **-2** | **-2 / 0** |
+
+全160戦scored、両agent statusは全て`DONE`、failure/run failure、watchdog event、fixed-search/ruleの
+error・incomplete・invalid・conflict・violationは0。全runの最小remaining overageは496.4084秒以上。
+r4/r34はmain/deck/model/cgが一致し、config差はAZ003追加だけ。r4 forwardだけgit `fd9f779`、他は
+`25876e8`だが、凍結fingerprint `5c1f74c...` / `5bce6c...`とwall `7dad42a...`は不変だった。
+
+r34のAZ003はforward 48 hit / 17 selected / 2 injected / 1 injected-selected、reverseは
+45 / 13 / 2 / 1、累積 **93 / 30 / 4 / 2**。AZ004も累積`hit=enforced=selected=73`。
+機構coverageを満たし、r34-r4の-2（席-2/0）は事前下限overall -8・各席-6内なので、判定は
+**SAFE-KEEP_TO_MULTI_META**。これはexact Cynthia proxyに対する局所gross-regression screenであり、
+通常の順逆160戦昇格、優越性、production、提出の証明ではない。機械可読判定は
+`results/expert_rules_r34_cynthia_gate_20260723.json`、生runは`results/arena.jsonl`。
+
+監査JSONのBC score供給元が旧r46名だったため、同じ48,501判断をr34 build指定で再実行した。
+全集計・10 row SHAは完全一致し、`policy_build`とSHAだけをr34へ訂正した。
+
+### AZ003介入trace→二層multi-meta（07-23 21:47、実行前の事前登録）
+
+Cynthiaを再抽選して勝率だけを増やさず、まず`results/expert_rules_audit_r34_20260723.json`の
+top-5外10 row SHAを凍結する。local fixed2専用のdecision traceへ、元BC top-5/rank/score、AZ003手、
+注入で落ちたBC #5、同一2 worlds上の各候補Q、最終選択、error/incompleteを保存する。raw観測・非公開札は
+保存せず、現行5候補の選択後にshadow計測して方策と乱数消費を変えない。
+
+- **TRACE SAFE**: 10/10が合法注入、audit metricとtrace件数が完全一致、error/incomplete/invalid 0。
+  AZ003が3つ以上の異なるrowで選択され、選択全件で`Q_AZ003 >= max(Q_original_top5)`、うち2件以上strict `>`。
+- **TRACE HOLD**: 健康だがAZ003選択が0–2 row。同じ対戦の再抽選はせず、独立局面を追加採掘する。
+- **TRACE REJECT**: 違法注入、metric/trace不一致、または選択済みAZ003のQが元top-5最大Qを下回る。
+
+TRACE SAFE時だけ最大80戦のmulti-metaへ進む。まずexact
+`screen-20260721-grim-canonical-fixed2`を共通wallに、r4/r34を各20戦（各席10）実行し、途中結果に
+かかわらず両runを完走する。Grim gate通過時だけ、`v4.5a-base-fixed2-e0717`をcanonical Alakazam
+negative sentinelとしてr4/r34各20戦を追加する。既に測ったCynthiaは再戦しない。
+
+- 全run scored/DONE、failure/run failure/watchdog、search/rule error・incomplete・invalid・conflict・
+  violation 0、最小overage60秒、fingerprint一致を必須とする。
+- 各wallでr34-r4がoverall -3/20以上、各席-2/10以上。二wall poolはoverall -4/40以上、
+  各席-3/20以上をSAFE下限とする。
+- GrimはAZ004 `hit=enforced=selected>=1`、AZ003 `hit>=1`かつ`injected=injected_selected>=1`。
+  live注入手もtrace上で元top-5最大Q以上を要求する。coverage 0はINCONCLUSIVEとしてcanonicalを省略する。
+- canonical sentinelはAZ003/004のhit・注入・採用が全て0を期待する。非0なら前提崩れとして調査し、
+  scoreだけで昇格しない。
+- candidate health/違法/Q矛盾はREJECT。健康・coverageありで壁差overall -7/20以下、任意席-5/10以下、
+  またはpool -10/40以下・任意席-7/20以下もgross-regression REJECT。中間域はINCONCLUSIVE。
+
+通過の呼称は`SAFE-MULTI-META / ExIt trace source`まで。標準順逆160戦、production `-j 1`、提出は別gateとする。
+独自性は公開上位のif文を強制コピーする点ではなく、BCが落としたHammer手だけを候補保証し、同一worldの
+シミュレータで反証して、探索が採用したtraceだけを次世代ExItへ蒸留する閉ループに置く。

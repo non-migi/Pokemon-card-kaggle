@@ -4,8 +4,8 @@
     "AZ004_HAMMER_BLOCKER_TARGET"
   ],
   "exact_deck": "decks/meta/snapshot_20260714_alakazam.csv",
-  "policy_build": "build/v4.5a-r46-fixed2",
-  "policy_build_sha256": "fac34f851f9e2583bd580a035c13a41cdaa7ec017311c79d5c3e0bef939e1952",
+  "policy_build": "build/v4.5a-r34-fixed2",
+  "policy_build_sha256": "5bce6c4974e178cc2c086fe0ee4fd88d1db1d2532301f5e1c8be99f0e13c30d7",
   "policy_enabled": true,
   "profile": "alakazam_v1",
   "rule_mode": "enforce",

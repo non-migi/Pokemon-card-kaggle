@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "created_at": "2026-07-23T21:47:35+09:00",
+  "experiment": "AZ003_HAMMER_BLOCKER_PLAY plus AZ004_HAMMER_BLOCKER_TARGET against exact Cynthia proxy",
+  "profile": "fixed-worlds",
+  "fixed_search_worlds": 2,
+  "jobs": 4,
+  "artifacts": {
+    "r4_sha256": "5c1f74c01c2d2c8063100feb5ddd1455d75be5a856721c3385cb1e18114b3536",
+    "r34_sha256": "5bce6c4974e178cc2c086fe0ee4fd88d1db1d2532301f5e1c8be99f0e13c30d7",
+    "cynthia_wall_sha256": "7dad42a29da8a28cb2fe01dd0f5cedc46d4d4d8c7144605682d89bde25c329d4",
+    "main_sha256": "fe5d43178b7a241d4e9cc03299eae3d3562fd47737282f008da8d9dd506f1e91",
+    "alakazam_deck_sha256": "33f38523c965d5dd57eb806b51b4706fea476e4bfa96a1f314860f6413949b94",
+    "cynthia_deck_sha256": "0d5cb0303a955a0432ed73eec60a3dfcfd01c88ab7d7758597605bd8297bfb2f",
+    "model_sha256": "be8146d75f0cfe813a8728084614a3e168fc821fd2f7dece717feb0c2b8c70da",
+    "cg_sha256": "00154aee7d3071451096c929c52da9f9af360a2821e686671097f5011e5a5d95",
+    "r4_agent_config_sha256": "e5e939cd9b56ac0605a69503532725fb98067044b8c83b2a597357037fc46218",
+    "r34_agent_config_sha256": "d109525dd133e569392af7ae1344d5f3da3b4810febe89daccc4b907d98ad428"
+  },
+  "runs": {
+    "r4_forward": {
+      "suite": "expert_r46_cynthia_20260723_r4",
+      "run_id": "a69d6fae43e1437b989cca93914356ab",
+      "invocation_id": "b445fbd87b834a94b4f5d62dc6b11f9f",
+      "git_commit": "fd9f779dd062431ed83916feec726761df0eb1fb",
+      "displayed_roles": "r4 A vs Cynthia B",
+      "displayed_score": {"overall": 21, "P0": 11, "P1": 10},
+      "candidate_score": {"overall": 21, "P0": 11, "P1": 10},
+      "min_remaining_overage_sec": {"a": 505.5624, "b": 496.4084},
+      "health": {"scored": 40, "unscored": 0, "statuses_a": {"DONE": 40}, "statuses_b": {"DONE": 40}, "failure_count": 0, "run_failure_count": 0, "watchdog_event_count": 0, "strict_metric_sum": 0}
+    },
+    "r34_forward": {
+      "suite": "expert_r34_cynthia_20260723_candidate",
+      "run_id": "b7d6b2d971e14550b74c354135f7cac0",
+      "invocation_id": "014fd0d9ccde4867849f7f644b4b5ab2",
+      "git_commit": "25876e8f1c455be32f0b3ed637f554f1f1905884",
+      "displayed_roles": "r34 A vs Cynthia B",
+      "displayed_score": {"overall": 23, "P0": 11, "P1": 12},
+      "candidate_score": {"overall": 23, "P0": 11, "P1": 12},
+      "min_remaining_overage_sec": {"a": 528.184, "b": 507.4427},
+      "health": {"scored": 40, "unscored": 0, "statuses_a": {"DONE": 40}, "statuses_b": {"DONE": 40}, "failure_count": 0, "run_failure_count": 0, "watchdog_event_count": 0, "strict_metric_sum": 0}
+    },
+    "r4_reverse": {
+      "suite": "expert_r34_cynthia_20260723_reverse_r4",
+      "run_id": "e45756af873647f9b1674f6ed3163ba6",
+      "invocation_id": "9a15409dff4443e789e63898f4cb1fee",
+      "git_commit": "25876e8f1c455be32f0b3ed637f554f1f1905884",
+      "displayed_roles": "Cynthia A vs r4 B",
+      "displayed_score": {"overall": 13, "P0": 7, "P1": 6},
+      "candidate_score": {"overall": 27, "P0": 14, "P1": 13},
+      "min_remaining_overage_sec": {"a": 508.2051, "b": 510.5973},
+      "health": {"scored": 40, "unscored": 0, "statuses_a": {"DONE": 40}, "statuses_b": {"DONE": 40}, "failure_count": 0, "run_failure_count": 0, "watchdog_event_count": 0, "strict_metric_sum": 0}
+    },
+    "r34_reverse": {
+      "suite": "expert_r34_cynthia_20260723_reverse_r34",
+      "run_id": "72951f969f784c82ac6798780e427420",
+      "invocation_id": "44210cf737f14c4e90d677df072c7705",
+      "git_commit": "25876e8f1c455be32f0b3ed637f554f1f1905884",
+      "displayed_roles": "Cynthia A vs r34 B",
+      "displayed_score": {"overall": 17, "P0": 9, "P1": 8},
+      "candidate_score": {"overall": 23, "P0": 12, "P1": 11},
+      "min_remaining_overage_sec": {"a": 501.8509, "b": 526.899},
+      "health": {"scored": 40, "unscored": 0, "statuses_a": {"DONE": 40}, "statuses_b": {"DONE": 40}, "failure_count": 0, "run_failure_count": 0, "watchdog_event_count": 0, "strict_metric_sum": 0}
+    }
+  },
+  "seat_conversion": {
+    "formula": "For reverse raw Cynthia scores R0/R1: candidate total=40-(R0+R1), P0=20-R1, P1=20-R0",
+    "missing_strict_metric_keys_are_zero": true
+  },
+  "combined": {
+    "r4": {"overall": 48, "n": 80, "P0": 25, "P0_n": 40, "P1": 23, "P1_n": 40},
+    "r34": {"overall": 46, "n": 80, "P0": 23, "P0_n": 40, "P1": 23, "P1_n": 40},
+    "r34_minus_r4": {"overall": -2, "P0": -2, "P1": 0}
+  },
+  "rule_coverage": {
+    "r4": {
+      "AZ004_HAMMER_BLOCKER_TARGET": {"hit": 58, "enforced": 58, "selected": 58}
+    },
+    "r34_forward": {
+      "AZ003_HAMMER_BLOCKER_PLAY": {"hit": 48, "selected": 17, "outside_topk": 2, "injected": 2, "injected_selected": 1},
+      "AZ004_HAMMER_BLOCKER_TARGET": {"hit": 39, "enforced": 39, "selected": 39}
+    },
+    "r34_reverse": {
+      "AZ003_HAMMER_BLOCKER_PLAY": {"hit": 45, "selected": 13, "outside_topk": 2, "injected": 2, "injected_selected": 1},
+      "AZ004_HAMMER_BLOCKER_TARGET": {"hit": 34, "enforced": 34, "selected": 34}
+    },
+    "r34_cumulative": {
+      "AZ003_HAMMER_BLOCKER_PLAY": {"hit": 93, "selected": 30, "outside_topk": 4, "injected": 4, "injected_selected": 2},
+      "AZ004_HAMMER_BLOCKER_TARGET": {"hit": 73, "enforced": 73, "selected": 73}
+    }
+  },
+  "predeclared_gate": {
+    "thresholds": {"r34_minus_r4_overall_min": -8, "r34_minus_r4_each_seat_min": -6, "min_remaining_overage_sec": 60},
+    "checks": {
+      "phase1_safe_screen": true,
+      "all_160_games_scored_and_done": true,
+      "all_health_metrics_zero": true,
+      "minimum_overage_pass": true,
+      "artifact_identity_pass": true,
+      "cumulative_AZ003_injected_and_selected": true,
+      "cumulative_AZ004_hard_consistency": true,
+      "overall_delta_pass": true,
+      "P0_delta_pass": true,
+      "P1_delta_pass": true
+    }
+  },
+  "outcome": "SAFE_KEEP_TO_MULTI_META",
+  "scope": "Targeted Cynthia gross-regression and mechanism screen only. It is not evidence of superiority, standard 160-game promotion, production readiness, or submission readiness."
+}

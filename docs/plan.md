@@ -4,7 +4,8 @@
 > 1100の壁を越えられていない。中核は **「専門家ルールを床、探索・ExItを天井」**。
 > ルールは強者を丸ごとコピーせず、破滅手の禁止と戦術候補の保証に限定し、探索の比較結果をExItで蒸留する。
 > r5は棄却。r8/AZ008とr46/AZ006は勝ち越しても実注入0でINCONCLUSIVEとして停止した。
-> 次はtop-5外注入10/10が教師一致したAZ003を、AZ004-onlyから分離し、候補化→探索採用を先に測る。
+> AZ003+004はexact Cynthia順逆で実注入4・採用2、r4比-2/80に収まりSAFE-KEEP。
+> 次は凍結10局面の候補Qをtraceし、反実仮想gateを通った場合だけGrim→canonicalの最大80戦へ進む。
 
 目標: **Strategy部門トップ8**(各$30,000 + ファイナル進出)。
 残り: Simulation締切(8/16)まで24日 / Strategy Writeup締切(9/13)まで52日。
@@ -52,8 +53,9 @@ exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確�
   偽KO 30件を除くと287 hit / 教師一致247 (86.06%)だが、bc_v2 top-5外は2件だけ。一方「進化をすぐ行う」は
   4,131/10,946=37.7%に留まるため、if文は件数でなく条件の証明度と実治療差でhard/candidate/shadowへ分ける。
 - **実治療差を勝率より先に判定**: r8はbase比+8、r46はAZ004-only比+5でも対象candidateの注入0で停止。
-  次のr34はAZ004-onlyを固定controlに、AZ003の`outside→injected→injected_selected`が1件以上なければ
-  勝敗を採用しない。AZ003は教師115/125だが、top-5外実注入10件は10/10教師一致なのでhardではなくsearch候補。
+  r34はAZ004-only固定controlに対し、Cynthia順逆でAZ003を4回注入・2回採用し、46/80対48/80
+  （席差-2/0）で局所SAFE-KEEP。AZ003は教師115/125、top-5外10/10教師一致なのでhardではなくsearch候補。
+  次は勝敗を増やす前に、凍結top-5外10局面で元BC候補とAZ003候補の同一world Qをtraceする。
 
 ## 1100突破の中核: Expert Floor → Search Ceiling → ExIt
 
@@ -103,8 +105,8 @@ exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確�
 - [x] **路線A: BC×探索の統合** — BCをロールアウト方策にした決定化探索、
   または root-only(BCの上位候補だけを探索で検証)
 - [ ] **主路線B': Expert Floor付きExIt** — 第1世代は59,249判断でcheckpoint済み。350kへ盲目的に戻らず、
-  r5は棄却、r8/r46は実注入0でHOLD。次は最新Cynthia壁でAZ004-only / AZ003+004を分離し、
-  AZ003の実注入・探索採用と安全性を確認後にだけ、
+  r5は棄却、r8/r46は実注入0でHOLD。AZ003+004は最新Cynthia壁で実注入・探索採用と局所安全性を確認した。
+  次は凍結10局面のdecision traceを通し、exact Grim→canonical Alakazamの最大80戦でmulti-meta安全性を確認後にだけ、
   公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
   第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り
