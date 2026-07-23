@@ -1,11 +1,12 @@
 # 全体計画(2026-07-23改訂 / 初版07-10)
 
-> **07-23の現在地**: canonical Alakazam＋BC×探索のv4.3aは249戦で862.8へ収束し、模倣だけでは
+> **07-23の現在地**: canonical Alakazam＋BC×探索のv4.3aは249戦・871.7付近へ収束し、模倣だけでは
 > 1100の壁を越えられていない。中核は **「専門家ルールを床、探索・ExItを天井」**。
 > ルールは強者を丸ごとコピーせず、破滅手の禁止と戦術候補の保証に限定し、探索の比較結果をExItで蒸留する。
 > r5は棄却。r8/AZ008とr46/AZ006は勝ち越しても実注入0でINCONCLUSIVEとして停止した。
 > AZ003+004はexact Cynthia順逆で実注入4・採用2、r4比-2/80に収まりSAFE-KEEP。
-> 次は凍結10局面の候補Qをtraceし、反実仮想gateを通った場合だけGrim→canonicalの最大80戦へ進む。
+> 凍結10局面はAZ003採用4・Q支配0でTRACE SAFE。旧Grimはr34 16/20対r4 15/20でもrule発火0のため
+> multi-metaはINCONCLUSIVEで止めた。次は上位Alakazamで再現したHammer4とExpert Floorを同一deckで分離評価する。
 
 目標: **Strategy部門トップ8**(各$30,000 + ファイナル進出)。
 残り: Simulation締切(8/16)まで24日 / Strategy Writeup締切(9/13)まで52日。
@@ -35,10 +36,11 @@ Mega Starmie系1。**→ 1100到達にはAlakazam中心の昇格pool、首位争
 生存poolの両方が必要。** まずcanonical Alakazamとexact 07-21 Grimを二層sentinelにし、
 Dragapult/Cynthia等はexact snapshotを揃えてから全体重みを再計算する。単一Top12へ過適合しない。
 
-07-23 19:29の公式LBは1100+が9 team、Top 8境界1108.9。最新上位25 replayの選択標本では
-Grim core 18/50枠、canonical Alakazam core 17/50枠、Cynthia 5/50枠。現6位junlee789のCynthia
-exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確認した。これは最新の対策壁には使うが、
-上位公開対戦からの標本なので環境採用率へは外挿しない。
+07-23 22:10固定CSVは1100+が13 team、Top8境界1116.6、首位1156.9。22:25 liveでは1100+ 16、
+Top8 1119.3まで動いた。現Top8の最新公開replayはGrim 3 / Alakazam 3 / Kang 1 / Dragapult 1。
+Grim 3者は配列順まで同じ60枚で、対戦相手を含む6 teamでも同型を確認した。旧07-21型から
+`Handheld Fan -2 / Pokégear 3.0 +1 / Tool Scrapper +1`だけ変えたexact wallを固定した。
+Alakazam上位2者は既知Hammer4と一致する。公開標本なので採用率へ外挿せず、再現したdeck techとexact壁にだけ使う。
 
 ### 確定した技術知見(experiments.md詳細)
 - **有効(現主力)**: bc_v2方策＋BC×決定化探索。G3は純BC比58.1%/400で通過し、ラダー826.4。
@@ -55,7 +57,13 @@ exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確�
 - **実治療差を勝率より先に判定**: r8はbase比+8、r46はAZ004-only比+5でも対象candidateの注入0で停止。
   r34はAZ004-only固定controlに対し、Cynthia順逆でAZ003を4回注入・2回採用し、46/80対48/80
   （席差-2/0）で局所SAFE-KEEP。AZ003は教師115/125、top-5外10/10教師一致なのでhardではなくsearch候補。
-  次は勝敗を増やす前に、凍結top-5外10局面で元BC候補とAZ003候補の同一world Qをtraceする。
+  凍結top-5外10局面は10/10合法・audit一致。修正後3 runはAZ003採用4/5/4、strict 4/3/3、
+  採用局Q劣位0で全てTRACE SAFE。gateは現行5候補を実際に選んだpassのAZ003＋保持4候補Qを使い、
+  未評価のdrop済みBC #5だけを後段6候補shadow passで補うため、別乱数passで実選択Qを上書きしない。
+  公式episodeにnative RNG seedが無く採否/Qは揺れるので、歴史的bit-exact replayとは区別する。
+- **multi-metaはcoverageもgate**: 旧Grim共通壁はr34 16/20対r4 15/20、席差0/+1、全件健全だったが
+  AZ003/004が一度も発火しなかった。安全性の弱いnegative evidenceにはなるが治療効果を測れていないため、
+  事前登録どおりcanonical phaseを省略し`INCONCLUSIVE_NO_GRIM_RULE_COVERAGE`。productionへ昇格しない。
 
 ## 1100突破の中核: Expert Floor → Search Ceiling → ExIt
 
@@ -106,8 +114,10 @@ exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確�
   または root-only(BCの上位候補だけを探索で検証)
 - [ ] **主路線B': Expert Floor付きExIt** — 第1世代は59,249判断でcheckpoint済み。350kへ盲目的に戻らず、
   r5は棄却、r8/r46は実注入0でHOLD。AZ003+004は最新Cynthia壁で実注入・探索採用と局所安全性を確認した。
-  次は凍結10局面のdecision traceを通し、exact Grim→canonical Alakazamの最大80戦でmulti-meta安全性を確認後にだけ、
-  公式教師との混合比を事前固定してbc_x1を学習・A/Bする。
+  凍結10局面のdecision traceはSAFE、旧Grim勝敗下限も通したがcoverage 0でmulti-metaは未通過。
+  次はMajkel/Yushinで外的再現したHammer4を共通deckにしてAZ004-onlyとAZ003+004を分離し、
+  exact Cynthiaで実注入を再確認後、最新Top8 Grimをnegative/meta safety wallにする。
+  両壁を通った介入だけ公式教師との混合比を事前固定してbc_x1へ入れる。
   第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り
   Elo加算を計画値として扱わない。重い場合はGoogle Cloudクーポン($3,000)投入。
@@ -160,8 +170,8 @@ exact 60枚を取得し、5 replayすべて同一、闘active＋Rockを3件確�
 - **if文の過適合**: 強者一致率が高くても因果を保証しない → hardは破滅回避/対象選択など局所支配手だけ。
   candidateは必ず探索とA/Bに通し、低一致ルールはshadowから動かさない
 - **最新2枠の事故**(良提出の押し出し): 提出はイベント駆動+この計画のゲートに従う
-- **メタシフト**: 週次収集で追随。07-22 21:43の1100+はGrim 41.2%へ増え、トップ3もGrimのため、
-  `snapshot_20260721_grim_canonical.csv`を二層metaの主要wallにする
+- **メタシフト**: 週次収集で追随。旧07-21 Grimだけを固定せず、07-23 Top8で6 teamに再現した
+  Pokégear＋Tool Scrapper型 `snapshot_20260723_grim_top8.csv`を最新wallにする
 - **測定の交絡**: 重負荷ジョブと時間依存評価の並走禁止。BC同士の評価は高速なので影響小
 - **公式engine drift**: PyPI版とKaggle配布native binaryの更新日は一致しないことがある →
   search評価・build前に`scripts/sync_cg_engine.py`をread-only実行し、差分時だけ`--apply`後に全buildを作り直す

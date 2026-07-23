@@ -3,13 +3,13 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 21:47 JST (Codex) — AZ003→AZ004のCynthia順逆gateをSAFE-KEEP、次は介入trace
+最終更新: 2026-07-23 23:03 JST (Codex) — AZ003 trace gateを実選択Q基準へ修正、3/3 SAFE
 
-## ラダー状況(2026-07-23 19:29 JST、active = 最新2提出のみ)
+## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
 | 提出 | active | 内容 | ライブレート / 公開対戦 |
 |---|---|---|---|
-| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **873.6** / 249戦126勝123敗 (50.6%、対戦集計00:10) |
+| **v4.3a** (sub 54731784) | **yes** | bc_v2 BCS + **canonical Top Alakazam** | **871.7** / 249戦126勝123敗 (50.6%、対戦集計00:10) |
 | **v4.2t** (sub 54688865) | **yes** | bc_v2 BCS + Great Tusk–Crustle mill | **699.5** / 204戦101勝103敗 (49.5%、対戦集計00:10) |
 | **v4.1a** (sub 54612885) | no | bc_v2 BCS + 旧Alakazam | **869.1 / 149戦79勝70敗 (53.0%)で凍結** |
 | **v4.1g** (sub 54601845) | no | BC×探索 + multi-select + bc_v2 + オーロンゲ型 | **751.0 / 93戦で凍結** |
@@ -19,7 +19,7 @@
 ポケモン無17/サイド10/自deckout 7。ポケモン無7敗で、ベンチ空・手札に出せるBasicがあるのに
 21の重要選択中15回出さず。timeoutではなく、**Great Tuskとbc_v2の分布不整合**が失敗の主因。
 
-`v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。現在score 873.6。純BC直接 **74.67%/300**、
+`v4.3a`は同bc_v2でデッキのみをcanonical Alakazamへ変更。現在score 871.7。純BC直接 **74.67%/300**、
 fixed2 BCS **75.0%/80**、二層meta加重 **88.95% vs baseline 83.23%**。最終production 8秒は
 凍結した実提出v4.1aに **8–2/10** (P0 3–2 / P1 5–0)、全戦`DONE`、failure 0、最小残りoverage
 **215.99秒**。両席buildを通し、07-16 00:48 JSTに提出、01:01 JSTに`COMPLETE`。早期78戦では
@@ -36,23 +36,23 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **AZ003のdecision-level介入traceを実装**: 監査で凍結したtop-5外10行をrow SHAで再同定し、
-   元BC top-5、注入で落ちた#5、同一fixed2 worlds上の候補Q、最終選択をlocal専用traceへ残す。
-   raw観測や非公開札は保存せず、現行5候補の選択を変えないshadow計測にする。
-2. **勝敗より先に反実仮想gate**: 10/10合法注入・trace/metric一致・error/incomplete 0を必須にし、
-   AZ003が3つ以上の異なるrowで選ばれ、選択全件が元top-5最大Q以上（うち2件strict）なら次へ進む。
-   選択0–2件はHOLD、選択とQの矛盾や違法手はREJECT。同じCynthia戦を再抽選しない。
-3. **trace SAFE時だけ最大80戦multi-meta**: exact 07-21 Grimへr4/r34を各20戦。双方完走後、
-   Grim gate通過時だけcanonical Alakazam negative sentinelへ各20戦。Cynthiaは既に順逆80戦ずつのため再戦しない。
-4. **multi-metaの局所安全gate**: 各壁r34-r4がoverall -3/20、各席-2/10以上、二壁poolが
-   overall -4/40、各席-3/20以上。Grimは実注入・採用>=1、canonicalはAZ003/004発火0を要求する。
-   通過しても`SAFE-MULTI-META / ExIt trace source`までで、標準160戦・production・提出とは分ける。
+1. **Hammer4×Expert Floorの交互作用を次に測る**: 上位Majkel/Yushinと同じHammer4へ
+   AZ004-only control `v4.5h-r4-fixed2`、AZ003+004 candidate `v4.5h-r34-fixed2`を組み、両席loader DONE。
+   exact Cynthia共通壁へ各20戦（各席10）を事前固定し、双方完走・実注入/採用・席差を確認する。
+2. **最新Grim壁へ更新**: Top8のLuca / me and the lads / Rmyを含む6 teamで一致した
+   `-2 Handheld Fan / +1 Pokégear 3.0 / +1 Tool Scrapper`型を
+   `snapshot_20260723_grim_top8.csv`へ固定し、fixed2壁の両席loaderを通した。Hammer4 gate通過時の
+   negative/meta safety wallに使い、旧07-21型だけへ最適化しない。
+3. **07-22公式Daily Topを取り込む**: 07-23 09:01 JST公開済み。新規decisionを既存BCへ盲目的に足さず、
+   top-5外専門家介入、反復失敗、最新Grim/Alakazam別に採掘し、候補traceの追加sourceにする。
+4. **ExItは反証済み介入だけを蒸留**: 凍結10局のTRACE SAFEはExIt source候補だが、
+   旧Grim multi-metaはcoverage 0でINCONCLUSIVE。`SAFE-MULTI-META`、production、提出へは未昇格。
 5. **AZ006/AZ008はHOLD**: r46は26/40対H 21/40、r8は26/40対base 18/40でも実注入0。
    Phase 2/production/ExItを停止。AZ006はより広いAZ003へ分解し、AZ008は付属なしDudunsparceの
    top-5外独立正例が5–10件集まるまで再戦しない。
 6. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
-   現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
+   最新Top8のMajkel/Yushinも同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
 7. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
    実測ペースで長すぎ、探索評価を塞ぐため停止した。夜は既存59kの重み付き混合比を先に固定し、
    追加生成を盲目的に再開しない。次世代から
@@ -69,6 +69,23 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- 凍結top-5外10局のlocal介入traceを実装。row SHAでpairsと完全episodeを二重照合し、各局fresh processで
+  現行5候補を先に選択、その後だけ元BC top-5＋AZ003の6候補を影評価する。raw観測・非公開札は出力しない。
+  gateは実選択passのAZ003＋保持4候補Qを使い、そこで未評価のdrop済みBC #5だけを後段shadow Qで補う。
+  修正後3 runは10/10完走・合法注入・audit一致、AZ003採用4/5/4局、strict 4/3/3局、採用局のQ支配0で
+  **3/3 TRACE SAFE**。native branch RNGは再現不能で採否/Qは揺れるため、歴史的bit-exact replayとは呼ばない。
+  凍結10件の縮小拒否、実`bc_search.decide`との順序/tie-break同値、timeout/target mismatch、nested raw・NaN拒否を含む
+  derived gate値のQ配列再計算照合まで含む全Unit **79件**通過。
+- TRACE SAFE後の旧07-21 Grim壁はr4 **15/20（P0 8/P1 7）**、r34
+  **16/20（8/8）**、差+1（席0/+1）。全40戦DONE、failure/error/incomplete/watchdog 0、
+  最小overage 542.93秒。ただしAZ003/004のhit・注入・採用が全て0なので、事前登録どおり
+  **INCONCLUSIVE_NO_GRIM_RULE_COVERAGE**。canonical sentinelは省略し、production/提出へ進めない。
+- 22:10公式LB snapshotは5,571 team、median 647.6、1000+ 92、1100+ 13、首位1156.9、
+  Top8境界1116.6、自チーム454位/871.7。22:25 live値は1100+ 16・Top8 1119.3まで動いたため、
+  CSV時刻を固定して扱う。本日提出0/5、activeはv4.3a 871.7 / v4.2t 699.5。
+- 最新Top8 replayはGrim 3 / Alakazam 3 / Kang 1 / Dragapult 1。Grim 3者の60枚は配列順まで同一で、
+  さらに対戦相手を含む6 teamが同型。新Grim deck SHA `92b92bac...`、fixed2壁SHA `b8a57e37...`。
+  Majkel/YushinのAlakazamは既存Hammer4と一致し、Hammer4＋Expert Floorの組合せを次候補にした。
 - AZ003+004のexact Cynthia順逆screenは、r34 **46/80（P0 23/P1 23）**、固定r4 control
   **48/80（25/23）**。差-2（席-2/0）は事前許容overall -8・各席-6内。全160戦scored/DONE、
   failure/error/incomplete 0、最小overage 496.41秒。r34累積はAZ003 hit93 / selected30 /
@@ -156,19 +173,23 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
   `models/value_v1`へ退避し、実行時はフルロールアウトへフォールバック
 - Kaggleは目標48試合/日、各マッチ10%でランダム相手。短期レート/順位には対面運が残る
 
-## 外部情報スキャン(07-23 19:29 JST)
+## 外部情報スキャン(07-23 22:25 JST)
 
-- 公式Leaderboard CSVは5,560 team、1100+ 9、Top 8境界1108.9。scoreは短時間でも変動するため、
-  `results/meta_snapshot_20260723_1929.json`へ観測時刻とCSV名を固定した。
-- 07-22 Daily Top datasetが公開済み。最新上位replayのCynthia exactを保存したが、公開replay標本の
-  deck比率や5戦勝率を母集団の強さへ外挿しない。
-- X通常検索では提示投稿の完全一致や新しい具体的if-cascadeを再取得できず、ログイン済みブラウザも利用不可。
-  「存在しない」とは断定せず、新規の未検証情報は採用根拠へ混ぜない。主根拠は公式LB/replayとlocal因果A/B。
+- 22:10固定CSVは5,571 team、1100+ 13、Top8 1116.6（`results/meta_snapshot_20260723_2210.json`）。
+  22:25 liveでは1100+ 16、Top8 1119.3へ動き、単一live値は判断gateに使わない。
+  07-22 Daily Top datasetは07-23 09:01 JSTに公開済み。
+- 最新Top8の60枚を公式replayで照合し、Grim 3者は新しい同一60枚、Alakazam上位2者は既知Hammer4。
+  公開標本の採用率は外挿せず、exact壁・外的再現性としてだけ使う。
+- Xで直接確認できた07-15投稿は、短期LBぶれで良い提出を壊さず、単一ログ完全一致でなく同型局面へ
+  一般化し、少量変更をログで因果確認する方針。提示された「強者行動を愚直にルール化」の原文自体は
+  再取得できず、同一投稿とは扱わない。
+- 最新Discussionはrule-based一時2位の自己申告、policy accuracyとLBの非相関、ILのdeck依存、
+  弱いvalueでsearchが悪化する経験を報告。巨大if-cascadeを目的化せず、
+  `guard→候補保証→Q反証→採用介入だけExIt`を維持する。
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-23 21:55 JST)**: AZ003のlocal専用decision-level traceと凍結10局面gateを実装・検証する。
-  `src/ptcg/bc_search.py`、監査/trace script、対応testを対象とし、重負荷対戦・提出は行わない。
+- なし
 
 ## 今日の提出枠
 

@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "experiment": "AZ003 plus AZ004 intervention trace and predeclared multi-meta gate",
+  "trace": {
+    "artifact": "results/expert_rules_trace_r34_20260723.json",
+    "policy_build": "build/v4.5a-r34-fixed2",
+    "policy_build_sha256": "5bce6c4974e178cc2c086fe0ee4fd88d1db1d2532301f5e1c8be99f0e13c30d7",
+    "outcome": "TRACE_SAFE",
+    "expected_events": 10,
+    "completed_events": 10,
+    "legal_injections": 10,
+    "audit_matches": 10,
+    "policy_selected_rule_rows": 4,
+    "selected_rule_dominated_rows": 0,
+    "selected_rule_strict_rows_saved_run": 4,
+    "gate_q_semantics": "rule and retained-original Q come from the actual five-candidate policy pass; only dropped BC rank 5 comes from the post-selection shadow pass",
+    "repeatability": {
+      "runs": 3,
+      "outcomes": ["TRACE_SAFE", "TRACE_SAFE", "TRACE_SAFE"],
+      "policy_selected_rule_rows": [4, 5, 4],
+      "selected_rule_strict_rows": [4, 3, 3],
+      "note": "all three corrected-gate runs were TRACE_SAFE with zero selected-rule domination; native branch RNG is not recorded or seeded, so selection and Q values varied"
+    }
+  },
+  "grim_wall": {
+    "agent": "build/screen-20260721-grim-canonical-fixed2",
+    "agent_sha256": "c7fd1a985b1eee447de0bed85f27acca4dd863581531bbad526e21434c4cd245",
+    "r4_control": {
+      "run_id": "62cebd8da7884c67a1477e371ba71a8e",
+      "agent": "build/v4.5a-r4-fixed2",
+      "agent_sha256": "5c1f74c01c2d2c8063100feb5ddd1455d75be5a856721c3385cb1e18114b3536",
+      "score": 15,
+      "n": 20,
+      "by_seat": {"P0": 8, "P1": 7}
+    },
+    "r34_candidate": {
+      "run_id": "691f5726433b4e649071f2609cd7eae0",
+      "agent": "build/v4.5a-r34-fixed2",
+      "agent_sha256": "5bce6c4974e178cc2c086fe0ee4fd88d1db1d2532301f5e1c8be99f0e13c30d7",
+      "score": 16,
+      "n": 20,
+      "by_seat": {"P0": 8, "P1": 8}
+    },
+    "candidate_minus_control": {
+      "overall": 1,
+      "by_seat": {"P0": 0, "P1": 1}
+    },
+    "health": {
+      "all_scored": true,
+      "statuses": {"r4": {"DONE": 20}, "r34": {"DONE": 20}},
+      "failure_count": 0,
+      "run_failure_count": 0,
+      "watchdog_event_count": 0,
+      "fixed_search_errors": 0,
+      "fixed_search_incomplete": 0,
+      "expert_rule_errors": 0,
+      "expert_rule_invalid": 0,
+      "min_remaining_overage_sec": 542.9301
+    },
+    "coverage": {
+      "AZ003_HAMMER_BLOCKER_PLAY": {
+        "hit": 0,
+        "injected": 0,
+        "injected_selected": 0
+      },
+      "AZ004_HAMMER_BLOCKER_TARGET": {
+        "hit": 0,
+        "enforced": 0,
+        "selected": 0
+      }
+    }
+  },
+  "canonical_sentinel": {
+    "run": false,
+    "reason": "predeclared Grim coverage was zero, so the canonical phase is omitted"
+  },
+  "gate": {
+    "outcome": "INCONCLUSIVE_NO_GRIM_RULE_COVERAGE",
+    "score_and_health_floor_passed": true,
+    "coverage_floor_passed": false,
+    "safe_multi_meta": false,
+    "production_or_submission_authorized": false
+  }
+}

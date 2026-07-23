@@ -1,0 +1,15 @@
+{
+  "label": "Hammer4 Alakazam + bc_v2 BCS fixed2 + Hammer target floor control",
+  "deck": "decks/candidates/alakazam_hammer4_20260716.csv",
+  "model": "bc_v2",
+  "config": {
+    "algo": "bcs",
+    "max_move_sec": 8.0,
+    "fixed_search_worlds": 2,
+    "expert_rules": "alakazam_v1",
+    "expert_rule_mode": "enforce",
+    "enabled_rule_ids": [
+      "AZ004_HAMMER_BLOCKER_TARGET"
+    ]
+  }
+}

@@ -1,0 +1,2023 @@
+{
+  "audit_sha256": "efd6347f0137a0dd9138139ad14898ce540f360780c76ef3ccd709370dd076d6",
+  "event_isolation": "fresh_process_per_row",
+  "events": [
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          20
+        ],
+        [
+          19
+        ],
+        [
+          9
+        ],
+        [
+          10
+        ],
+        [
+          0
+        ],
+        [
+          8
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            20
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            19
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            9
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            0
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            8
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "counterfactual_q_delta": 0.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 0.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        0
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 0.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": false,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            20
+          ],
+          "rank": 1,
+          "score": -57.48616409
+        },
+        {
+          "action": [
+            19
+          ],
+          "rank": 2,
+          "score": -57.48616409
+        },
+        {
+          "action": [
+            9
+          ],
+          "rank": 3,
+          "score": -57.48616409
+        },
+        {
+          "action": [
+            10
+          ],
+          "rank": 4,
+          "score": -57.48616409
+        },
+        {
+          "action": [
+            0
+          ],
+          "rank": 5,
+          "score": -58.02574158
+        }
+      ],
+      "policy_candidates": [
+        [
+          20
+        ],
+        [
+          8
+        ],
+        [
+          19
+        ],
+        [
+          9
+        ],
+        [
+          10
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            20
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            8
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            19
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            9
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 0.0,
+      "policy_selected_action": [
+        20
+      ],
+      "policy_selected_rule": false,
+      "reason_codes": [],
+      "row_number": 34946,
+      "row_sha256": "6214be84dca501c6fa1b58a51d2459e6af539c2c47772ab4cf9f2557ad0b312b",
+      "rule_action": [
+        8
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          29
+        ],
+        [
+          5
+        ],
+        [
+          24
+        ],
+        [
+          16
+        ],
+        [
+          25
+        ],
+        [
+          28
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            29
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            5
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            24
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            16
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            28
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "counterfactual_q_delta": 0.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 0.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        25
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 0.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": false,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            29
+          ],
+          "rank": 1,
+          "score": -71.74742126
+        },
+        {
+          "action": [
+            5
+          ],
+          "rank": 2,
+          "score": -72.10598755
+        },
+        {
+          "action": [
+            24
+          ],
+          "rank": 3,
+          "score": -72.24639893
+        },
+        {
+          "action": [
+            16
+          ],
+          "rank": 4,
+          "score": -72.82013702
+        },
+        {
+          "action": [
+            25
+          ],
+          "rank": 5,
+          "score": -72.82013702
+        }
+      ],
+      "policy_candidates": [
+        [
+          29
+        ],
+        [
+          28
+        ],
+        [
+          5
+        ],
+        [
+          24
+        ],
+        [
+          16
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            29
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            28
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            5
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            24
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            16
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 0.0,
+      "policy_selected_action": [
+        29
+      ],
+      "policy_selected_rule": false,
+      "reason_codes": [],
+      "row_number": 62580,
+      "row_sha256": "80cf67faecc88d7acc24cc2b17e9ec9a3246ccd8229aa01632bf6dc392352dc6",
+      "rule_action": [
+        28
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          21
+        ],
+        [
+          4
+        ],
+        [
+          14
+        ],
+        [
+          22
+        ],
+        [
+          7
+        ],
+        [
+          25
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            21
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            4
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            14
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            22
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            7
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        }
+      ],
+      "counterfactual_q_delta": 0.5,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 0.5,
+      "counterfactual_rule_strictly_better": true,
+      "dropped_bc_action": [
+        7
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 0.5,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": true,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            21
+          ],
+          "rank": 1,
+          "score": -71.82693481
+        },
+        {
+          "action": [
+            4
+          ],
+          "rank": 2,
+          "score": -71.86270905
+        },
+        {
+          "action": [
+            14
+          ],
+          "rank": 3,
+          "score": -72.418396
+        },
+        {
+          "action": [
+            22
+          ],
+          "rank": 4,
+          "score": -72.418396
+        },
+        {
+          "action": [
+            7
+          ],
+          "rank": 5,
+          "score": -72.418396
+        }
+      ],
+      "policy_candidates": [
+        [
+          21
+        ],
+        [
+          25
+        ],
+        [
+          4
+        ],
+        [
+          14
+        ],
+        [
+          22
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            21
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            4
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            14
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            22
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 0.5,
+      "policy_selected_action": [
+        25
+      ],
+      "policy_selected_rule": true,
+      "reason_codes": [],
+      "row_number": 62584,
+      "row_sha256": "a122efe875e26f4c276d7cfeb5e2dbda249d84ac4e1979a5751184b88ebcf1a6",
+      "rule_action": [
+        25
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          26
+        ],
+        [
+          25
+        ],
+        [
+          24
+        ],
+        [
+          21
+        ],
+        [
+          22
+        ],
+        [
+          23
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            26
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            24
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            21
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            22
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            23
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        }
+      ],
+      "counterfactual_q_delta": 1.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 1.0,
+      "counterfactual_rule_strictly_better": true,
+      "dropped_bc_action": [
+        22
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 1.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": true,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            26
+          ],
+          "rank": 1,
+          "score": -42.83163071
+        },
+        {
+          "action": [
+            25
+          ],
+          "rank": 2,
+          "score": -43.40753937
+        },
+        {
+          "action": [
+            24
+          ],
+          "rank": 3,
+          "score": -43.40753937
+        },
+        {
+          "action": [
+            21
+          ],
+          "rank": 4,
+          "score": -43.40753937
+        },
+        {
+          "action": [
+            22
+          ],
+          "rank": 5,
+          "score": -43.40753937
+        }
+      ],
+      "policy_candidates": [
+        [
+          26
+        ],
+        [
+          23
+        ],
+        [
+          25
+        ],
+        [
+          24
+        ],
+        [
+          21
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            26
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            23
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            24
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            21
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 1.0,
+      "policy_selected_action": [
+        23
+      ],
+      "policy_selected_rule": true,
+      "reason_codes": [],
+      "row_number": 82996,
+      "row_sha256": "a54f6aebedee517d418579e8be932f4d746ba3c11c19a889b2037e4b343fad80",
+      "rule_action": [
+        23
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          6
+        ],
+        [
+          7
+        ],
+        [
+          8
+        ],
+        [
+          10
+        ],
+        [
+          0
+        ],
+        [
+          12
+        ]
+      ],
+      "counterfactual_original_max_q": 0.5,
+      "counterfactual_q": [
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            7
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            8
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            0
+          ],
+          "count": 2,
+          "q": 0.21,
+          "total": 0.42
+        },
+        {
+          "action": [
+            12
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "counterfactual_q_delta": -0.5,
+      "counterfactual_rule_not_dominated": false,
+      "counterfactual_rule_q": 0.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        0
+      ],
+      "gate_dropped_original_q": 0.21,
+      "gate_original_max_q": 0.5,
+      "gate_q_delta": -0.5,
+      "gate_rule_not_dominated": false,
+      "gate_rule_strictly_better": false,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            6
+          ],
+          "rank": 1,
+          "score": -53.31402969
+        },
+        {
+          "action": [
+            7
+          ],
+          "rank": 2,
+          "score": -53.31402969
+        },
+        {
+          "action": [
+            8
+          ],
+          "rank": 3,
+          "score": -53.31402969
+        },
+        {
+          "action": [
+            10
+          ],
+          "rank": 4,
+          "score": -53.66233444
+        },
+        {
+          "action": [
+            0
+          ],
+          "rank": 5,
+          "score": -53.84751129
+        }
+      ],
+      "policy_candidates": [
+        [
+          6
+        ],
+        [
+          12
+        ],
+        [
+          7
+        ],
+        [
+          8
+        ],
+        [
+          10
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            12
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            7
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            8
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.5,
+      "policy_rule_q": 0.0,
+      "policy_selected_action": [
+        7
+      ],
+      "policy_selected_rule": false,
+      "reason_codes": [],
+      "row_number": 130646,
+      "row_sha256": "b8008243c706c7088510592fd3aa9061bce658d734fcc3655911d906cf06971c",
+      "rule_action": [
+        12
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          5
+        ],
+        [
+          4
+        ],
+        [
+          6
+        ],
+        [
+          3
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ]
+      ],
+      "counterfactual_original_max_q": 1.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            5
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            4
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        },
+        {
+          "action": [
+            3
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            1
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        }
+      ],
+      "counterfactual_q_delta": 0.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 1.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        2
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.5,
+      "gate_q_delta": 0.5,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": true,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            5
+          ],
+          "rank": 1,
+          "score": -39.65373993
+        },
+        {
+          "action": [
+            4
+          ],
+          "rank": 2,
+          "score": -39.8313942
+        },
+        {
+          "action": [
+            6
+          ],
+          "rank": 3,
+          "score": -39.87687683
+        },
+        {
+          "action": [
+            3
+          ],
+          "rank": 4,
+          "score": -40.07437134
+        },
+        {
+          "action": [
+            2
+          ],
+          "rank": 5,
+          "score": -40.35702896
+        }
+      ],
+      "policy_candidates": [
+        [
+          5
+        ],
+        [
+          1
+        ],
+        [
+          4
+        ],
+        [
+          6
+        ],
+        [
+          3
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            5
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            1
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        },
+        {
+          "action": [
+            4
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            3
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.5,
+      "policy_rule_q": 1.0,
+      "policy_selected_action": [
+        1
+      ],
+      "policy_selected_rule": true,
+      "reason_codes": [],
+      "row_number": 233868,
+      "row_sha256": "570dd13291eb3627a3ab19496ba6dfabb4ae07ef16a6b901f699313f5c9e006e",
+      "rule_action": [
+        1
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          3
+        ],
+        [
+          9
+        ],
+        [
+          10
+        ],
+        [
+          6
+        ],
+        [
+          11
+        ],
+        [
+          12
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            3
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            9
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            11
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            12
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "counterfactual_q_delta": 0.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 0.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        11
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 0.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": false,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            3
+          ],
+          "rank": 1,
+          "score": -41.93767548
+        },
+        {
+          "action": [
+            9
+          ],
+          "rank": 2,
+          "score": -42.08680725
+        },
+        {
+          "action": [
+            10
+          ],
+          "rank": 3,
+          "score": -42.08680725
+        },
+        {
+          "action": [
+            6
+          ],
+          "rank": 4,
+          "score": -42.30228424
+        },
+        {
+          "action": [
+            11
+          ],
+          "rank": 5,
+          "score": -42.43725967
+        }
+      ],
+      "policy_candidates": [
+        [
+          3
+        ],
+        [
+          12
+        ],
+        [
+          9
+        ],
+        [
+          10
+        ],
+        [
+          6
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            3
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            12
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            9
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 0.0,
+      "policy_selected_action": [
+        3
+      ],
+      "policy_selected_rule": false,
+      "reason_codes": [],
+      "row_number": 240817,
+      "row_sha256": "747570901f266ac79f95315e2e7c58ea33b585702f9f37a1f347a20d0243531c",
+      "rule_action": [
+        12
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          12
+        ],
+        [
+          10
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ],
+        [
+          4
+        ],
+        [
+          25
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            12
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            3
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            4
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        }
+      ],
+      "counterfactual_q_delta": 1.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 1.0,
+      "counterfactual_rule_strictly_better": true,
+      "dropped_bc_action": [
+        4
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 1.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": true,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            12
+          ],
+          "rank": 1,
+          "score": -59.26589966
+        },
+        {
+          "action": [
+            10
+          ],
+          "rank": 2,
+          "score": -59.64993286
+        },
+        {
+          "action": [
+            2
+          ],
+          "rank": 3,
+          "score": -60.03855896
+        },
+        {
+          "action": [
+            3
+          ],
+          "rank": 4,
+          "score": -60.03855896
+        },
+        {
+          "action": [
+            4
+          ],
+          "rank": 5,
+          "score": -60.20089722
+        }
+      ],
+      "policy_candidates": [
+        [
+          12
+        ],
+        [
+          25
+        ],
+        [
+          10
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            12
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            25
+          ],
+          "count": 2,
+          "q": 1.0,
+          "total": 2.0
+        },
+        {
+          "action": [
+            10
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            3
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 1.0,
+      "policy_selected_action": [
+        25
+      ],
+      "policy_selected_rule": true,
+      "reason_codes": [],
+      "row_number": 339478,
+      "row_sha256": "031e6bf6755279b8ac4b0547b4a6955ee7760bc3644a9e15082fdc7c367263b9",
+      "rule_action": [
+        25
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          24
+        ],
+        [
+          5
+        ],
+        [
+          6
+        ],
+        [
+          2
+        ],
+        [
+          0
+        ],
+        [
+          23
+        ]
+      ],
+      "counterfactual_original_max_q": 0.0,
+      "counterfactual_q": [
+        {
+          "action": [
+            24
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            5
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            0
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            23
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "counterfactual_q_delta": 0.0,
+      "counterfactual_rule_not_dominated": true,
+      "counterfactual_rule_q": 0.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        0
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 0.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": false,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            24
+          ],
+          "rank": 1,
+          "score": -56.17786789
+        },
+        {
+          "action": [
+            5
+          ],
+          "rank": 2,
+          "score": -57.5943985
+        },
+        {
+          "action": [
+            6
+          ],
+          "rank": 3,
+          "score": -57.75124359
+        },
+        {
+          "action": [
+            2
+          ],
+          "rank": 4,
+          "score": -57.77493286
+        },
+        {
+          "action": [
+            0
+          ],
+          "rank": 5,
+          "score": -58.24239349
+        }
+      ],
+      "policy_candidates": [
+        [
+          24
+        ],
+        [
+          23
+        ],
+        [
+          5
+        ],
+        [
+          6
+        ],
+        [
+          2
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            24
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            23
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            5
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            6
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 0.0,
+      "policy_selected_action": [
+        24
+      ],
+      "policy_selected_rule": false,
+      "reason_codes": [],
+      "row_number": 359147,
+      "row_sha256": "a239b8df97253a4c845bef47afbf2f7b11e36de65925ccd052e856ee62d2d8c3",
+      "rule_action": [
+        23
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    },
+    {
+      "audit_match": true,
+      "counterfactual_candidates": [
+        [
+          2
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          7
+        ],
+        [
+          8
+        ],
+        [
+          23
+        ]
+      ],
+      "counterfactual_original_max_q": 0.5,
+      "counterfactual_q": [
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            0
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            1
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            7
+          ],
+          "count": 2,
+          "q": 0.5,
+          "total": 1.0
+        },
+        {
+          "action": [
+            8
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            23
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "counterfactual_q_delta": -0.5,
+      "counterfactual_rule_not_dominated": false,
+      "counterfactual_rule_q": 0.0,
+      "counterfactual_rule_strictly_better": false,
+      "dropped_bc_action": [
+        8
+      ],
+      "gate_dropped_original_q": 0.0,
+      "gate_original_max_q": 0.0,
+      "gate_q_delta": 0.0,
+      "gate_rule_not_dominated": true,
+      "gate_rule_strictly_better": false,
+      "legal_injection": true,
+      "original_bc_top5": [
+        {
+          "action": [
+            2
+          ],
+          "rank": 1,
+          "score": -63.93896484
+        },
+        {
+          "action": [
+            0
+          ],
+          "rank": 2,
+          "score": -64.54932404
+        },
+        {
+          "action": [
+            1
+          ],
+          "rank": 3,
+          "score": -64.54932404
+        },
+        {
+          "action": [
+            7
+          ],
+          "rank": 4,
+          "score": -64.54932404
+        },
+        {
+          "action": [
+            8
+          ],
+          "rank": 5,
+          "score": -64.88158417
+        }
+      ],
+      "policy_candidates": [
+        [
+          2
+        ],
+        [
+          23
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          7
+        ]
+      ],
+      "policy_q": [
+        {
+          "action": [
+            2
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            23
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            0
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            1
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        },
+        {
+          "action": [
+            7
+          ],
+          "count": 2,
+          "q": 0.0,
+          "total": 0.0
+        }
+      ],
+      "policy_retained_original_max_q": 0.0,
+      "policy_rule_q": 0.0,
+      "policy_selected_action": [
+        2
+      ],
+      "policy_selected_rule": false,
+      "reason_codes": [],
+      "row_number": 359152,
+      "row_sha256": "f7bc6589e22585c6b937794d83114edc41921303fc73c518cd66cbf1104434e8",
+      "rule_action": [
+        23
+      ],
+      "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+      "status": "complete",
+      "world_count": 2
+    }
+  ],
+  "experiment": "frozen_expert_rule_intervention_trace",
+  "gate": {
+    "criteria": {
+      "q_epsilon": 1e-12,
+      "required_events": 10,
+      "required_selected_rule_rows": 3,
+      "required_selected_rule_strict_rows": 2
+    },
+    "outcome": "TRACE_SAFE",
+    "reason_codes": [
+      "PREDECLARED_SAFE_CRITERIA_MET"
+    ]
+  },
+  "generated_at_jst": "2026-07-23T23:00:28+09:00",
+  "hidden_world_pairing": "same row-sha-seeded determinizations; policy pass precedes shadow pass",
+  "historical_replay": false,
+  "limitations": [
+    "official episodes do not preserve native branch RNG; this is a current counterfactual screen, not a bit-exact historical replay",
+    "the two passes reuse hidden-world contents, but native chance streams are neither seeded nor paired across passes"
+  ],
+  "native_rng_controlled": false,
+  "policy_build": "build/v4.5a-r34-fixed2",
+  "policy_build_sha256": "5bce6c4974e178cc2c086fe0ee4fd88d1db1d2532301f5e1c8be99f0e13c30d7",
+  "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+  "schema": 1,
+  "summary": {
+    "audit_matches": 10,
+    "completed_events": 10,
+    "expected_events": 10,
+    "legal_injections": 10,
+    "policy_selected_rule_rows": 4,
+    "selected_rule_dominated_rows": 0,
+    "selected_rule_not_dominated_rows": 4,
+    "selected_rule_strict_rows": 4,
+    "technical_errors": 0
+  },
+  "world_count": 2
+}

@@ -1100,3 +1100,89 @@ negative sentinelとしてr4/r34各20戦を追加する。既に測ったCynthia
 通過の呼称は`SAFE-MULTI-META / ExIt trace source`まで。標準順逆160戦、production `-j 1`、提出は別gateとする。
 独自性は公開上位のif文を強制コピーする点ではなく、BCが落としたHammer手だけを候補保証し、同一worldの
 シミュレータで反証して、探索が採用したtraceだけを次世代ExItへ蒸留する閉ループに置く。
+
+### AZ003凍結10局介入trace（07-23 22:17–22:19、結果）
+
+07-15 Daily Topのslim pairsは`search_begin_input`を持たないため、そのままでは探索を再実行できない。
+公式datasetのepisode indexとpairsの判断境界を照合し、監査10行を含み得る33 episodeだけを`/tmp`へ取得した。
+`bc_extract`と同じrow直列化のSHAを照合すると、10/10についてpairsの凍結SHAと完全episode内の判断が一致した。
+raw episode・observation・非公開札はrepoへ保存していない。
+
+`scripts/trace_expert_interventions.py`を追加した。各判断をfresh processへ隔離し、
+
+1. row SHA由来seedで2つの決定化worldを作る
+2. r34の現行5候補を現行と同じworld→candidate順で先に評価し、選択を確定する
+3. `search_end`後、元BC top-5＋AZ003の6候補を同じ決定化world内容で影評価する
+4. action option index / rank / BC score / Q / 選択だけをallowlist出力する
+
+順にした。影評価は選択後なので提出方策へ逆流しない。元BC #5を同じ本番探索へ足すと探索量とnative乱数を
+変えるため、その設計は採らなかった。公式episodeはnative branch RNG seedを保存せず、同じhidden worldでも
+2 passのchance streamを対応付けられない。従ってこれは現在buildのcounterfactual screenであり、
+歴史的bit-exact replayではない。
+
+レビューで、初版はgate用Qまで別乱数の6候補shadow passだけから取っていたことを検出した。実選択と同じ
+5候補passのAZ003 Qと保持された元BC 4候補Qをgateに使い、そこで未評価のdrop済みBC #5だけを
+後段shadow Qで補う保守比較へ修正した。凍結件数はaudit自己申告ではなく10へ固定し、出力はaction形状、
+64桁SHA、有限Q、候補数、error codeまで厳密schemaでfail-closedにした。
+
+修正後の保存run `results/expert_rules_trace_r34_20260723.json`は10/10 complete / legal injection /
+audit match、technical error 0。3回の修正版runはいずれもTRACE SAFEで、AZ003選択4/5/4、
+strict 4/3/3、選択済みAZ003のQ劣位は全run 0。native乱数により採否/Q値自体は変動するため、
+再現したのはgate判定であってbit-exactなQではない。事前条件を満たすため判定は **TRACE SAFE**。
+Unitは凍結10件の縮小拒否、実`bc_search.decide`との候補順/tie-break同値、worker timeout/target mismatch、
+nested raw・非有限Q拒否、derived gate値のQ配列再計算照合を含む全79件が通過した。
+
+### AZ003 multi-meta旧Grim gate（07-23 22:23–22:35、結果）
+
+事前登録どおり`screen-20260721-grim-canonical-fixed2`を共通wallにし、r4/r34を各20戦（各席10）、
+途中結果にかかわらず完走した。
+
+| agent | overall | P0 | P1 | AZ003 hit / injected / injected-selected | AZ004 hit |
+|---|---:|---:|---:|---:|---:|
+| r4 AZ004-only | 15/20 | 8/10 | 7/10 | — | 0 |
+| r34 AZ003+004 | **16/20** | 8/10 | 8/10 | **0 / 0 / 0** | **0** |
+| r34-r4 | **+1** | 0 | +1 | — | — |
+
+全40戦scored/DONE、failure/run failure/watchdog 0、fixed search error/incomplete 0、rule
+error/invalid 0、最小overage 542.9301秒。fingerprintはr4 `5c1f74c0...`、r34 `5bce6c49...`、
+Grim壁`c7fd1a98...`で事前値と一致した。勝敗・席下限・健康性は通ったが、治療対象のAZ003/004が
+1度も発火していない。事前規則のcoverage 0により
+**INCONCLUSIVE_NO_GRIM_RULE_COVERAGE**。canonical sentinelは省略し、
+`SAFE-MULTI-META` / ExIt / production / 提出へ昇格しない。機械可読判定は
+`results/expert_rules_r34_multimeta_gate_20260723.json`、生runはarena rows 108–109。
+
+### 07-23最新metaと次のHammer4×Floor gate（22:10–22:44、結果確認前）
+
+22:10:09 JST固定Leaderboard CSVは5,571 team、median 647.6、1000+ 92、1100+ 13、1200+ 0、
+首位1156.9、Top8境界1116.6、自チーム454位/871.7。22:25 live値は1100+ 16、Top8 1119.3まで
+動いたため、前者を時刻付きsnapshot、後者を変動確認にだけ使う。本日提出は0/5。
+
+現Top8の最新公開replayはGrim 3 / Alakazam 3 / Kang–Crustle 1 / Dragapult 1。
+Luca / me and the lads / RmyのGrimは配列順まで同じ60枚で、対戦相手を含め計6 teamに同型を確認した。
+07-21 canonicalとの差は`Handheld Fan(1161) -2 / Pokégear 3.0(1122) +1 /
+Tool Scrapper(1137) +1`だけ。`decks/meta/snapshot_20260723_grim_top8.csv`へ固定し、
+episode 87663925 / 87663311 / 87663980と60/60一致。deck SHA `92b92bac...`、
+`screen-20260723-grim-top8-fixed2` SHA `b8a57e37...`、file-path loader両席DONE。
+
+Majkel/YushinのAlakazamは、こちらが07-16に独立screen済みのHammer4
+（Nighttime Mine -1 / Enhanced Hammer +1）と一致した。純BC 54.17%/300、fixed2 BCS
+52.5%/80の内部証拠に外的再現性が加わったため、次はdeckとruleの交互作用を分離する。
+同じHammer4 deck/model/engineから、
+
+- control `v4.5h-r4-fixed2`（AZ004-only、SHA `32bc2dd1...`）
+- candidate `v4.5h-r34-fixed2`（AZ003+004、SHA `baade5cb...`）
+
+を組み、両席loader DONE。結果を見る前に次を固定する。
+
+1. exact `screen-20260723-cynthia-junlee-fixed2`へcontrol/candidateを各20戦（各席10）、
+   途中結果にかかわらず双方完走する。重負荷ジョブと並走しない。
+2. 全scored/DONE、failure/run failure/watchdog、search/rule error・incomplete・invalid 0、
+   最小overage60秒、fingerprint一致を必須にする。
+3. candidate-controlがoverall -3/20以上、各席-2/10以上。candidateでAZ003
+   `hit>=1`かつ`injected=injected_selected>=1`、AZ004 `hit=enforced=selected>=1`をcoverage下限にする。
+4. coverage 0はHOLD、健康性違反またはoverall -7以下・任意席-5以下はREJECT。中間はINCONCLUSIVE。
+   scoreをrule効果へ帰属するには実注入・採用を必須とする。
+5. H1通過後も直ちに昇格しない。成功判断のprivacy-safe live traceを追加し、Q矛盾が無いことを確認してから、
+   最新`screen-20260723-grim-top8-fixed2`をnegative/meta safety wallに各20戦追加する。
+
+このgateが未実行の間、Hammer4＋Floorはローカル候補のみ。production agentやKaggle提出物は作らない。

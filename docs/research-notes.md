@@ -106,5 +106,48 @@ Kaggleディスカッション・note/X・Qiitaを横断調査。他の参加者
   Rocket / Dragapult / Cynthia Garchomp各2 (11.8%)、Alakazam / Kang / Lopunny–Dudunsparce /
   Mega Starmie系各1 (5.9%)。00:10には新たに1 teamが1100へ入り18 teamになったため、
   17-team分類は時刻付きsnapshotとして扱い、新規1 teamを未分類のまま既存比率へ混ぜない。
-- 07-22 Daily Top datasetは00:10時点で未公開。最新の公式学習・検証用datasetは引き続き07-21版。
+- 07-22 Daily Top datasetは00:10時点では未公開だったが、07-23 09:01 JSTに公開された（次節）。
+  この時点の最新datasetが07-21だったという観測記録は残し、現在状態とは分ける。
   <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-21>
+
+## 9. 2026-07-23 22:25 JST 更新
+
+- Kaggle公式Leaderboardの22:10:09固定CSVは **5,571 teams**、median 647.6、1000+ 92、
+  1100+ 13、1200+ 0、leader 1156.9、top-8 cutoff 1116.6。自チームは454位 / 871.7。
+  activeはv4.3a 871.7 / v4.2t 699.5、本日提出0/5。22:25 live値は1100+ 16、
+  top-8 cutoff 1119.3へ動いたため、短時間のlive値でgateを変えず固定CSVを時刻付きで扱う。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>
+- 07-22 Daily Top Episodesは07-23 09:01 JSTに公開済み（740,375,805 bytes）。
+  07-21止まりという前節の状態は解消した。追加学習へ即混合せず、最新deck別・top-5外介入・反復失敗に
+  分けて採掘し、既存bc_v2とのA/Bを通す。
+  <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-22>
+- 現Top8の最新公開replayを1件ずつ照合すると、Grim 3 / Alakazam 3 /
+  Kangaskhan–Crustle 1 / Dragapult 1。Luca、me and the lads、RmyのGrimは60枚の配列順まで一致し、
+  対戦相手を含む計6 teamで同型を確認した。07-21 canonicalから
+  `Handheld Fan -2 / Pokégear 3.0 +1 / Tool Scrapper +1`。
+  episode 87663925 / 87663311 / 87663980を根拠にexact wallへ固定した。
+  Alakazam上位のMajkel/Yushinは既知Hammer4と一致する。これは公開標本の母集団採用率ではなく、
+  deck techの複数上位再現とexact対戦壁の証拠として使う。
+- active rule-based agentが「一時2位、通常top10」とする07-23の匿名自己申告がある。
+  rule方式の上限が低いとは言えない一方、本人・提出物を照合できないので採用根拠の信頼度は低〜中。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/728168>
+- Tony Li氏はpolicy accuracy 79%→95%がLB改善と相関せず、類似checkpointで30–80pt差、
+  旧版・公開agentとのlocal tournamentで選ぶと報告。同じcheckpointでもdeck変更の影響が大きく、
+  pure IL約21k gamesで大差が出るとの参加者報告もある。単一accuracyよりdeck共適応と代表wallを重視する。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/728071>
+- 30,000試合の思考時間分析は約半数をrule系、当時首位をRL＋bounded searchと推定するが、
+  時間指紋による分類には誤分類反論がある。同スレでは「valueが弱いとsearchがraw policyを悪化させる」
+  という実体験も報告され、候補Qの反証gateが必要な外的理由になる。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/724362>
+- BCへRLとsearchを重ね、heuristic agentでlocal評価し、episodeに一貫する失敗をRLで補ったという
+  参加者報告がある。BC単独は成果の20–30%という自己評価で、Expert Floor＋Search＋ExItに近いが、
+  数値は自己申告なので方向性の傍証に留める。
+  <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/discussion/717697>
+- Xで本文と日時を直接確認できた07-15投稿は、短期LBぶれで良い提出を壊さない、メタ変化で古いlogicは
+  陳腐化する、単一ログ完全一致でなく同型局面へ一般化する、変更を少量ずつ入れログで因果確認するという要旨。
+  現在のrow-SHA凍結traceとrule単位ablationを支持する。
+  <https://x.com/tanuproojisan/status/2077346664449274132>
+- ユーザー提示の「強者行動を愚直にルールベースへ書き起こす」原文は、完全一致・部分一致検索でも
+  再取得できず、上記X投稿と同一とは扱わない。結論は巨大if-cascadeの模写ではなく、
+  **破滅手guard → 専門家手をroot候補へ保証 → search Qで反証 → 採用介入だけExItへ蒸留**
+  という検証可能な閉ループを維持すること。
