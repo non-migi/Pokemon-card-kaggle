@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 23:49 JST (Codex) — 07-22 AZ003独立holdoutを結果未確認のまま事前登録中
+最終更新: 2026-07-24 08:21 JST (Codex) — AZ003独立holdoutは固定済み、初回scanを結果未出力で中断
 
 ## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
@@ -38,7 +38,9 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 1. **07-22 Daily TopからAZ003の独立反例を採掘**: Hammer4 H1はAZ003注入2・探索採用1で、
    総合差もSAFE下限を1勝外した。同じCynthia壁を再抽選せず、top-5外の採用/棄却局面を分け、
-   blocker数・Hammer残数・後続KO等から適用guardを狭める。十分な独立正例が無ければAZ003はHOLD。
+   blocker数・Hammer残数・後続KO等から適用guardを狭める。事前登録・監査CLIは`c05bb7c`へ固定済み。
+   08:19開始のscanはユーザー指示で中断し、結果/tmp/集計stdoutは全て未生成。再開時は条件を変えず、
+   `mine_az003_guard.py`の同一commandを完走する。十分な独立正例が無ければAZ003はHOLD。
 2. **Hammer4 deckとAZ003を分離して保持**: Hammer4自体は純BC54.17%/300、fixed2 52.5%/80、
    Top8のMajkel/Yushinでも再現した。一方Hammer4＋AZ003はH1未通過なので、次のdeck候補へ自動合成しない。
 3. **最新Grim壁は次段まで凍結**: Top8のLuca / me and the lads / Rmyを含む6 teamで一致した
@@ -70,6 +72,12 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- AZ003 Exact-safe独立holdoutを結果確認前に`c05bb7c`へ事前登録。07-22 rawは
+  4,639 file/unique、集合SHA `9ff468f2...`、07-15除外は366,457 decision / `66b15e69...`。
+  専用bc_v2 audit buildはagent `0ca440e3...` / model `be8146d7...`、両席DONE。
+  全Hammer copyのsemantic同値、Exact-safe fail-closed guard、固定入力のscan前後照合、
+  aggregate-only schema、gate優先順位を実装し全Unit **92件**通過。初回scanは固定preflight後の
+  episode parse中にユーザー指示で停止し、結果JSON/tmp/集計stdoutなし、残存processなし。
 - Hammer4共通deckのH1はr4 control **13/20（P0 8/P1 5）**、r34 candidate
   **9/20（6/3）**、差-4（席-2/-2）。全40戦DONE、failure/error/incomplete/watchdog 0、
   最小overage 505.34秒。AZ003はhit31 / outside=injected 2 / injected-selected 1、
@@ -196,12 +204,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- 07-23 23:49 Codex: 07-22 Daily TopのAZ003 Exact-safe独立holdout。
-  `docs/experiments.md`、`scripts/mine_az003_guard.py`、関連Unitのみを編集する。
-  holdout結果を見る前に定義・gate・出力schemaをcommitし、raw episodeは`/tmp`にだけ置く。
+- なし（07-24 08:21、一時中断。再開時は`c05bb7c`の固定holdout scanから）
 
 ## 今日の提出枠
 
+- 07-24: **0/5 使用**（提出なし）
 - 07-23: **0/5 使用**（提出なし）
 - 07-22: **0/5 使用**（提出なし）
 - 07-16: **1/5 使用** (`v4.3a`, sub 54731784, COMPLETE)

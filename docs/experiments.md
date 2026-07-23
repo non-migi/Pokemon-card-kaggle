@@ -1286,3 +1286,10 @@ technical error、policy score欠落、非有限score、privacy/schema違反が�
 `AZ009_HAMMER_SAFE_CONVERSION`相当を別IDで組み、holdout内の独立局面をprivacy-safe traceしてから
 未使用のfresh local wallへ進むことだけ。既存AZ003/AZ006の意味を上書きせず、production、最新Grim、
 ExIt学習、Kaggle提出へは自動昇格しない。
+
+#### 初回scanの一時中断（07-24 08:19–08:21、結果未観測）
+
+事前登録commit `c05bb7c`から固定commandを開始し、corpus/build/model/除外集合/TOP_Kのpreflightは通過した。
+episode parse中にユーザーの作業中断指示を受けてSIGINTで停止した。aggregate stdout、結果JSON、
+`.tmp`はいずれも未生成で、残存processもない。条件・コード・閾値は変更せず、再開時は同じcommandを
+blind rerunして完走する。この中断をholdoutの判定結果としては扱わない。
