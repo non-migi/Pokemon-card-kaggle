@@ -1186,3 +1186,26 @@ Majkel/YushinのAlakazamは、こちらが07-16に独立screen済みのHammer4
    最新`screen-20260723-grim-top8-fixed2`をnegative/meta safety wallに各20戦追加する。
 
 このgateが未実行の間、Hammer4＋Floorはローカル候補のみ。production agentやKaggle提出物は作らない。
+
+### Hammer4×Floor H1 exact Cynthia（07-23 23:10–23:28、結果）
+
+事前登録どおり、他の重負荷jobなし・fixed2・`-j 4`でcontrol/candidateを各20戦（各席10）、
+途中結果に関係なく完走した。
+
+| agent | overall | P0 | P1 | AZ003 hit / injected / injected-selected | AZ004 hit=enforced=selected |
+|---|---:|---:|---:|---:|---:|
+| Hammer4 r4 control | **13/20** | 8/10 | 5/10 | — | 16 |
+| Hammer4 r34 candidate | **9/20** | 6/10 | 3/10 | **31 / 2 / 1** | 21 |
+| candidate-control | **-4** | **-2** | **-2** | — | — |
+
+両runの全40戦がscored/DONE、failure/run failure/watchdog 0、fixed search error/incomplete 0、
+rule error/invalid 0。最小overage 505.3431秒、control/candidate/wall fingerprintは事前値と一致した。
+健康性と両席下限（各-2）は通ったが、総合SAFE下限-3を1勝下回った。またAZ003は実注入2件のうち
+探索採用1件で、事前coverage式`injected == injected_selected >= 1`を満たさない。
+gross-regression REJECT下限（総合-7、任意席-5）にも達せず、coverage 0でもないため、判定は
+**INCONCLUSIVE_SCORE_AND_PARTIAL_COVERAGE** とする。
+
+同じCynthia壁の再抽選や事後延長は行わず、最新Grim phase、production、提出へ進めない。次は07-22公式
+Daily TopからAZ003のtop-5外局面を独立採掘し、採用/棄却の条件差でrule guardを狭める。勝敗-4を直接
+rule因果とみなさず、新しい条件を事前固定できた場合だけ別exact wallで新規screenする。機械可読結果は
+`results/expert_rules_hammer4_floor_h1_20260723.json`、生runはarena rows 110–111。

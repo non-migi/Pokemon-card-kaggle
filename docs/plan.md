@@ -6,7 +6,8 @@
 > r5は棄却。r8/AZ008とr46/AZ006は勝ち越しても実注入0でINCONCLUSIVEとして停止した。
 > AZ003+004はexact Cynthia順逆で実注入4・採用2、r4比-2/80に収まりSAFE-KEEP。
 > 凍結10局面はAZ003採用4・Q支配0でTRACE SAFE。旧Grimはr34 16/20対r4 15/20でもrule発火0のため
-> multi-metaはINCONCLUSIVEで止めた。次は上位Alakazamで再現したHammer4とExpert Floorを同一deckで分離評価する。
+> multi-metaはINCONCLUSIVEで止めた。Hammer4 H1もr34 9/20対r4 13/20、注入2/採用1で
+> score/coverageが部分未達。同じ壁を再抽選せず、07-22強者局面からAZ003のguardを狭める。
 
 目標: **Strategy部門トップ8**(各$30,000 + ファイナル進出)。
 残り: Simulation締切(8/16)まで24日 / Strategy Writeup締切(9/13)まで52日。
@@ -64,6 +65,10 @@ Alakazam上位2者は既知Hammer4と一致する。公開標本なので採用�
 - **multi-metaはcoverageもgate**: 旧Grim共通壁はr34 16/20対r4 15/20、席差0/+1、全件健全だったが
   AZ003/004が一度も発火しなかった。安全性の弱いnegative evidenceにはなるが治療効果を測れていないため、
   事前登録どおりcanonical phaseを省略し`INCONCLUSIVE_NO_GRIM_RULE_COVERAGE`。productionへ昇格しない。
+- **deck×ruleの交互作用も分離**: Hammer4共通deckではr4 control 13/20、r34 candidate 9/20、
+  席差-2/-2。AZ003はhit31 / injected2 / injected-selected1で治療差は存在したが、総合SAFE下限-3を
+  1勝外し、全注入採用条件も未達。健康性は完全、gross REJECTでもないため
+  `INCONCLUSIVE_SCORE_AND_PARTIAL_COVERAGE`。Hammer4 deckの外的再現性とAZ003採用可否を混同しない。
 
 ## 1100突破の中核: Expert Floor → Search Ceiling → ExIt
 
@@ -115,8 +120,9 @@ Alakazam上位2者は既知Hammer4と一致する。公開標本なので採用�
 - [ ] **主路線B': Expert Floor付きExIt** — 第1世代は59,249判断でcheckpoint済み。350kへ盲目的に戻らず、
   r5は棄却、r8/r46は実注入0でHOLD。AZ003+004は最新Cynthia壁で実注入・探索採用と局所安全性を確認した。
   凍結10局面のdecision traceはSAFE、旧Grim勝敗下限も通したがcoverage 0でmulti-metaは未通過。
-  次はMajkel/Yushinで外的再現したHammer4を共通deckにしてAZ004-onlyとAZ003+004を分離し、
-  exact Cynthiaで実注入を再確認後、最新Top8 Grimをnegative/meta safety wallにする。
+  Majkel/Yushinで外的再現したHammer4を共通deckにしたH1はscore/coverage部分未達でINCONCLUSIVE。
+  同じCynthiaを再抽選せず、07-22 Daily Topのtop-5外AZ003局面から採用/棄却条件を独立採掘する。
+  新guardを事前固定できた場合だけ、最新Top8 Grimを別のnegative/meta safety wallにする。
   両壁を通った介入だけ公式教師との混合比を事前固定してbc_x1へ入れる。
   第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り

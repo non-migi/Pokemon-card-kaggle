@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 23:03 JST (Codex) — AZ003 trace gateを実選択Q基準へ修正、3/3 SAFE
+最終更新: 2026-07-23 23:32 JST (Codex) — Hammer4×Floor H1はscore/coverage部分未達でINCONCLUSIVE
 
 ## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
@@ -36,23 +36,24 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **Hammer4×Expert Floorの交互作用を次に測る**: 上位Majkel/Yushinと同じHammer4へ
-   AZ004-only control `v4.5h-r4-fixed2`、AZ003+004 candidate `v4.5h-r34-fixed2`を組み、両席loader DONE。
-   exact Cynthia共通壁へ各20戦（各席10）を事前固定し、双方完走・実注入/採用・席差を確認する。
-2. **最新Grim壁へ更新**: Top8のLuca / me and the lads / Rmyを含む6 teamで一致した
+1. **07-22 Daily TopからAZ003の独立反例を採掘**: Hammer4 H1はAZ003注入2・探索採用1で、
+   総合差もSAFE下限を1勝外した。同じCynthia壁を再抽選せず、top-5外の採用/棄却局面を分け、
+   blocker数・Hammer残数・後続KO等から適用guardを狭める。十分な独立正例が無ければAZ003はHOLD。
+2. **Hammer4 deckとAZ003を分離して保持**: Hammer4自体は純BC54.17%/300、fixed2 52.5%/80、
+   Top8のMajkel/Yushinでも再現した。一方Hammer4＋AZ003はH1未通過なので、次のdeck候補へ自動合成しない。
+3. **最新Grim壁は次段まで凍結**: Top8のLuca / me and the lads / Rmyを含む6 teamで一致した
    `-2 Handheld Fan / +1 Pokégear 3.0 / +1 Tool Scrapper`型を
-   `snapshot_20260723_grim_top8.csv`へ固定し、fixed2壁の両席loaderを通した。Hammer4 gate通過時の
-   negative/meta safety wallに使い、旧07-21型だけへ最適化しない。
-3. **07-22公式Daily Topを取り込む**: 07-23 09:01 JST公開済み。新規decisionを既存BCへ盲目的に足さず、
-   top-5外専門家介入、反復失敗、最新Grim/Alakazam別に採掘し、候補traceの追加sourceにする。
+   `snapshot_20260723_grim_top8.csv`へ固定し、fixed2壁の両席loaderを通した。H1がINCONCLUSIVEなので
+   現AZ003のまま再戦せず、新しいguardを事前固定できた時だけnegative/meta safety wallに使う。
 4. **ExItは反証済み介入だけを蒸留**: 凍結10局のTRACE SAFEはExIt source候補だが、
-   旧Grim multi-metaはcoverage 0でINCONCLUSIVE。`SAFE-MULTI-META`、production、提出へは未昇格。
+   旧Grimはcoverage 0、Hammer4 H1はpartial coverageでINCONCLUSIVE。`SAFE-MULTI-META`、
+   production、提出へは未昇格。
 5. **AZ006/AZ008はHOLD**: r46は26/40対H 21/40、r8は26/40対base 18/40でも実注入0。
    Phase 2/production/ExItを停止。AZ006はより広いAZ003へ分解し、AZ008は付属なしDudunsparceの
    top-5外独立正例が5–10件集まるまで再戦しない。
 6. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
-   最新Top8のMajkel/Yushinも同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
+   最新Top8のMajkel/Yushinも同一60枚で、現環境再現性は上がった。AZ003との組合せH1はINCONCLUSIVE。
 7. **ExIt v1を短期設計へ変更**: 59,249判断は健全な3 shardとして保存済み。350,000までの継続は
    実測ペースで長すぎ、探索評価を塞ぐため停止した。夜は既存59kの重み付き混合比を先に固定し、
    追加生成を盲目的に再開しない。次世代から
@@ -69,13 +70,19 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- Hammer4共通deckのH1はr4 control **13/20（P0 8/P1 5）**、r34 candidate
+  **9/20（6/3）**、差-4（席-2/-2）。全40戦DONE、failure/error/incomplete/watchdog 0、
+  最小overage 505.34秒。AZ003はhit31 / outside=injected 2 / injected-selected 1、
+  AZ004はhit=enforced=selected 21。総合SAFE下限-3を1勝外し、`injected==injected_selected>=1`も
+  未達だがgross REJECT下限には達しないため **INCONCLUSIVE_SCORE_AND_PARTIAL_COVERAGE**。
+  同じCynthia壁は再抽選せず、最新Grim/production/提出へ進めない。
 - 凍結top-5外10局のlocal介入traceを実装。row SHAでpairsと完全episodeを二重照合し、各局fresh processで
   現行5候補を先に選択、その後だけ元BC top-5＋AZ003の6候補を影評価する。raw観測・非公開札は出力しない。
   gateは実選択passのAZ003＋保持4候補Qを使い、そこで未評価のdrop済みBC #5だけを後段shadow Qで補う。
   修正後3 runは10/10完走・合法注入・audit一致、AZ003採用4/5/4局、strict 4/3/3局、採用局のQ支配0で
   **3/3 TRACE SAFE**。native branch RNGは再現不能で採否/Qは揺れるため、歴史的bit-exact replayとは呼ばない。
-  凍結10件の縮小拒否、実`bc_search.decide`との順序/tie-break同値、timeout/target mismatch、nested raw・NaN拒否を含む
-  derived gate値のQ配列再計算照合まで含む全Unit **79件**通過。
+  凍結10件の縮小拒否、実`bc_search.decide`との順序/tie-break同値、timeout/target mismatch、
+  nested raw・非有限Q拒否、derived gate値のQ配列再計算照合まで含む全Unit **79件**通過。
 - TRACE SAFE後の旧07-21 Grim壁はr4 **15/20（P0 8/P1 7）**、r34
   **16/20（8/8）**、差+1（席0/+1）。全40戦DONE、failure/error/incomplete/watchdog 0、
   最小overage 542.93秒。ただしAZ003/004のhit・注入・採用が全て0なので、事前登録どおり

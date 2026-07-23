@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "experiment": "Hammer4 deck interaction with AZ003 plus AZ004 expert floor against exact Cynthia",
+  "preregistered_in": "docs/experiments.md",
+  "wall": {
+    "agent": "build/screen-20260723-cynthia-junlee-fixed2",
+    "agent_sha256": "7dad42a29da8a28cb2fe01dd0f5cedc46d4d4d8c7144605682d89bde25c329d4"
+  },
+  "shared_candidate_deck_sha256": "0598646548d081832ec311c15fdc369b32c6f5e63175b0cfd1904d21fd082451",
+  "control": {
+    "run_id": "a28b1e0595fe4ff8a6bc1d3d5cf871ca",
+    "agent": "build/v4.5h-r4-fixed2",
+    "agent_sha256": "32bc2dd10790128219c6be999b6cddcc53ba216024a8942f426f7dc913f0e154",
+    "score": 13,
+    "n": 20,
+    "by_seat": {
+      "P0": 8,
+      "P1": 5
+    },
+    "coverage": {
+      "AZ004_HAMMER_BLOCKER_TARGET": {
+        "hit": 16,
+        "enforced": 16,
+        "selected": 16
+      }
+    }
+  },
+  "candidate": {
+    "run_id": "ea58b2976f464153bd51d48c895fc3ba",
+    "agent": "build/v4.5h-r34-fixed2",
+    "agent_sha256": "baade5cbd442b8408b06a2f7d7e61df011009dc173f05f587f1af07b6909a036",
+    "score": 9,
+    "n": 20,
+    "by_seat": {
+      "P0": 6,
+      "P1": 3
+    },
+    "coverage": {
+      "AZ003_HAMMER_BLOCKER_PLAY": {
+        "hit": 31,
+        "selected": 9,
+        "outside_topk": 2,
+        "injected": 2,
+        "injected_selected": 1
+      },
+      "AZ004_HAMMER_BLOCKER_TARGET": {
+        "hit": 21,
+        "enforced": 21,
+        "selected": 21
+      }
+    }
+  },
+  "candidate_minus_control": {
+    "overall": -4,
+    "by_seat": {
+      "P0": -2,
+      "P1": -2
+    }
+  },
+  "health": {
+    "all_scored": true,
+    "statuses": {
+      "control_a": {
+        "DONE": 20
+      },
+      "control_b": {
+        "DONE": 20
+      },
+      "candidate_a": {
+        "DONE": 20
+      },
+      "candidate_b": {
+        "DONE": 20
+      }
+    },
+    "failure_count": 0,
+    "run_failure_count": 0,
+    "watchdog_event_count": 0,
+    "fixed_search_errors": 0,
+    "fixed_search_incomplete": 0,
+    "expert_rule_errors": 0,
+    "expert_rule_invalid": 0,
+    "min_remaining_overage_sec": 505.3431
+  },
+  "gate": {
+    "safe_thresholds": {
+      "overall_min": -3,
+      "each_seat_min": -2
+    },
+    "gross_regression_thresholds": {
+      "overall_max": -7,
+      "any_seat_max": -5
+    },
+    "coverage_requirements": {
+      "AZ003_HAMMER_BLOCKER_PLAY": "hit >= 1 and injected == injected_selected >= 1",
+      "AZ004_HAMMER_BLOCKER_TARGET": "hit == enforced == selected >= 1"
+    },
+    "health_passed": true,
+    "coverage_present": true,
+    "coverage_passed": false,
+    "safe_score_floor_passed": false,
+    "gross_regression_reject_triggered": false,
+    "outcome": "INCONCLUSIVE_SCORE_AND_PARTIAL_COVERAGE",
+    "latest_grim_phase_authorized": false,
+    "production_or_submission_authorized": false,
+    "reason_codes": [
+      "OVERALL_DELTA_ONE_WIN_BELOW_SAFE_FLOOR",
+      "ONE_OF_TWO_INJECTED_AZ003_ACTIONS_WAS_SELECTED",
+      "COVERAGE_PRESENT_WITHOUT_GROSS_REGRESSION"
+    ]
+  }
+}
