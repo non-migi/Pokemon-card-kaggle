@@ -992,3 +992,53 @@ Xは通常検索でも提示文の完全一致や新しい具体的if-cascadeを
 
 参照: <https://www.kaggle.com/competitions/pokemon-tcg-ai-battle/leaderboard>、
 <https://www.kaggle.com/datasets/kaggle/pokemon-tcg-ai-battle-episodes-2026-07-22>。
+
+#### Cynthia三群Phase 1結果（07-23 19:43–20:44）
+
+事前宣言どおりB/H/Cを途中結果にかかわらず各40戦完走した。全120戦scored、全status `DONE`、
+failure/run failure、fixed-search/rule error・incomplete・invalid・conflict・violationは全て0。
+
+| 群 | score | P0 / P1 | 機構指標 | 最小overage A / wall |
+|---|---:|---:|---|---:|
+| B base | 22/40 | 12 / 10 | — | 306.59 / 350.00秒 |
+| H AZ004 | 21/40 | 11 / 10 | AZ004 hit=enforced=selected=32 | 505.56 / 496.41秒 |
+| C AZ004+006 | 26/40 | 15 / 11 | AZ004 35/35/35、AZ006 hit25 / selected13 | 509.30 / 493.43秒 |
+
+score差はH–B=-1（席-1/0）、C–H=+5（+4/+1）、C–B=+4（+3/+1）で、表面的には全て
+SAFE範囲だった。しかしCのAZ006は`outside_topk=0 / injected=0 / injected_selected=0`。
+25回の提案は全て元からBC top-5内で、HとCの探索候補集合は同一だった。したがってC–Hの+5は
+AZ006へ帰属できず、判定優先順位のcoverageで **INCONCLUSIVE**。逆load-order、production、提出へ進めない。
+
+Hは32回直接介入しforwardのscore/health条件を満たしたが、事前登録した三群joint gate全体が不成立なので、
+この結果だけを事後的に切り出してAZ004を昇格させない。機械可読判定は
+`results/expert_rules_cynthia_phase1_20260723.json`、生runは`results/arena.jsonl`の3 suite。
+
+### AZ003→AZ004 Hammer連鎖の実注入screen（07-23 20:48、結果確認前）
+
+AZ006は「Hammerを使えばexact KO」の狭い部分集合だったが現壁で実注入0。次は同じ阻害Energyに対し、
+exact KOに限定せずEnhanced Hammerを**使う選択肢**をrootへ保証するAZ003を候補化し、AZ004が対象を固定する
+`v4.5a-r34-fixed2`を測る。AZ006は混ぜず、H（AZ004のみ）との差をAZ003の純増分にする。
+
+48,501判断を実行時`enforce`・全proposal共有2枠で再監査すると、AZ003は125 hit / 教師一致115
+（92.0%）。全体不一致10件はあるためhardにはせずsearchへ委ねる。一方bc_v2 top-5外は10件あり、
+実注入10/10が全て教師一致（rank 6×5、7×4、8×1）。AZ004は162/162教師一致。
+行SHA付き結果は`results/expert_rules_audit_r34_20260723.json`。r34 fingerprintは`5bce6c49...`で、
+r4とmain/deck/model/cgが同一、config差はAZ003追加だけ。ファイルパスloaderは両席`DONE`。
+
+Phase 1 controlは直前の健康なH run（score 21、P0 11 / P1 10、fingerprint `5c1f74c0...`、同じwall
+`7dad42a2...`）へ固定し、controlを都合よく再抽選しない。r34 candidateだけ同一wallへ40戦・各席20、
+fixed2、`-j 4`、他の重負荷jobなしで実行する。candidate結果を見る前に次で固定する。
+
+- 判定優先はcandidate health → control/wall infra → coverage → score。
+- healthは40/40 scored、全status DONE、failure/run failure 0、fixed-search/ruleのerror/incomplete/invalid/
+  conflict/violation 0、最小overage 60秒、fingerprint一致。
+- coverageはAZ004 `hit=enforced=selected>=1`、AZ003
+  `hit>=1`, `outside_topk=injected>=1`, `injected_selected>=1`。
+- **SAFE-SCREEN**: r34 score>=17/40、P0>=8、P1>=7（H比overall -4、各席-3以内）。
+- **REJECT**: candidate health異常、またはcoverageありでscore<=12、P0<=4、P1<=3。
+- **INCONCLUSIVE**: coverage不足、score 13–16、P0 5–7、P1 4–6、またはcontrol/wallだけのinfra異常。
+
+SAFE時だけCynthia A vs r4 B、Cynthia A vs r34 Bを各40戦、途中結果にかかわらず両方実行する。
+forwardを合わせ各variant 80戦へ補数変換し、r34–r4がoverall -8以上・各席-6以上、全healthと累積coverageを
+満たした時だけmulti-metaへ進む。これは広いHammer使用を強制するruleではなく、BCが読まなかった候補を
+searchが選べるかの機構screenであり、優越性・production採用・提出の証明ではない。

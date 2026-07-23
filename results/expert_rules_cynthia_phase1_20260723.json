@@ -1,0 +1,79 @@
+{
+  "captured_at_jst": "2026-07-23 20:45:45 JST",
+  "git_commit": "fd9f779",
+  "wall": "build/screen-20260723-cynthia-junlee-fixed2",
+  "wall_sha256": "7dad42a29da8a28cb2fe01dd0f5cedc46d4d4d8c7144605682d89bde25c329d4",
+  "runs": {
+    "B": {
+      "suite": "expert_r46_cynthia_20260723_base",
+      "agent": "build/v4.5a-base-fixed2-e0717",
+      "sha256": "09e4c497738b6e16cfd55de9cbd283161cce4b17a56145c76e8a80398fd658ad",
+      "score": 22,
+      "p0": 12,
+      "p1": 10,
+      "failure_count": 0,
+      "statuses_a": {"DONE": 40},
+      "statuses_b": {"DONE": 40},
+      "min_remaining_overage_sec": {"a": 306.5874, "b": 349.9998},
+      "fixed_search_incomplete": 0,
+      "sec": 1163.8
+    },
+    "H": {
+      "suite": "expert_r46_cynthia_20260723_r4",
+      "agent": "build/v4.5a-r4-fixed2",
+      "sha256": "5c1f74c01c2d2c8063100feb5ddd1455d75be5a856721c3385cb1e18114b3536",
+      "score": 21,
+      "p0": 11,
+      "p1": 10,
+      "failure_count": 0,
+      "statuses_a": {"DONE": 40},
+      "statuses_b": {"DONE": 40},
+      "min_remaining_overage_sec": {"a": 505.5624, "b": 496.4084},
+      "fixed_search_incomplete": 0,
+      "rule_metrics": {
+        "AZ004_hit": 32,
+        "AZ004_enforced": 32,
+        "AZ004_selected": 32
+      },
+      "sec": 1253.3
+    },
+    "C": {
+      "suite": "expert_r46_cynthia_20260723_r46",
+      "agent": "build/v4.5a-r46-fixed2",
+      "sha256": "fac34f851f9e2583bd580a035c13a41cdaa7ec017311c79d5c3e0bef939e1952",
+      "score": 26,
+      "p0": 15,
+      "p1": 11,
+      "failure_count": 0,
+      "statuses_a": {"DONE": 40},
+      "statuses_b": {"DONE": 40},
+      "min_remaining_overage_sec": {"a": 509.2957, "b": 493.4331},
+      "fixed_search_incomplete": 0,
+      "rule_metrics": {
+        "AZ004_hit": 35,
+        "AZ004_enforced": 35,
+        "AZ004_selected": 35,
+        "AZ006_hit": 25,
+        "AZ006_selected": 13,
+        "AZ006_outside_topk": 0,
+        "AZ006_injected": 0,
+        "AZ006_injected_selected": 0
+      },
+      "sec": 1080.6
+    }
+  },
+  "score_deltas": {
+    "H_minus_B": {"overall": -1, "p0": -1, "p1": 0},
+    "C_minus_H": {"overall": 5, "p0": 4, "p1": 1},
+    "C_minus_B": {"overall": 4, "p0": 3, "p1": 1}
+  },
+  "gate": {
+    "candidate_health": "pass",
+    "control_and_wall_infra": "pass",
+    "coverage": "fail_AZ006_no_actual_injection",
+    "outcome": "INCONCLUSIVE",
+    "reverse_phase": false,
+    "causal_conclusion": "AZ006 never changed the candidate set; C-minus-H cannot be attributed to AZ006",
+    "posthoc_guard": "H forward was healthy and within score bounds, but the predeclared joint gate failed; do not promote AZ004 from this run alone"
+  }
+}

@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 19:41 JST (Codex) — AZ008をno-treatmentで停止し、AZ004→AZ006のCynthia三群gateを事前登録
+最終更新: 2026-07-23 20:48 JST (Codex) — r46をno-treatmentで停止し、AZ003→AZ004 Hammer連鎖gateを事前登録
 
 ## ラダー状況(2026-07-23 19:29 JST、active = 最新2提出のみ)
 
@@ -36,17 +36,17 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **Cynthia三群screenを順次実行**: exact 07-23 junlee789 Cynthia＋bc_v2 BCS fixed2を共通壁に、
-   base (`B`) / AZ004 hardのみ (`H`) / AZ004+AZ006 (`C`) をA側で各40戦・各席20、`-j 4`、
-   他の重負荷jobなしで途中結果にかかわらず完走する。開始前にledger重複を再確認する。
-2. **因果gateを判定**: H/CのAZ004 `hit=enforced=selected>=1`、CのAZ006
-   `hit>=1`, `outside_topk=injected>=1`, `injected_selected>=1`を必須にする。coverageを満たし、
-   H–B / C–H / C–Bがoverall -4以上・各席-3以上、全health正常ならSAFE-SCREEN。
-   coverage 0や中間差はINCONCLUSIVE、候補health異常またはcoverageありでoverall -9/席-7以下はREJECT。
-3. **SAFE時だけ逆load-order**: Cynthia A vs base/r4/r46 Bを各40戦追加し、各variant計80戦へ変換する。
+1. **AZ003→AZ004を単独screen**: 直前の健康なAZ004-only H run（21/40、P0 11/P1 10）を固定controlに、
+   `v4.5a-r34-fixed2`を同じexact Cynthia壁へ40戦・各席20、`-j 4`、他の重負荷jobなしで実行する。
+2. **機構gateを判定**: AZ004 `hit=enforced=selected>=1`、AZ003
+   `hit>=1`, `outside_topk=injected>=1`, `injected_selected>=1`を必須にする。全health正常かつ
+   score>=17、P0>=8、P1>=7ならSAFE-SCREEN。coverage 0/中間差はINCONCLUSIVE、candidate health異常または
+   coverageありでscore<=12/P0<=4/P1<=3はREJECT。
+3. **SAFE時だけ逆load-order**: Cynthia A vs r4/r34 Bを各40戦追加し、各variant計80戦へ変換する。
    これは局所的gross-regression screenで、優越性・production採用・提出の証明ではない。
-4. **AZ008はHOLD**: Grim壁candidate 26/40、base 18/40でも実注入0のためno-treatment。
-   Phase 2/production/ExItを停止し、付属なしDudunsparceのtop-5外独立正例が5–10件集まるまで再戦しない。
+4. **AZ006/AZ008はHOLD**: r46は26/40対H 21/40、r8は26/40対base 18/40でも実注入0。
+   Phase 2/production/ExItを停止。AZ006はより広いAZ003へ分解し、AZ008は付属なしDudunsparceの
+   top-5外独立正例が5–10件集まるまで再戦しない。
 5. **Hammer4をproduction候補として保持**: `-1 Nighttime Mine (1266) / +1 Enhanced Hammer (1081)`は
    純BC同型 **54.17%/300 [48.51–59.72]**、fixed2 BCS **52.5%/80 [41.7–63.1]**。
    現1100+の`aaa`も同一60枚で、現環境再現性は上がった。ただしExpert Floorとの組合せは未評価。
@@ -66,6 +66,12 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- Cynthia三群はB 22/40（12/10）、H 21/40（11/10）、C 26/40（15/11）。全120戦DONE、failure 0、
+  最小overage 306.59秒以上。HのAZ004はhit=enforced=selected=32、Cは35で直接介入した。
+- CのAZ006はhit25 / selected13でも`outside_topk=injected=injected_selected=0`。C–H +5は候補集合差がなく
+  ruleへ帰属不能。joint gateはINCONCLUSIVE、逆順なし。Hだけを事後昇格もしない。
+- AZ003+004の実行mode監査はAZ003 125 hit / 教師115、top-5外10件を全件注入し**10/10教師一致**。
+  広いHammer playはhardにせずsearch候補。r34 fingerprint `5bce6c49...`、両席loader DONE。
 - AZ008 Phase 1はbase 18/40、r8 26/40（両席13/20）だが、r8のhit9 / selected4は全てBC top-5内で
   **injected=0 / injected-selected=0**。勝差をruleへ帰属できず事前規則どおりINCONCLUSIVE、Phase 2なし。
 - baseのfixed-search incomplete 3件は08:16:05–08:28:00のClamshell Sleep約715秒と、sidecarの
@@ -153,9 +159,9 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- **Codex (2026-07-23 19:41 JST)**: AZ008をno-treatmentで停止。fixed評価のsleep false hard-stopを修正し、
-  最新exact Cynthia壁、base/r4/r46をbuild・両席検証済み。上記事前登録どおり3群各40戦を順次実行し、
-  AZ004 hardとAZ006注入を分離する。旧r5/r8/統合Floorの勝敗は混ぜず、提出もしない。
+- **Codex (2026-07-23 20:48 JST)**: Cynthia三群を完走し、AZ006をno-treatmentで停止。
+  AZ003+004を監査・build・両席検証済み。上記事前登録どおりr34を固定H controlと比較する。
+  旧r5/r8/r46/統合Floorの勝敗は混ぜず、提出もしない。
 
 ## 今日の提出枠
 

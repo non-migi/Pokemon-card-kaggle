@@ -1,0 +1,61 @@
+{
+  "enabled_rule_ids": [
+    "AZ003_HAMMER_BLOCKER_PLAY",
+    "AZ004_HAMMER_BLOCKER_TARGET"
+  ],
+  "exact_deck": "decks/meta/snapshot_20260714_alakazam.csv",
+  "policy_build": "build/v4.5a-r46-fixed2",
+  "policy_build_sha256": "fac34f851f9e2583bd580a035c13a41cdaa7ec017311c79d5c3e0bef939e1952",
+  "policy_enabled": true,
+  "profile": "alakazam_v1",
+  "rule_mode": "enforce",
+  "totals": {
+    "rows_read": 369083,
+    "decisions_audited": 48501,
+    "policy_score_missing": 64
+  },
+  "rules": {
+    "AZ003_HAMMER_BLOCKER_PLAY": {
+      "hits": 125,
+      "kind_candidate": 125,
+      "teacher_match": 115,
+      "teacher_disagree": 10,
+      "teacher_alignment_rate": 0.92,
+      "bc_top1": 31,
+      "bc_top5": 115,
+      "bc_outside_top5": 10,
+      "bc_rank_1": 31,
+      "bc_rank_2": 37,
+      "bc_rank_3": 22,
+      "bc_rank_4": 14,
+      "bc_rank_5": 11,
+      "bc_rank_6": 5,
+      "bc_rank_7": 4,
+      "bc_rank_8": 1,
+      "candidate_injected": 10,
+      "candidate_injected_teacher_match": 10
+    },
+    "AZ004_HAMMER_BLOCKER_TARGET": {
+      "hits": 162,
+      "kind_hard": 162,
+      "teacher_match": 162,
+      "teacher_alignment_rate": 1.0,
+      "bc_top1": 45,
+      "bc_top5": 98,
+      "bc_outside_top5": 0,
+      "candidate_injected": 0
+    }
+  },
+  "candidate_injected_examples": [
+    {"row_number": 34946, "row_sha256": "6214be84dca501c6fa1b58a51d2459e6af539c2c47772ab4cf9f2557ad0b312b", "bc_rank": 6, "teacher_team": "Yushin Ito", "turn": 10, "opponent_active_id": 756, "rule_action": [8], "teacher_match": true},
+    {"row_number": 62580, "row_sha256": "80cf67faecc88d7acc24cc2b17e9ec9a3246ccd8229aa01632bf6dc392352dc6", "bc_rank": 7, "teacher_team": "Yushin Ito", "turn": 7, "opponent_active_id": 756, "rule_action": [28], "teacher_match": true},
+    {"row_number": 62584, "row_sha256": "a122efe875e26f4c276d7cfeb5e2dbda249d84ac4e1979a5751184b88ebcf1a6", "bc_rank": 6, "teacher_team": "Yushin Ito", "turn": 7, "opponent_active_id": 756, "rule_action": [25], "teacher_match": true},
+    {"row_number": 82996, "row_sha256": "a54f6aebedee517d418579e8be932f4d746ba3c11c19a889b2037e4b343fad80", "bc_rank": 6, "teacher_team": "Yushin Ito", "turn": 15, "opponent_active_id": 345, "rule_action": [23], "teacher_match": true},
+    {"row_number": 130646, "row_sha256": "b8008243c706c7088510592fd3aa9061bce658d734fcc3655911d906cf06971c", "bc_rank": 7, "teacher_team": "pztriatomic", "turn": 3, "opponent_active_id": 345, "rule_action": [12], "teacher_match": true},
+    {"row_number": 233868, "row_sha256": "570dd13291eb3627a3ab19496ba6dfabb4ae07ef16a6b901f699313f5c9e006e", "bc_rank": 6, "teacher_team": "Oshbocker", "turn": 11, "opponent_active_id": 379, "rule_action": [1], "teacher_match": true},
+    {"row_number": 240817, "row_sha256": "747570901f266ac79f95315e2e7c58ea33b585702f9f37a1f347a20d0243531c", "bc_rank": 7, "teacher_team": "bono", "turn": 11, "opponent_active_id": 756, "rule_action": [12], "teacher_match": true},
+    {"row_number": 339478, "row_sha256": "031e6bf6755279b8ac4b0547b4a6955ee7760bc3644a9e15082fdc7c367263b9", "bc_rank": 6, "teacher_team": "bono", "turn": 10, "opponent_active_id": 756, "rule_action": [25], "teacher_match": true},
+    {"row_number": 359147, "row_sha256": "a239b8df97253a4c845bef47afbf2f7b11e36de65925ccd052e856ee62d2d8c3", "bc_rank": 8, "teacher_team": "Yushin Ito", "turn": 8, "opponent_active_id": 756, "rule_action": [23], "teacher_match": true},
+    {"row_number": 359152, "row_sha256": "f7bc6589e22585c6b937794d83114edc41921303fc73c518cd66cbf1104434e8", "bc_rank": 7, "teacher_team": "Yushin Ito", "turn": 8, "opponent_active_id": 756, "rule_action": [23], "teacher_match": true}
+  ]
+}
