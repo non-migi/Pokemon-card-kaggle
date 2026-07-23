@@ -36,6 +36,9 @@ def player(hand=None, active=None, bench=None, deck_count=30):
         "deckCount": deck_count,
         "discard": [],
         "prize": [None] * 6,
+        "asleep": False,
+        "paralyzed": False,
+        "confused": False,
     }
 
 
@@ -138,6 +141,27 @@ class ExpertRuleTests(unittest.TestCase):
             target_obs, ALAKAZAM_DECK, "alakazam_v1",
             ["AZ004_HAMMER_BLOCKER_TARGET"],
         ), [])
+
+    def test_hammer_play_treats_all_hand_copies_as_equivalent(self):
+        mine = player(
+            hand=[1081, 1081],
+            active=[pokemon(743, energies=[5], energy_cards=[{"id": 5}])],
+        )
+        opp = player(active=[pokemon(305, energy_cards=[{"id": 11}])])
+        obs = observation([
+            {"type": 14},
+            {"type": 7, "area": 2, "index": 0},
+            {"type": 7, "area": 2, "index": 1},
+        ], mine=mine, opp=opp)
+        got = rules.evaluate(
+            obs, ALAKAZAM_DECK, "alakazam_v1",
+            ["AZ003_HAMMER_BLOCKER_PLAY"],
+        )[0]
+        self.assertEqual(got.action, (1,))
+        self.assertEqual(got.equivalent_actions, ((2,),))
+        self.assertTrue(rules.proposal_matches(got, [1]))
+        self.assertTrue(rules.proposal_matches(got, [2]))
+        self.assertFalse(rules.proposal_matches(got, [0]))
 
     def test_rock_fighting_energy_blocks_only_on_fighting_pokemon(self):
         mine = player(
@@ -274,6 +298,62 @@ class ExpertRuleTests(unittest.TestCase):
         self.assertEqual(rules.evaluate(
             obs, ALAKAZAM_DECK, "alakazam_v1", ["AZ006_UNBLOCK_EXACT_KO"],
         ), [])
+
+    def test_hammer_safe_conversion_is_fail_closed(self):
+        mine = player(
+            hand=[1081],
+            active=[pokemon(743, energies=[5], energy_cards=[{"id": 5}])],
+        )
+        mine["handCount"] = 20
+        opp = player(active=[pokemon(879, energy_cards=[{"id": 11}])])
+        opp["active"][0]["hp"] = 300
+        attack = {"type": 13, "attackId": 1072}
+        obs = observation([
+            attack,
+            {"type": 7, "area": 2, "index": 0},
+        ], mine=mine, opp=opp)
+        energy_types = {879: 1}
+
+        def safe(traits=None):
+            return rules.is_hammer_safe_conversion(
+                obs, energy_types,
+                traits if traits is not None else {
+                    879: {"attack_effect_immune": False},
+                },
+            )
+
+        self.assertTrue(safe())
+
+        mine["handCount"] = 15
+        self.assertFalse(safe())
+        mine["handCount"] = 20
+
+        obs["select"]["option"].remove(attack)
+        self.assertFalse(safe())
+        obs["select"]["option"].insert(0, attack)
+
+        opp["active"][0]["energyCards"].append({"id": 11})
+        self.assertFalse(safe())
+        opp["active"][0]["energyCards"].pop()
+
+        self.assertFalse(safe({879: {"attack_effect_immune": True}}))
+
+        for status in ("asleep", "paralyzed", "confused"):
+            mine[status] = True
+            self.assertFalse(safe(), status)
+            mine[status] = False
+
+        hand_count = mine.pop("handCount")
+        self.assertFalse(safe())
+        mine["handCount"] = hand_count
+        status = mine.pop("confused")
+        self.assertFalse(safe())
+        mine["confused"] = status
+        for malformed in (None, 0, "false"):
+            mine["confused"] = malformed
+            self.assertFalse(safe(), malformed)
+        mine["confused"] = False
+        self.assertFalse(safe({}))
 
     def test_zero_deck_sacred_ash_proposes_all_eligible_cards(self):
         mine = player(active=[pokemon(742)], deck_count=0)

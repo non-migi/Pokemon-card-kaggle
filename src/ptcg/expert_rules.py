@@ -259,6 +259,13 @@ def _hand_power_effect_blocked(
     """観測から確定できるPowerful Hand（damage counter効果）の無効条件。"""
     if _effect_blocker_on_active(opp, card_energy_types):
         return True
+    return _hand_power_non_energy_effect_blocked(mine, opp, card_traits)
+
+
+def _hand_power_non_energy_effect_blocked(
+    mine: dict, opp: dict, card_traits: CardTraits,
+) -> bool:
+    """Energyを全て外しても残る、観測から確定可能な効果無効条件。"""
     target = _active(opp)
     if target is None:
         return False
@@ -291,6 +298,64 @@ def _alakazam_ready(player: dict) -> bool:
     )
 
 
+def enhanced_hammer_play_actions(obs: dict) -> tuple[tuple[int, ...], ...]:
+    """現在のmain選択にあるEnhanced Hammerの同価値PLAY actionを返す。"""
+    return tuple(
+        (i,) for i in _option_for_hand_card(obs, {ENHANCED_HAMMER}, OT_PLAY)
+    )
+
+
+def is_hammer_safe_conversion(
+    obs: dict, card_energy_types: Mapping[int, int],
+    card_traits: CardTraits,
+) -> bool:
+    """Hammer後のHand Power KOを現在観測だけで証明できるか。
+
+    既存AZ003/AZ006の挙動は変えず、独立監査と将来の別rule ID用に
+    fail-closedなguardだけを公開する。
+    """
+    sel = obs.get("select") or {}
+    players = _players(obs)
+    if sel.get("type") != ST_MAIN or sel.get("maxCount") != 1 or players is None:
+        return False
+    mine, opp = players
+    blockers = _blocker_energy_indices(opp, card_energy_types)
+    hammers = enhanced_hammer_play_actions(obs)
+    target = _active(opp)
+    if (
+        not _alakazam_ready(mine)
+        or not blockers
+        or len(hammers) < len(blockers)
+        or target is None
+        or target.get("id") not in card_traits
+        or "handCount" not in mine
+        or any(
+            status not in mine
+            for status in ("asleep", "paralyzed", "confused")
+        )
+    ):
+        return False
+    try:
+        hand_count = int(mine.get("handCount") or 0)
+        hp = int(target.get("hp", 0) or 0)
+    except (TypeError, ValueError):
+        return False
+    if hp <= 0 or max(0, hand_count - len(blockers)) * 20 < hp:
+        return False
+    if not any(
+        isinstance(option, dict) and option.get("type") == OT_ATTACK
+        and option.get("attackId") == HAND_POWER
+        for option in sel.get("option") or []
+    ):
+        return False
+    if _hand_power_non_energy_effect_blocked(mine, opp, card_traits):
+        return False
+    return all(
+        mine.get(status) is False
+        for status in ("asleep", "paralyzed", "confused")
+    )
+
+
 def _az003_hammer_blocker_play(
     obs: dict, card_energy_types: Mapping[int, int], _card_traits: CardTraits,
 ) -> RuleProposal | None:
@@ -304,12 +369,13 @@ def _az003_hammer_blocker_play(
         opp, card_energy_types,
     ):
         return None
-    indices = _option_for_hand_card(obs, {ENHANCED_HAMMER}, OT_PLAY)
-    if not indices:
+    actions = enhanced_hammer_play_actions(obs)
+    if not actions:
         return None
     return RuleProposal(
-        "AZ003_HAMMER_BLOCKER_PLAY", (indices[0],), 180, "candidate",
+        "AZ003_HAMMER_BLOCKER_PLAY", actions[0], 180, "candidate",
         "Hand Powerを無効化する特殊energyをEnhanced Hammerで外す",
+        actions[1:],
     )
 
 

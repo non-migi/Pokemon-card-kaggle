@@ -1209,3 +1209,80 @@ gross-regression REJECT下限（総合-7、任意席-5）にも達せず、cover
 Daily TopからAZ003のtop-5外局面を独立採掘し、採用/棄却の条件差でrule guardを狭める。勝敗-4を直接
 rule因果とみなさず、新しい条件を事前固定できた場合だけ別exact wallで新規screenする。機械可読結果は
 `results/expert_rules_hammer4_floor_h1_20260723.json`、生runはarena rows 110–111。
+
+### AZ003 Exact-safe / 07-22 Daily Top独立holdout（07-23 23:54、結果確認前の事前登録）
+
+Hammer4×Floor H1はAZ003を実注入2回・探索採用1回したが、control比-4/20かつ注入手の全採用条件を
+満たさなかった。同じCynthia対戦を再抽選せず、07-15で凍結したtop-5外10局面だけを開発標本にして
+guardを固定し、公式07-22 Daily Topを独立holdoutとして一度だけ評価する。
+
+07-22 dataset 4,639 episodeは取得・`pairs_0722`抽出まで済んでいるが、この時点ではAZ003のhit、
+BC rank、教師行動、safe/non-safe内訳を一切集計・確認していない。評価コードと次の定義・gateを
+commit/pushしてから初回scanを行い、結果を見た後に条件や閾値を変えない。
+
+局面をparseせずraw bytesだけをhashし、07-22 corpusは4,639 file / 4,639 unique raw SHA、
+集合SHA `9ff468f2ce5600da44d82468dd36807f0e4a603654b2b7d9fbc83e020200a0ed`へ固定した。
+07-15除外集合はteam名を含まない正規化decision 366,457件、集合SHA
+`66b15e69eedddd602ae746095197f89f870ea5de8bc317c20086cd0bb3fa6f03`。
+新helperを含む専用`build/v4.5a-r34-guard-audit`は両席loader DONE、agent SHA
+`0ca440e31908463009f2c4eab490a80c75a33f8ec4b878d71254630f6e00ef1c`、bc_v2 model SHA
+`be8146d75f0cfe813a8728084614a3e168fc821fd2f7dece717feb0c2b8c70da`。実行前にこれら全てと
+`BC TOP_K == 5`をfail-closed照合し、別build・部分corpus・除外省略では局面評価を開始しない。
+
+#### 固定する意味論とguard
+
+- episode JSONを直接読み、有効な勝者側60枚deckのうちAlakazam系だけを対象にする。flat pairsでは失う
+  episode/turn順序を保持し、同一raw episode SHAの重複を除く。
+- broad hitは現行`AZ003_HAMMER_BLOCKER_PLAY`。複数のEnhanced Hammerが手札にある場合、
+  全ての合法PLAY optionを同価値群とする。教師一致は**いずれかのHammer optionを選んだこと**、
+  semantic top-5外は**全Hammer optionのBC順位が6位以下**であること、と定義する。
+- primary `exact_safe`は07-15だけから固定した次のAND条件。未来の同一turn行動や勝敗後情報は使わない。
+  1. 現在の手札Hammer option数が相手activeのenergy blocker数以上。
+  2. 全blockerをHammerで外した後の手札打点
+     `20 * max(0, handCount - blocker_count)`が相手active残HP以上。
+  3. 現在のmain optionにHand Power attackが存在する。
+  4. energyを外しても残る、観測から確定可能な非energy効果blockerがない
+     （attack-effect immunity、Articuno aura＋Basic Team Rocket、
+     Carracosta＋自Alakazamのspecial energy）。
+  5. 自playerがAsleep / Paralyzed / Confusedでない。
+- `handCount`、上記3 status、相手activeのcard metadataのいずれかが欠ける場合は、推測で補わず
+  `exact_safe=false`とする。教師一致はproposalの先頭copyではなく、教師actionが固定した全Hammer
+  action集合に直接含まれるかで判定する。
+- 07-15凍結10件では3–5は全件true。上記guardはexact 5 / broad-only 5へ分かれ、
+  exact側は保存traceで4選択・4 strict、残る1件もQ同率、broad-only側は選択0/5だった。
+  `残Prize`、`Hammer数==blocker数`、相手card種類など、この10件だけを完全分離する追加条件は使わない。
+- 07-15 `pairs_0715`と`sel/current/action/deck`を正規化したdecision SHAが一致するrowはholdoutから除外し、
+  overlap件数を報告する。team名をhashへ含めない。
+
+#### 固定する集計・privacy条件
+
+primary unitはsemantic top-5外の判断。`exact_safe` / `broad_only`別にevent数、教師Hammer一致数・率、
+unique episode数、unique winner-team数を集計する。参考として全broad hit、既にHammerがtop-5内だった件数、
+複数Hammer件数、同一episode・同一turn内の`broad_only → 後続exact_safe`件数も集計する。
+最後の連鎖は「Hammer前にdraw/setupを優先する」仮説の診断だけで、primary gateを上書きしない。
+
+commitするJSONは集計のみとし、team名、episode/file ID、個別row/observation SHA、action index、card ID、
+raw observation、deck、絶対pathを出さない。dataset全体と除外集合は集合fingerprint、policyは
+repo相対build labelとagent/model fingerprintだけを出す。
+technical error、policy score欠落、非有限score、privacy/schema違反があれば`INVALID_RUN`とする。
+
+#### 事前判定gate
+
+- **SUPPORT_NARROW_TO_FRESH_TRACE**:
+  - valid run、07-15 overlap除外後にexact-safe / broad-onlyがそれぞれ5 event以上かつ4 unique episode以上、
+    exact-safeは2 unique winner-team以上。
+  - exact-safeのsemantic教師Hammer率が80%以上。
+  - exact-safe率がbroad-only率を20 percentage point以上上回る。
+- **HOLD_DATA**: いずれかのcohortが上記event/episode/team下限を満たさない。
+- **REJECT_GUARD**: exact-safeが5 event・4 episode以上あるのに教師率60%未満。
+- **INCONCLUSIVE_GUARD**: validかつ標本下限は満たすがSUPPORT/REJECTのどちらでもない。
+- **INVALID_RUN**: 技術・schema・privacy条件違反。結果は戦略判断に使わず修正後に同一固定条件で再実行する。
+
+条件が重なる場合の優先順位は
+**INVALID_RUN > REJECT_GUARD > HOLD_DATA > SUPPORT_NARROW_TO_FRESH_TRACE > INCONCLUSIVE_GUARD**。
+従ってexact-safeが5 event・4 episode以上で教師率60%未満なら、broad-only不足でもREJECTを優先する。
+
+`SUPPORT_NARROW_TO_FRESH_TRACE`でも許可するのは、新しいrule ID
+`AZ009_HAMMER_SAFE_CONVERSION`相当を別IDで組み、holdout内の独立局面をprivacy-safe traceしてから
+未使用のfresh local wallへ進むことだけ。既存AZ003/AZ006の意味を上書きせず、production、最新Grim、
+ExIt学習、Kaggle提出へは自動昇格しない。
