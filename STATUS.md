@@ -167,7 +167,8 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- **なし**。重負荷jobは停止中。次は上記decision-level traceを実装してから、条件付きmulti-metaへ進む。
+- **Codex (2026-07-23 21:55 JST)**: AZ003のlocal専用decision-level traceと凍結10局面gateを実装・検証する。
+  `src/ptcg/bc_search.py`、監査/trace script、対応testを対象とし、重負荷対戦・提出は行わない。
 
 ## 今日の提出枠
 
