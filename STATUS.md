@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-23 23:32 JST (Codex) — Hammer4×Floor H1はscore/coverage部分未達でINCONCLUSIVE
+最終更新: 2026-07-23 23:49 JST (Codex) — 07-22 AZ003独立holdoutを結果未確認のまま事前登録中
 
 ## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
@@ -196,7 +196,9 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- なし
+- 07-23 23:49 Codex: 07-22 Daily TopのAZ003 Exact-safe独立holdout。
+  `docs/experiments.md`、`scripts/mine_az003_guard.py`、関連Unitのみを編集する。
+  holdout結果を見る前に定義・gate・出力schemaをcommitし、raw episodeは`/tmp`にだけ置く。
 
 ## 今日の提出枠
 
