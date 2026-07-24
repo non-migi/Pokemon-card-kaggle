@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-24 08:21 JST (Codex) — AZ003独立holdoutは固定済み、初回scanを結果未出力で中断
+最終更新: 2026-07-24 19:14 JST (Codex) — AZ003独立holdoutの固定blind rerunを再開
 
 ## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
@@ -204,7 +204,8 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- なし（07-24 08:21、一時中断。再開時は`c05bb7c`の固定holdout scanから）
+- 07-24 19:14 Codex: `c05bb7c`で固定した07-22 AZ003 Exact-safe holdout scanを同一条件で再開。
+  `results/az003_guard_holdout_20260722.json`、`docs/experiments.md`、`docs/plan.md`、`STATUS.md`のみ。
 
 ## 今日の提出枠
 
