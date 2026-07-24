@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-24 19:25 JST (Codex) — 4引分だけを正常skipする回復protocolを固定中
+最終更新: 2026-07-24 19:31 JST (Codex) — AZ003 Exact-safe独立holdoutはINCONCLUSIVE、AZ003をHOLD
 
 ## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
@@ -36,12 +36,11 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 次のアクション(優先順)
 
-1. **07-22 Daily TopからAZ003の独立反例を採掘**: Hammer4 H1はAZ003注入2・探索採用1で、
-   総合差もSAFE下限を1勝外した。同じCynthia壁を再抽選せず、top-5外の採用/棄却局面を分け、
-   blocker数・Hammer残数・後続KO等から適用guardを狭める。事前登録・監査CLIは`c05bb7c`へ固定済み。
-   固定blind rerunは完走したが、勝者のない`[0,0]` 4引分をschema errorへ誤分類してINVALID_RUN。
-   旧結果を上書きせず、引分を正常skipへ分ける技術修正だけをcommit後、同一条件を新規pathへ再実行する。
-   guard・閾値・29件のcohortは変更しない。十分な独立正例が無ければAZ003はHOLD。
+1. **AZ003をHOLDし、07-22 branchを閉じる**: 回復scanは全validator通過。semantic top-5外で
+   Exact-safe **10/13=76.92%**、Broad-only **12/16=75.00%**、差+1.92pt。
+   事前SUPPORT（80%以上かつ+20pt）未達で`INCONCLUSIVE_GUARD`。AZ009、個別trace、fresh wall、
+   ExIt/production/提出へ進めず、07-22から別条件を後付けしない。変更なしの再確認は次の未開封
+   Daily Topを取得・閲覧する前に停止則ごと事前登録する。
 2. **Hammer4 deckとAZ003を分離して保持**: Hammer4自体は純BC54.17%/300、fixed2 52.5%/80、
    Top8のMajkel/Yushinでも再現した。一方Hammer4＋AZ003はH1未通過なので、次のdeck候補へ自動合成しない。
 3. **最新Grim壁は次段まで凍結**: Top8のLuca / me and the lads / Rmyを含む6 teamで一致した
@@ -73,10 +72,13 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
-- 07-22固定holdoutのblind rerunは完走したが`episode_schema_errors=4`で **INVALID_RUN**。
-  corpus/build/model/除外SHA、policy/rule error 0、privacy/schemaは正常。header集計で4件は全て
-  勝者なし`[0,0]`の引分と確認し、残り4,635件には勝者がいる。引分はBC抽出でも除外され、
-  AZ003 cohortへ入らないため、次は正常skip counterへ分離する技術修正だけを行う。
+- AZ003 Exact-safe回復scanは全technical 0、privacy/frozen/recovery validator全通過。
+  v1→v2差は4引分の正常skipと機械的gate再計算だけで、戦略集計は完全一致。Exact-safe
+  **10/13=76.92%**、Broad-only **12/16=75.00%**、差**+1.92pt**のため
+  **INCONCLUSIVE_GUARD**。r2 SHA `f3ed4d45...`。AZ003をHOLDし、AZ009/trace/wall/提出へ進めない。
+- 初回version 1は`episode_schema_errors=4`でINVALIDとしてSHA `ded767a1...`のまま保存。
+  4件は全て勝者なし`[0,0]`かつvalid step構造、malformed/multiple winner 0。
+  回復protocolは`802527b`で事前固定し、旧結果を上書きしていない。
 - AZ003 Exact-safe独立holdoutを結果確認前に`c05bb7c`へ事前登録。07-22 rawは
   4,639 file/unique、集合SHA `9ff468f2...`、07-15除外は366,457 decision / `66b15e69...`。
   専用bc_v2 audit buildはagent `0ca440e3...` / model `be8146d7...`、両席DONE。
@@ -209,9 +211,7 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- 07-24 19:14 Codex: `c05bb7c`で固定した07-22 AZ003 Exact-safe holdout scanを同一条件で再開。
-  `scripts/mine_az003_guard.py`、関連Unit、`results/az003_guard_holdout_20260722_r2.json`、
-  `docs/experiments.md`、`docs/plan.md`、`STATUS.md`のみ。guard/rank/gateは変更しない。
+- なし
 
 ## 今日の提出枠
 

@@ -1329,3 +1329,29 @@ malformed/unmatched headerとwinner複数は0で、集計は
   1項目でも違えばversion 2を保存せず、07-22はINVALID確定とする。
 - 合致時のdecisionは固定gateによる`INCONCLUSIVE_GUARD`以外を許さない。この値は新発見ではなく、
   既に開示された集計への機械適用と記載する。07-22を追加guard探索へ再利用しない。
+
+#### version 2回復scan / 最終判定（07-24 19:27–19:30）
+
+事前commit `802527b`のversion 2を完走し、
+`results/az003_guard_holdout_20260722_r2.json`
+（SHA `f3ed4d456cab53e9336ab64035b8ee907b9e7eec6cd45902d2fedc5114ee0931`）を生成した。
+privacy、固定input/report、v1→v2 recovery invarianceの全validatorが通過。v1との差は許可した
+analysis version、baseline SHA追加、no-winner 4追加、schema/technical 4→0、gate再計算だけで、
+`az003`、`cohorts`、`same_turn_diagnostic`、全既存scan countは完全一致した。全technicalは0。
+
+| semantic top-5外cohort | event | unique episode | unique team | 教師Hammer一致 | 一致率 |
+|---|---:|---:|---:|---:|---:|
+| Exact-safe | 13 | 13 | 7 | 10 | **76.92%** |
+| Broad-only | 16 | 15 | 8 | 12 | **75.00%** |
+| Exact-safe差 | — | — | — | — | **+1.92pt** |
+
+標本下限は両cohortとも満たし、Exact-safe 76.92%はREJECT下限60%未満ではない。一方、
+SUPPORTに必要なExact-safe 80%以上とBroad-only比+20pt以上を両方満たさない。固定gateの最終判定は
+**INCONCLUSIVE_GUARD**。全broad hitは236、教師一致193（81.78%）、semantic top-5外は29、
+教師一致22（75.86%）。同一turnのbroad-only→後続Exact-safeは1 turnあるが、教師Hammerからの遷移は0で、
+診断値はgateを上書きしない。
+
+従って`AZ009_HAMMER_SAFE_CONVERSION`の実装、07-22個別trace/追加特徴分割、fresh wall、
+ExIt/production/提出へは進まない。AZ003とHammer4 deckは分離したままAZ003をHOLDする。
+07-22は使用済みで、ここから別guardを後付けしない。次に同じExact-safeを確認するなら、次の未開封Daily Top
+corpusを取得・閲覧する前に、変更なしのconfirmatory replicationと停止則を事前登録する。

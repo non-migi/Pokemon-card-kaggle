@@ -1,0 +1,84 @@
+{
+  "aggregate_only": true,
+  "analysis": "az003_exact_safe_independent_holdout",
+  "analysis_version": 2,
+  "az003": {
+    "broad_hits_audited": 236,
+    "broad_hits_raw": 236,
+    "broad_teacher_matches": 193,
+    "broad_teacher_rate": 0.817797,
+    "multiple_hammer_hits": 77,
+    "overlap_excluded": 0,
+    "semantic_outside_top5": 29,
+    "semantic_teacher_matches": 22,
+    "semantic_teacher_rate": 0.758621,
+    "semantic_top5_present": 207
+  },
+  "cohorts": {
+    "broad_only": {
+      "events": 16,
+      "teacher_hammer_matches": 12,
+      "teacher_hammer_rate": 0.75,
+      "unique_episodes": 15,
+      "unique_winner_teams": 8
+    },
+    "exact_safe": {
+      "events": 13,
+      "teacher_hammer_matches": 10,
+      "teacher_hammer_rate": 0.769231,
+      "unique_episodes": 13,
+      "unique_winner_teams": 7
+    }
+  },
+  "dataset_fingerprint_sha256": "9ff468f2ce5600da44d82468dd36807f0e4a603654b2b7d9fbc83e020200a0ed",
+  "dataset_label": "daily-top-20260722",
+  "exclude_decision_count": 366457,
+  "exclude_decision_set_sha256": "66b15e69eedddd602ae746095197f89f870ea5de8bc317c20086cd0bb3fa6f03",
+  "gate": {
+    "criteria": {
+      "min_events_each": 5,
+      "min_exact_safe_unique_winner_teams": 2,
+      "min_unique_episodes_each": 4,
+      "observed_broad_only_teacher_rate": 0.75,
+      "observed_exact_safe_teacher_rate": 0.769231,
+      "observed_rate_advantage": 0.019231,
+      "reject_exact_safe_teacher_rate_below": 0.6,
+      "support_exact_safe_teacher_rate_min": 0.8,
+      "support_rate_advantage_min": 0.2,
+      "technical_error_count": 0
+    },
+    "decision": "INCONCLUSIVE_GUARD"
+  },
+  "policy_build": "build/v4.5a-r34-guard-audit",
+  "policy_build_sha256": "0ca440e31908463009f2c4eab490a80c75a33f8ec4b878d71254630f6e00ef1c",
+  "policy_enabled": true,
+  "policy_model_sha256": "be8146d75f0cfe813a8728084614a3e168fc821fd2f7dece717feb0c2b8c70da",
+  "profile": "alakazam_v1",
+  "recovery_baseline_sha256": "ded767a1dcc59006569eb26c56c1d56a03d3e2c1c18c7d41727d6d5f960984fc",
+  "rule_id": "AZ003_HAMMER_BLOCKER_PLAY",
+  "same_turn_diagnostic": {
+    "broad_teacher_hammer_to_later_exact_turns": 0,
+    "broad_to_later_exact_turns": 1,
+    "episodes_with_broad_to_later_exact": 1,
+    "semantic_outside_events": 29
+  },
+  "scan": {
+    "alakazam_winner_decisions": 62734,
+    "alakazam_winner_episodes": 821,
+    "duplicate_raw_episodes": 0,
+    "episode_files_seen": 4639,
+    "no_unique_winner_episodes": 4,
+    "non_alakazam_winner_episodes": 3814,
+    "unique_raw_episodes": 4639,
+    "valid_winner_episodes": 4635
+  },
+  "technical": {
+    "episode_schema_errors": 0,
+    "hammer_rank_errors": 0,
+    "json_parse_errors": 0,
+    "policy_score_errors": 0,
+    "policy_score_missing": 0,
+    "policy_score_nonfinite": 0,
+    "rule_evaluation_errors": 0
+  }
+}

@@ -1,16 +1,17 @@
-# 全体計画(2026-07-23改訂 / 初版07-10)
+# 全体計画(2026-07-24改訂 / 初版07-10)
 
-> **07-23の現在地**: canonical Alakazam＋BC×探索のv4.3aは249戦・871.7付近へ収束し、模倣だけでは
+> **07-24の現在地**: canonical Alakazam＋BC×探索のv4.3aは249戦・871.7付近へ収束し、模倣だけでは
 > 1100の壁を越えられていない。中核は **「専門家ルールを床、探索・ExItを天井」**。
 > ルールは強者を丸ごとコピーせず、破滅手の禁止と戦術候補の保証に限定し、探索の比較結果をExItで蒸留する。
 > r5は棄却。r8/AZ008とr46/AZ006は勝ち越しても実注入0でINCONCLUSIVEとして停止した。
 > AZ003+004はexact Cynthia順逆で実注入4・採用2、r4比-2/80に収まりSAFE-KEEP。
 > 凍結10局面はAZ003採用4・Q支配0でTRACE SAFE。旧Grimはr34 16/20対r4 15/20でもrule発火0のため
 > multi-metaはINCONCLUSIVEで止めた。Hammer4 H1もr34 9/20対r4 13/20、注入2/採用1で
-> score/coverageが部分未達。同じ壁を再抽選せず、07-22強者局面からAZ003のguardを狭める。
+> score/coverageが部分未達。07-22独立holdoutでもExact-safe 10/13対Broad-only 12/16、
+> 一致率差+1.92ptで事前SUPPORT未達。AZ003はHOLDし、Hammer4 deckと分離する。
 
 目標: **Strategy部門トップ8**(各$30,000 + ファイナル進出)。
-残り: Simulation締切(8/16)まで24日 / Strategy Writeup締切(9/13)まで52日。
+残り: Simulation締切(8/16)まで23日 / Strategy Writeup締切(9/13)まで51日。
 
 ## 前提となる確定事実(公式ページ・実測で裏取り済み)
 
@@ -69,6 +70,9 @@ Alakazam上位2者は既知Hammer4と一致する。公開標本なので採用�
   席差-2/-2。AZ003はhit31 / injected2 / injected-selected1で治療差は存在したが、総合SAFE下限-3を
   1勝外し、全注入採用条件も未達。健康性は完全、gross REJECTでもないため
   `INCONCLUSIVE_SCORE_AND_PARTIAL_COVERAGE`。Hammer4 deckの外的再現性とAZ003採用可否を混同しない。
+- **Exact-safe guardも独立holdoutで未確認**: 07-22のsemantic top-5外29件はExact-safe 10/13
+  （76.92%）、Broad-only 12/16（75.00%）、差+1.92pt。事前条件の80%かつ+20ptを満たさず
+  `INCONCLUSIVE_GUARD`。AZ009、個別trace、fresh wall、ExItへ進めず、07-22から条件を後付けしない。
 
 ## 1100突破の中核: Expert Floor → Search Ceiling → ExIt
 
@@ -121,8 +125,9 @@ Alakazam上位2者は既知Hammer4と一致する。公開標本なので採用�
   r5は棄却、r8/r46は実注入0でHOLD。AZ003+004は最新Cynthia壁で実注入・探索採用と局所安全性を確認した。
   凍結10局面のdecision traceはSAFE、旧Grim勝敗下限も通したがcoverage 0でmulti-metaは未通過。
   Majkel/Yushinで外的再現したHammer4を共通deckにしたH1はscore/coverage部分未達でINCONCLUSIVE。
-  同じCynthiaを再抽選せず、07-22 Daily Topのtop-5外AZ003局面から採用/棄却条件を独立採掘する。
-  新guardを事前固定できた場合だけ、最新Top8 Grimを別のnegative/meta safety wallにする。
+  07-22 Daily TopのExact-safe独立検証も一致率差+1.92ptでINCONCLUSIVEとなり、AZ003はHOLD。
+  同じcorpusから別guardを作らず、変更なしの再確認は次の未開封Daily Topを取得前に事前登録する。
+  別ruleは07-22を除外した開発根拠で条件を固定できた場合だけ、未来corpusと最新Top8 Grimへ進める。
   両壁を通った介入だけ公式教師との混合比を事前固定してbc_x1へ入れる。
   第2世代からはrule候補・探索Q・最終選択を同時に記録し、
   hard ruleをラベルへ盲目的に固定せず、探索が採用した行動を蒸留する。世代ごとの改善実測がない限り
