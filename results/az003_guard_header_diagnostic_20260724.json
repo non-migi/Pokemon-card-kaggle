@@ -1,0 +1,17 @@
+{
+  "analysis": "az003_holdout_header_only_recovery_check",
+  "aggregate_only": true,
+  "corpus_fingerprint_sha256": "9ff468f2ce5600da44d82468dd36807f0e4a603654b2b7d9fbc83e020200a0ed",
+  "episode_files": 4639,
+  "malformed_or_unmatched_reward_headers": 0,
+  "multiple_winner_reward_headers": 0,
+  "no_unique_winner_reward_headers": 4,
+  "reward_header_counts": {
+    "draw_zero_zero": 4,
+    "loss_win": 2044,
+    "null_win": 2,
+    "win_loss": 2589
+  },
+  "unique_winner_reward_headers": 4635,
+  "verdict": "ALL_FOUR_INITIAL_SCHEMA_ERRORS_ARE_NO_UNIQUE_WINNER_DRAWS"
+}

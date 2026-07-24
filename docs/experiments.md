@@ -1293,3 +1293,20 @@ ExIt学習、Kaggle提出へは自動昇格しない。
 episode parse中にユーザーの作業中断指示を受けてSIGINTで停止した。aggregate stdout、結果JSON、
 `.tmp`はいずれも未生成で、残存processもない。条件・コード・閾値は変更せず、再開時は同じcommandを
 blind rerunして完走する。この中断をholdoutの判定結果としては扱わない。
+
+#### blind rerun完走 / INVALID_RUN（07-24 19:14–19:17）
+
+固定commandを変更せず完走し、`results/az003_guard_holdout_20260722.json`
+（SHA `ded767a1dcc59006569eb26c56c1d56a03d3e2c1c18c7d41727d6d5f960984fc`）を生成した。
+corpus/build/model/除外集合は事前値と一致し、privacy/schema validatorも通過したが、
+`episode_schema_errors=4`のため優先順位どおり **INVALID_RUN**。この時点では教師率やcohort差を
+戦略判定に使用しない。
+
+headerだけを個別IDなしで再集計すると、4,639件はwinnerあり4,635件
+（`[-1,1]` 2,044 / `[1,-1]` 2,589 / `[null,1]` 2）と、引き分け`[0,0]` 4件だった。
+malformed/unmatched headerとwinner複数は0で、集計は
+`results/az003_guard_header_diagnostic_20260724.json`へ保存した。
+4 errorは全て、`bc_extract`なら正常除外する引き分けを監査CLIがschema errorへ誤分類したもの。
+引き分けには勝者側decisionがなく、AZ003/guard/rank/cohortへ入る経路はない。次はguard・閾値・固定入力を
+変えず、`no_unique_winner`を明示的な正常skip counterへ分離する技術修正だけを事前commitし、
+新規result pathで同じscanを再実行する。旧INVALID JSONは上書きしない。

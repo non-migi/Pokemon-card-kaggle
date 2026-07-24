@@ -3,7 +3,7 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-07-24 19:14 JST (Codex) — AZ003独立holdoutの固定blind rerunを再開
+最終更新: 2026-07-24 19:19 JST (Codex) — AZ003 holdout完走、4引分の誤分類でINVALID_RUN
 
 ## ラダー状況(2026-07-23 22:10 JST、active = 最新2提出のみ)
 
@@ -39,8 +39,9 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 1. **07-22 Daily TopからAZ003の独立反例を採掘**: Hammer4 H1はAZ003注入2・探索採用1で、
    総合差もSAFE下限を1勝外した。同じCynthia壁を再抽選せず、top-5外の採用/棄却局面を分け、
    blocker数・Hammer残数・後続KO等から適用guardを狭める。事前登録・監査CLIは`c05bb7c`へ固定済み。
-   08:19開始のscanはユーザー指示で中断し、結果/tmp/集計stdoutは全て未生成。再開時は条件を変えず、
-   `mine_az003_guard.py`の同一commandを完走する。十分な独立正例が無ければAZ003はHOLD。
+   固定blind rerunは完走したが、勝者のない`[0,0]` 4引分をschema errorへ誤分類してINVALID_RUN。
+   旧結果を上書きせず、引分を正常skipへ分ける技術修正だけをcommit後、同一条件を新規pathへ再実行する。
+   guard・閾値・29件のcohortは変更しない。十分な独立正例が無ければAZ003はHOLD。
 2. **Hammer4 deckとAZ003を分離して保持**: Hammer4自体は純BC54.17%/300、fixed2 52.5%/80、
    Top8のMajkel/Yushinでも再現した。一方Hammer4＋AZ003はH1未通過なので、次のdeck候補へ自動合成しない。
 3. **最新Grim壁は次段まで凍結**: Top8のLuca / me and the lads / Rmyを含む6 teamで一致した
@@ -72,6 +73,10 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
    Grim/Kang/Alakazam/新規Dragapult・Cynthia・Froslass-Lopunny別の実勝率を追う。
 
 **確定した知見(今セッション)**:
+- 07-22固定holdoutのblind rerunは完走したが`episode_schema_errors=4`で **INVALID_RUN**。
+  corpus/build/model/除外SHA、policy/rule error 0、privacy/schemaは正常。header集計で4件は全て
+  勝者なし`[0,0]`の引分と確認し、残り4,635件には勝者がいる。引分はBC抽出でも除外され、
+  AZ003 cohortへ入らないため、次は正常skip counterへ分離する技術修正だけを行う。
 - AZ003 Exact-safe独立holdoutを結果確認前に`c05bb7c`へ事前登録。07-22 rawは
   4,639 file/unique、集合SHA `9ff468f2...`、07-15除外は366,457 decision / `66b15e69...`。
   専用bc_v2 audit buildはagent `0ca440e3...` / model `be8146d7...`、両席DONE。
