@@ -159,6 +159,32 @@ class EpisodeScanTests(unittest.TestCase):
         self.assertEqual(state.exact_safe.teacher_hammer_matches, 1)
         self.assertEqual(state.broad_only.events, 0)
 
+    def test_no_unique_winner_is_a_normal_explicit_skip(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "draw.json")
+            with open(path, "w") as handle:
+                json.dump({
+                    "rewards": [0, 0],
+                    "steps": [[{}, {}], [{}, {}], [{}, {}]],
+                }, handle)
+            state = mining.scan_episode_dir(directory, set())
+        self.assertEqual(state.scan["no_unique_winner_episodes"], 1)
+        self.assertEqual(state.technical, {})
+        self.assertEqual(state.scan["valid_winner_episodes"], 0)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "broken-draw.json")
+            with open(path, "w") as handle:
+                json.dump({"rewards": [0, 0]}, handle)
+            broken = mining.scan_episode_dir(directory, set())
+        self.assertEqual(broken.scan["no_unique_winner_episodes"], 0)
+        self.assertEqual(broken.technical["episode_schema_errors"], 1)
+
+        with self.assertRaises(ValueError):
+            mining._episode_header({"rewards": [1, 1]})
+        with self.assertRaises(ValueError):
+            mining._episode_header({"rewards": [2, 0]})
+
     def test_normalized_exclusion_does_not_depend_on_team_name(self):
         episode = exact_safe_episode()
         obs = episode["steps"][1][0]["observation"]
@@ -344,6 +370,7 @@ class TransitionAndPrivacyTests(unittest.TestCase):
             "episode_files_seen": mining.EXPECTED_EPISODE_FILES,
             "unique_raw_episodes": mining.EXPECTED_UNIQUE_RAW_EPISODES,
             "duplicate_raw_episodes": 0,
+            "no_unique_winner_episodes": 4,
         })
         mining.validate_frozen_report(frozen)
 
@@ -356,6 +383,24 @@ class TransitionAndPrivacyTests(unittest.TestCase):
         extra["team"] = "secret"
         with self.assertRaises(ValueError):
             mining.validate_report_privacy(extra)
+
+    def test_recovery_invariance_allows_only_draw_reclassification(self):
+        baseline = mining.load_recovery_baseline()
+        recovered = copy.deepcopy(baseline)
+        recovered["analysis_version"] = mining.ANALYSIS_VERSION
+        recovered["recovery_baseline_sha256"] = (
+            mining.RECOVERY_BASELINE_SHA256
+        )
+        recovered["scan"]["no_unique_winner_episodes"] = 4
+        recovered["technical"]["episode_schema_errors"] = 0
+        recovered["gate"]["criteria"]["technical_error_count"] = 0
+        recovered["gate"]["decision"] = "INCONCLUSIVE_GUARD"
+        mining.validate_recovery_invariance(baseline, recovered)
+
+        changed = copy.deepcopy(recovered)
+        changed["cohorts"]["exact_safe"]["events"] += 1
+        with self.assertRaisesRegex(ValueError, "cohorts"):
+            mining.validate_recovery_invariance(baseline, changed)
 
 
 if __name__ == "__main__":

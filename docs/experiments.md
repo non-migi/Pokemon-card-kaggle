@@ -1310,3 +1310,22 @@ malformed/unmatched headerとwinner複数は0で、集計は
 引き分けには勝者側decisionがなく、AZ003/guard/rank/cohortへ入る経路はない。次はguard・閾値・固定入力を
 変えず、`no_unique_winner`を明示的な正常skip counterへ分離する技術修正だけを事前commitし、
 新規result pathで同じscanを再実行する。旧INVALID JSONは上書きしない。
+
+#### INVALID_RUN回復protocol（07-24 19:24、再実行前）
+
+07-22の率は既に開示されたためblind holdoutへは戻らない。回復実行は新しい条件探索ではなく、
+固定gateの機械的再計算に限定する。analysis versionを2へ上げ、
+`results/az003_guard_holdout_20260722_r2.json`だけを新規出力先にする。旧version 1 JSON
+`ded767a1...`をbaselineとして起動前にSHA照合し、次だけを変更する。
+
+- `len(rewards)==2`かつ値が既知でwinner数0なら`no_unique_winner_episodes`へ正常skipする。
+  winner複数、未知reward値、malformed header/deck/team/stepは引き続きtechnical error。
+- 回復後は`no_unique_winner_episodes=4`、`episode_schema_errors: 4→0`、
+  `technical_error_count: 4→0`だけを許す。analysis version、result path、baseline SHA、
+  gate decisionの機械的再計算以外は変更しない。
+- version 1とversion 2の`az003`、`cohorts`、`same_turn_diagnostic`を完全一致させる。
+  corpus/build/model/exclude/profile/ruleと、files 4,639 / unique 4,639 / duplicate 0 /
+  valid winner 4,635 / non-Alakazam 3,814 / Alakazam 821 / 対象decision 62,734も完全一致させる。
+  1項目でも違えばversion 2を保存せず、07-22はINVALID確定とする。
+- 合致時のdecisionは固定gateによる`INCONCLUSIVE_GUARD`以外を許さない。この値は新発見ではなく、
+  既に開示された集計への機械適用と記載する。07-22を追加guard探索へ再利用しない。

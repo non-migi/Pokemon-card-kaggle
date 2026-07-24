@@ -40,9 +40,14 @@ from ptcg import bc_search, expert_rules, heuristics, policy  # noqa: E402
 from ptcglab.arena import agent_fingerprint  # noqa: E402
 
 
-ANALYSIS_VERSION = 1
+ANALYSIS_VERSION = 2
 PROFILE = "alakazam_v1"
 RULE_ID = "AZ003_HAMMER_BLOCKER_PLAY"
+RECOVERY_BASELINE = "results/az003_guard_holdout_20260722.json"
+RECOVERY_BASELINE_SHA256 = (
+    "ded767a1dcc59006569eb26c56c1d56a03d3e2c1c18c7d41727d6d5f960984fc"
+)
+EXPECTED_OUTPUT = "results/az003_guard_holdout_20260722_r2.json"
 EXPECTED_DATASET_LABEL = "daily-top-20260722"
 EXPECTED_EPISODE_FILES = 4639
 EXPECTED_UNIQUE_RAW_EPISODES = 4639
@@ -84,6 +89,7 @@ SCAN_KEYS = {
     "duplicate_raw_episodes",
     "valid_winner_episodes",
     "non_alakazam_winner_episodes",
+    "no_unique_winner_episodes",
     "alakazam_winner_episodes",
     "alakazam_winner_decisions",
 }
@@ -123,6 +129,7 @@ REPORT_KEYS = {
     "policy_build",
     "policy_build_sha256",
     "policy_model_sha256",
+    "recovery_baseline_sha256",
     "policy_enabled",
     "profile",
     "rule_id",
@@ -169,6 +176,10 @@ DENIED_KEYS = {
 
 
 class ScoreMissing(ValueError):
+    pass
+
+
+class NoUniqueWinnerEpisode(ValueError):
     pass
 
 
@@ -404,10 +415,21 @@ def _episode_header(data: dict) -> tuple[int, list, str, list]:
     names = (data.get("info") or {}).get("TeamNames")
     if (
         not isinstance(rewards, list)
-        or rewards.count(1) != 1
-        or not isinstance(steps, list)
-        or len(steps) < 3
+        or len(rewards) != 2
+        or any(value not in (-1, 0, 1, None) for value in rewards)
     ):
+        raise ValueError("rewards schema")
+    if not isinstance(steps, list) or len(steps) < 3:
+        raise ValueError("steps schema")
+    winner_count = rewards.count(1)
+    if winner_count == 0:
+        if any(
+            not isinstance(step, list) or len(step) < 2
+            for step in steps
+        ):
+            raise ValueError("draw steps schema")
+        raise NoUniqueWinnerEpisode("no unique winner")
+    if winner_count != 1:
         raise ValueError("winner/steps schema")
     winner = rewards.index(1)
     if (
@@ -468,6 +490,9 @@ def scan_episode_dir(
             continue
         try:
             winner, deck, team_token, steps = _episode_header(data)
+        except NoUniqueWinnerEpisode:
+            state.scan["no_unique_winner_episodes"] += 1
+            continue
         except (AttributeError, TypeError, ValueError):
             state.technical["episode_schema_errors"] += 1
             continue
@@ -683,6 +708,7 @@ def assemble_report(
         "policy_build": policy_build_label,
         "policy_build_sha256": policy_build_sha256,
         "policy_model_sha256": policy_model_sha256,
+        "recovery_baseline_sha256": RECOVERY_BASELINE_SHA256,
         "policy_enabled": bool(policy.ENABLED),
         "profile": PROFILE,
         "rule_id": RULE_ID,
@@ -750,6 +776,7 @@ def validate_report_privacy(report: dict) -> None:
         "exclude_decision_set_sha256",
         "policy_build_sha256",
         "policy_model_sha256",
+        "recovery_baseline_sha256",
     ):
         if HEX64.fullmatch(str(report[key])) is None:
             raise ValueError("FINGERPRINT_SCHEMA")
@@ -842,6 +869,7 @@ def validate_frozen_report(report: dict) -> None:
         "policy_build": EXPECTED_POLICY_BUILD,
         "policy_build_sha256": EXPECTED_POLICY_BUILD_SHA256,
         "policy_model_sha256": EXPECTED_POLICY_MODEL_SHA256,
+        "recovery_baseline_sha256": RECOVERY_BASELINE_SHA256,
     }
     mismatches = [
         key for key, value in expected.items()
@@ -851,6 +879,7 @@ def validate_frozen_report(report: dict) -> None:
         "episode_files_seen": EXPECTED_EPISODE_FILES,
         "unique_raw_episodes": EXPECTED_UNIQUE_RAW_EPISODES,
         "duplicate_raw_episodes": 0,
+        "no_unique_winner_episodes": 4,
     }
     mismatches.extend(
         f"scan.{key}"
@@ -860,6 +889,92 @@ def validate_frozen_report(report: dict) -> None:
     if mismatches:
         raise ValueError(
             "frozen report mismatch: " + ",".join(sorted(mismatches)),
+        )
+
+
+def load_recovery_baseline() -> dict:
+    path = os.path.join(ROOT, RECOVERY_BASELINE)
+    with open(path, "rb") as handle:
+        raw = handle.read()
+    if hashlib.sha256(raw).hexdigest() != RECOVERY_BASELINE_SHA256:
+        raise ValueError("recovery baseline SHA mismatch")
+    baseline = json.loads(raw)
+    if (
+        baseline.get("analysis") != "az003_exact_safe_independent_holdout"
+        or baseline.get("analysis_version") != 1
+        or (baseline.get("gate") or {}).get("decision") != "INVALID_RUN"
+        or (baseline.get("technical") or {}).get("episode_schema_errors") != 4
+        or sum((baseline.get("technical") or {}).values()) != 4
+    ):
+        raise ValueError("recovery baseline schema mismatch")
+    return baseline
+
+
+def validate_recovery_invariance(baseline: dict, recovered: dict) -> None:
+    """引分skip以外が初回INVALIDから1 bitでも変われば回復判定を拒否する。"""
+    exact_sections = ("az003", "cohorts", "same_turn_diagnostic")
+    mismatches = [
+        section for section in exact_sections
+        if baseline.get(section) != recovered.get(section)
+    ]
+    immutable_fields = (
+        "aggregate_only",
+        "analysis",
+        "dataset_label",
+        "dataset_fingerprint_sha256",
+        "exclude_decision_count",
+        "exclude_decision_set_sha256",
+        "policy_build",
+        "policy_build_sha256",
+        "policy_enabled",
+        "policy_model_sha256",
+        "profile",
+        "rule_id",
+    )
+    mismatches.extend(
+        key for key in immutable_fields
+        if baseline.get(key) != recovered.get(key)
+    )
+    initial_scan = baseline.get("scan") or {}
+    recovered_scan = recovered.get("scan") or {}
+    for key, value in initial_scan.items():
+        if recovered_scan.get(key) != value:
+            mismatches.append(f"scan.{key}")
+    if recovered_scan.get("no_unique_winner_episodes") != 4:
+        mismatches.append("scan.no_unique_winner_episodes")
+
+    initial_technical = baseline.get("technical") or {}
+    recovered_technical = recovered.get("technical") or {}
+    if (
+        initial_technical.get("episode_schema_errors") != 4
+        or sum(initial_technical.values()) != 4
+        or any(recovered_technical.values())
+    ):
+        mismatches.append("technical")
+
+    initial_criteria = dict((baseline.get("gate") or {}).get("criteria") or {})
+    recovered_criteria = dict(
+        (recovered.get("gate") or {}).get("criteria") or {}
+    )
+    initial_criteria.pop("technical_error_count", None)
+    recovered_criteria.pop("technical_error_count", None)
+    if initial_criteria != recovered_criteria:
+        mismatches.append("gate.criteria")
+    if (
+        (recovered.get("gate") or {}).get("criteria", {}).get(
+            "technical_error_count"
+        ) != 0
+        or (recovered.get("gate") or {}).get("decision")
+        != "INCONCLUSIVE_GUARD"
+        or recovered.get("analysis_version") != ANALYSIS_VERSION
+        or recovered.get("recovery_baseline_sha256")
+        != RECOVERY_BASELINE_SHA256
+    ):
+        mismatches.append("recovery_identity")
+    if mismatches:
+        raise ValueError(
+            "recovery invariance mismatch: "
+            + ",".join(sorted(set(mismatches))),
         )
 
 
@@ -896,8 +1011,12 @@ def main() -> None:
         parser.error(
             f"--dataset-labelは固定値{EXPECTED_DATASET_LABEL}",
         )
+    output_label = os.path.relpath(os.path.abspath(args.output), ROOT)
+    if output_label != EXPECTED_OUTPUT:
+        parser.error(f"--outputは固定値{EXPECTED_OUTPUT}")
     if os.path.exists(args.output):
         parser.error(f"--outputは新規pathを指定する: {args.output}")
+    baseline = load_recovery_baseline()
     build_label = _policy_build_label()
     policy_fingerprint = agent_fingerprint(MODULE_ROOT)
     excluded, exclude_fingerprint = load_excluded_decisions(
@@ -928,6 +1047,7 @@ def main() -> None:
     )
     validate_report_privacy(report)
     validate_frozen_report(report)
+    validate_recovery_invariance(baseline, report)
     _write_new_json(args.output, report)
     print(json.dumps({
         "output": os.path.relpath(args.output, ROOT),
