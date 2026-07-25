@@ -1,5 +1,53 @@
 # 実験ログ
 
+## 2026-07-25 **bc_grim(対Grim専用壁)を作成 → 従来壁が無効だったことを実証**
+
+対Grim 25.7%(本番315戦)を改善するには、まず**測れる壁**が要る。従来はbc_v2(Alakazam学習)に
+Grimを操縦させていたが、これが分布外で弱く、ローカルと本番の乖離を作っていた疑いを直接検証した。
+
+### bc_grim の学習
+
+- 追加DLなし。既存`data/bc/pairs_0701..0715, 0722`(全624万判断)から
+  `scripts/bc_filter_deck.py`(新規)でGrim勝者の判断だけ抽出 → **1,638,062判断 / 41デッキ / 100チーム**
+  (`data/bc/pairs_grim.jsonl.gz`)。全判断の26.3%がGrim。
+- `bc_featurize` → 単数選択1,409,746件・15シャード → `train_bc2 --epochs 6`。
+  **holdout top1 = 70.25%** (best epoch 1)。bc_v2の約64%より高い(デッキ多様性が小さい専用モデルのため)。
+- 学習データ内のGrim型内訳: `snapshot_20260721_grim_canonical` 583,968判断/45チーム(35.6%)、
+  `snapshot_20260723_grim_top8` 114,769判断/24チーム(7.0%)。**どちらも壁として分布内**。
+
+### 壁の妥当性検証(自陣 = v4.3a-bc: bc_v2 + canonical Alakazam、純BC、各400戦)
+
+| 壁 | 自陣勝率 | Wilson95% |
+|---|---:|---|
+| **旧式** bc_v2 が Top8 Grim を操縦 | **52.8%** | 47.9–57.6% |
+| **新** bc_grim + Top8 Grim | **35.5%** | 31.0–40.3% |
+| **新** bc_grim + canonical Grim | **39.8%** | 35.1–44.6% |
+| （参考）**本番実測** v4.3a(探索込み) vs Grim | **25.7%** | 14.2–42.1% (n=35) |
+
+- **旧式壁の52.8%は本番CIの外**。新壁の35.5%/39.8%は**本番CIの内側**。
+  壁の差は**-17.3pt**でCIが完全非重複＝デッキではなく**操縦する方策**が壁の質を決めていた。
+- これで「ローカル二層meta加重88.95% vs 本番25.7%」という乖離の出所が確定した。
+  **今後、非Alakazamデッキの壁は必ずそのデッキ専用BCに操縦させる。**
+- 残差(35.5% vs 本番25.7%)は、本番側が探索込み＝本来もっと強いはずなのに低いことを意味し、
+  実際のGrim使用者はbc_grimよりまだ強い。壁は**まだ楽観側**だが、17pt分は正しくなった。
+
+### 成果物
+
+- `models/bc_grim/`(META付き、追加のみ)、`data/bc/pairs_grim.jsonl.gz`、`data/bc/feat_grim/`
+- `scripts/bc_filter_deck.py`
+- agents: `wall-grim-top8-bc` / `wall-grim-canonical-bc` / `wall-grim-top8-old-bc`(比較用) / `v4.3a-bc`
+- 全4エージェント両席DONE、結果は`results/arena.jsonl`へ自動追記済み
+
+## 2026-07-25 v4.3h(Hammer4 production)を提出
+
+- `agents/v4.3h.json` = v4.3aと**デッキのみ差分**(`-1266 Nighttime Mine / +1081 Enhanced Hammer`)。
+  bc_v2 + BCS 8s は同一。Top8のMajkel/Yushinと同一60枚。
+- 両席DONE、`__pycache__`/`.pyc` 0、tar SHA `095108bcacbaca656294471dd14d870bc77c11c38be48922167f4c546e5ca172`。
+- submission **54968749**、`COMPLETE`。activeは **v4.3h + v4.3a(832.8)**、v4.2t(699.9)が押し出された。
+  v4.3aが残るので**ノーリスク**。07-16以降9日間0/5だった提出枠を再稼働させ、本番でのdeck A/Bを開始。
+- ⚠️ 直後のscore 889.6は**戦数が少なく無意味**(v4.3aも78戦時点で920.7 → 315戦で839へ収束した)。
+  判定は最低80–100戦(約2日)後。
+
 ## 2026-07-25 **本番315戦の相手デッキ別実勝率**: 頭打ちの正体はミラーではなく対Grim/Dragapult
 
 `scripts/ladder_matchups.py`(新規)で v4.3a(sub 54731784)の公開リプレイ315戦を集計。

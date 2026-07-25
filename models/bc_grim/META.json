@@ -1,0 +1,13 @@
+{
+ "model": "bc_grim",
+ "hid": 128,
+ "trained": "2026-07-25",
+ "feat_dir": "data/bc/feat_grim",
+ "sources": [
+  "pairs_grim.jsonl.gz"
+ ],
+ "epochs": 6,
+ "best_epoch": 1,
+ "holdout_top1": 0.702545,
+ "seed": 0
+}
