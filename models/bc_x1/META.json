@@ -1,0 +1,24 @@
+{
+ "model": "bc_x1",
+ "hid": 128,
+ "trained": "2026-07-24",
+ "feat_dir": "data/bc/feat_x1",
+ "sources": [
+  "exit_x15.jsonl.gz",
+  "pairs_0701.jsonl.gz",
+  "pairs_0702.jsonl.gz",
+  "pairs_0703.jsonl.gz",
+  "pairs_0704.jsonl.gz",
+  "pairs_0705.jsonl.gz",
+  "pairs_0706.jsonl.gz",
+  "pairs_0707.jsonl.gz",
+  "pairs_0708.jsonl.gz",
+  "pairs_0709.jsonl.gz",
+  "pairs_0710.jsonl.gz",
+  "pairs_0711.jsonl.gz"
+ ],
+ "epochs": 6,
+ "best_epoch": 4,
+ "holdout_top1": 0.607244,
+ "seed": 0
+}
