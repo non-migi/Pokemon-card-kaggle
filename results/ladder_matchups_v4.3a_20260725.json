@@ -1,0 +1,153 @@
+{
+  "submission": "54731784",
+  "games": 319,
+  "wins": 159,
+  "by_opponent_deck": {
+    "Alakazam": {
+      "wins": 59,
+      "games": 118,
+      "loss_causes": {
+        "自山切れ": 12,
+        "サイド取り切られ": 39,
+        "その他(長期戦で失速)": 6,
+        "短期崩壊(80step以内)": 2
+      }
+    },
+    "Grimmsnarl+Froslass": {
+      "wins": 6,
+      "games": 26,
+      "loss_causes": {
+        "短期崩壊(80step以内)": 2,
+        "サイド取り切られ": 13,
+        "その他(長期戦で失速)": 5
+      }
+    },
+    "Dragapult": {
+      "wins": 3,
+      "games": 13,
+      "loss_causes": {
+        "サイド取り切られ": 3,
+        "自山切れ": 1,
+        "その他(長期戦で失速)": 3,
+        "短期崩壊(80step以内)": 3
+      }
+    },
+    "Kangaskhan": {
+      "wins": 6,
+      "games": 16,
+      "loss_causes": {
+        "サイド取り切られ": 3,
+        "自山切れ": 5,
+        "短期崩壊(80step以内)": 1,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Grimmsnarl": {
+      "wins": 3,
+      "games": 9,
+      "loss_causes": {
+        "サイド取り切られ": 2,
+        "自山切れ": 2,
+        "その他(長期戦で失速)": 2
+      }
+    },
+    "Lucario": {
+      "wins": 15,
+      "games": 25,
+      "loss_causes": {
+        "サイド取り切られ": 6,
+        "短期崩壊(80step以内)": 3,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Archaludon+Cinderace": {
+      "wins": 42,
+      "games": 58,
+      "loss_causes": {
+        "自山切れ": 1,
+        "サイド取り切られ": 6,
+        "その他(長期戦で失速)": 5,
+        "短期崩壊(80step以内)": 4
+      }
+    },
+    "(other)": {
+      "wins": 12,
+      "games": 26,
+      "loss_causes": {
+        "サイド取り切られ": 6,
+        "短期崩壊(80step以内)": 3,
+        "その他(長期戦で失速)": 3,
+        "自山切れ": 2
+      }
+    },
+    "Garchomp": {
+      "wins": 3,
+      "games": 8,
+      "loss_causes": {
+        "自山切れ": 1,
+        "サイド取り切られ": 3,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Starmie+Cinderace": {
+      "wins": 2,
+      "games": 4,
+      "loss_causes": {
+        "サイド取り切られ": 1,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Great Tusk": {
+      "wins": 5,
+      "games": 11,
+      "loss_causes": {
+        "その他(長期戦で失速)": 2,
+        "自山切れ": 4
+      }
+    },
+    "Froslass+Starmie+Cinderace": {
+      "wins": 0,
+      "games": 2,
+      "loss_causes": {
+        "サイド取り切られ": 2
+      }
+    },
+    "Froslass+Starmie": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "Starmie": {
+      "wins": 2,
+      "games": 2,
+      "loss_causes": {}
+    }
+  },
+  "by_opening_basics": {
+    "1": {
+      "wins": 100,
+      "games": 201
+    },
+    "2": {
+      "wins": 43,
+      "games": 86
+    },
+    "3": {
+      "wins": 12,
+      "games": 27
+    },
+    "4": {
+      "wins": 3,
+      "games": 4
+    },
+    "5": {
+      "wins": 1,
+      "games": 1
+    }
+  },
+  "overage_used_seconds": {
+    "median": 358.2088970000001,
+    "p90": 427.47256100000016,
+    "max": 545.2209379999997
+  }
+}
