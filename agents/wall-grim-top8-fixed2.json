@@ -1,0 +1,1 @@
+{"label":"対Grim壁(探索付き): bc_grim + 07-23 Top8 Grim + BCS fixed2。純BC壁(50.0%)が実物(本番25.7%)より弱すぎたため強化した版","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}
