@@ -1,0 +1,1 @@
+{"label":"探索量の収益測定: canonical Alakazam + bc_v2 + BCS fixed-worlds 8。v4.3a-fixed2とは世界数のみ差分(2→8)","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":8}}
