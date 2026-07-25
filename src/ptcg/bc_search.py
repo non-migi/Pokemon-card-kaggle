@@ -17,6 +17,7 @@ import numpy as np
 from cg.api import to_observation_class
 
 from . import heuristics, policy, value
+from . import opp_policy
 from .belief import sample_world
 from .simx import search_begin_dict, search_step_dict, search_end
 
@@ -139,8 +140,19 @@ def _record_injected_selection(
         _metric_inc(metrics, f"expert_rule_injected_selected.{rule_id}")
 
 
-def _policy_act(od: dict) -> list[int]:
-    act = policy.choose(od)
+def _policy_act(od: dict, my_index: int | None = None) -> list[int]:
+    act = None
+    if my_index is not None and opp_policy.ENABLED:
+        # ロールアウト内で相手が手番のときだけ相手専用モデルで操縦する。
+        # yourIndexが取れない/相手モデルが対象外を返した場合は従来のpolicyへ落ちる。
+        try:
+            actor = (od.get("current") or {}).get("yourIndex")
+        except Exception:
+            actor = None
+        if actor is not None and actor != my_index:
+            act = opp_policy.choose(od)
+    if act is None:
+        act = policy.choose(od)
     if act is not None:
         return act
     try:
@@ -170,7 +182,7 @@ def _rollout(state: dict, my_index: int) -> float:
     limit = VALUE_TRUNC if value.ENABLED else ROLLOUT_MAX
     steps = 0
     while state["observation"]["current"]["result"] < 0 and steps < limit:
-        state = search_step_dict(state["searchId"], _policy_act(state["observation"]))
+        state = search_step_dict(state["searchId"], _policy_act(state["observation"], my_index))
         steps += 1
     cur = state["observation"]["current"]
     if cur["result"] >= 0:

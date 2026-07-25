@@ -30,21 +30,29 @@ def _relu(x):
     return np.maximum(x, 0.0)
 
 
-def _raw_scores(sel: dict, cur: dict, opts: list) -> np.ndarray | None:
-    """各optionのスコア(logits)を計算。maxCountに依存しない共通処理。"""
+def raw_scores_with(P, cid2idx: dict, sel: dict, cur: dict, opts: list) -> np.ndarray | None:
+    """任意のパラメタ束で各optionのスコア(logits)を計算する。
+
+    相手モデル(opp_policy)が同じ推論を別の重みで使うため、重みを引数に外だしした。
+    """
     try:
         sf = np.asarray(PF.state_features(sel, cur), np.float32)
-        sv = _relu(sf @ _P["s_w1"].T + _P["s_b1"]) @ _P["s_w2"].T + _P["s_b2"]
+        sv = _relu(sf @ P["s_w1"].T + P["s_b1"]) @ P["s_w2"].T + P["s_b2"]
         of, emb_idx = [], []
         for opt in opts:
             feats, cid = PF.option_features(sel, cur, opt)
             of.append(feats)
-            emb_idx.append(_CID2IDX.get(cid, 0))
-        om = np.concatenate([np.asarray(of, np.float32), _P["emb"][emb_idx]], axis=1)
-        ov = _relu(om @ _P["o_w1"].T + _P["o_b1"]) @ _P["o_w2"].T + _P["o_b2"]
+            emb_idx.append(cid2idx.get(cid, 0))
+        om = np.concatenate([np.asarray(of, np.float32), P["emb"][emb_idx]], axis=1)
+        ov = _relu(om @ P["o_w1"].T + P["o_b1"]) @ P["o_w2"].T + P["o_b2"]
         return (ov @ sv) / np.sqrt(len(sv))
     except Exception:
         return None
+
+
+def _raw_scores(sel: dict, cur: dict, opts: list) -> np.ndarray | None:
+    """各optionのスコア(logits)を計算。maxCountに依存しない共通処理。"""
+    return raw_scores_with(_P, _CID2IDX, sel, cur, opts)
 
 
 def scores(obs_dict: dict) -> np.ndarray | None:

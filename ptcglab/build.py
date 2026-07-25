@@ -55,6 +55,12 @@ def build(name: str, validate: bool = True, tar: bool = True) -> str:
             src_file = os.path.join(mdir, fn)
             if fn != "META.json" and os.path.isfile(src_file):
                 shutil.copy(src_file, os.path.join(out, "ptcg", fn))
+    # ロールアウト内で相手を操縦する専用モデル(任意)。opp_policy.py がこの2ファイルを見る
+    if spec.get("opp_model"):
+        odir = os.path.join(ROOT, "models", spec["opp_model"])
+        for fn, dst in (("policy_params.npz", "opp_policy_params.npz"),
+                        ("policy_vocab.py", "opp_policy_vocab.py")):
+            shutil.copy(os.path.join(odir, fn), os.path.join(out, "ptcg", dst))
     # 設定
     with open(os.path.join(out, "agent_config.json"), "w") as f:
         json.dump(spec.get("config", {}), f)
@@ -93,6 +99,14 @@ def _validate_spec(spec: dict, spec_path: str) -> None:
         for filename in ("policy_params.npz", "policy_vocab.py"):
             if not os.path.isfile(os.path.join(model_dir, filename)):
                 raise ValueError(f"{spec_path}: model asset不足: {model}/{filename}")
+    opp_model = spec.get("opp_model")
+    if opp_model is not None:
+        if algo != "bcs":
+            raise ValueError(f"{spec_path}: opp_modelはalgo=bcs専用(ロールアウト内でのみ使う)")
+        opp_dir = os.path.join(ROOT, "models", opp_model)
+        for filename in ("policy_params.npz", "policy_vocab.py"):
+            if not os.path.isfile(os.path.join(opp_dir, filename)):
+                raise ValueError(f"{spec_path}: opp_model asset不足: {opp_model}/{filename}")
     fixed = config.get("fixed_search_worlds")
     if fixed is not None and (not isinstance(fixed, int) or isinstance(fixed, bool)
                               or not 2 <= fixed <= 24):

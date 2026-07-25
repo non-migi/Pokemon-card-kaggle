@@ -1,0 +1,1 @@
+{"label":"仮説検証: ロールアウト内の相手をbc_grimで操縦(上限値テスト)。canonical Alakazam + bc_v2 + BCS fixed2。v4.3a-fixed2とはopp_modelのみ差分","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v2","opp_model":"bc_grim","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}
