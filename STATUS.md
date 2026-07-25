@@ -211,10 +211,6 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Claude Code (07-24〜): **ExIt決着テスト(1100campaign本命ベット)**。既存59k ExIt決定を
-  ×15アップサンプル→ bc_v2正確sources(pairs_0701..0711)と混合featurize(feat_x1)→ **bc_x1**学習
-  → 純BC A/B bc_x1 vs bc_v2。信号あれば350k増量・多世代へ。Expert Floor/AZ系/Hammer4/beliefには触れない。
-  ⚠️重負荷featurize/学習中はproduction `-j1` wall-clock確認と並走しないで(fixed-worlds gateはOK)。
 
 ## 今日の提出枠
 
