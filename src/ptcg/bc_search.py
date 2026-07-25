@@ -31,6 +31,16 @@ ROLLOUT_MAX = 200
 VALUE_TRUNC = 20        # 価値網有効時のロールアウト打ち切り手数
 MAX_WORLDS = 96 if value.ENABLED else 24
 
+# 未決着ロールアウトの評価に山札枚数差を入れる重み(0で従来どおりサイド差のみ)。
+# 背景(2026-07-25): 本番533戦のうち **19.3%が山札切れ決着**(自山切れ負け8.8% / 相手山切れ勝ち10.5%)
+# で、対Kangaskhan・対Great Tuskの山札レースは30%/25%と大きく負け越している。
+# それにも関わらず`_terminal_value`のフォールバックはサイド差だけを見ており、
+# 山札が尽きかけていることを評価できていなかった。agent_config.jsonの`deck_race_weight`で設定する。
+DECK_RACE_WEIGHT = 0.0
+# 山札差の寄与はサイド差より小さく頭打ちにする(サイド1枚=0.08に対し、山札は残りが少ない時だけ効かせる)。
+DECK_RACE_CAP = 0.24
+DECK_RACE_DANGER = 15   # 自分または相手の山札がこの枚数以下の時だけ山札差を評価に入れる
+
 
 class FixedSearchIncomplete(RuntimeError):
     """固定計算量を完遂できず、比較用測定に採用できない。"""
@@ -174,7 +184,29 @@ def _terminal_value(cur: dict, my_index: int) -> float:
         return 0.5
     players = cur["players"]
     diff = len(players[1 - my_index].get("prize") or []) - len(players[my_index].get("prize") or [])
-    return max(0.0, min(1.0, 0.5 + diff * 0.08))
+    score = 0.5 + diff * 0.08
+    score += _deck_race_term(players, my_index)
+    return max(0.0, min(1.0, score))
+
+
+def _deck_race_term(players: list, my_index: int) -> float:
+    """山札レースの寄与。危険域(どちらかがDECK_RACE_DANGER以下)でだけ効かせる。
+
+    DECK_RACE_WEIGHT=0(既定)なら常に0で、従来の評価と完全に一致する。
+    """
+    if not DECK_RACE_WEIGHT:
+        return 0.0
+    try:
+        mine = players[my_index].get("deckCount")
+        theirs = players[1 - my_index].get("deckCount")
+    except (IndexError, AttributeError, TypeError):
+        return 0.0
+    if not isinstance(mine, int) or not isinstance(theirs, int):
+        return 0.0
+    if min(mine, theirs) > DECK_RACE_DANGER:
+        return 0.0
+    term = (mine - theirs) * DECK_RACE_WEIGHT
+    return max(-DECK_RACE_CAP, min(DECK_RACE_CAP, term))
 
 
 def _rollout(state: dict, my_index: int) -> float:

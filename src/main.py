@@ -80,6 +80,13 @@ try:
 except (KeyError, TypeError, ValueError):
     FIXED_SEARCH_WORLDS = None
 
+try:
+    # 未決着ロールアウトの評価に山札枚数差を入れる。未指定(0)なら従来の評価と完全一致。
+    _drw = float(CONFIG.get("deck_race_weight", 0.0))
+    bc_search.DECK_RACE_WEIGHT = _drw if 0.0 <= _drw <= 0.05 else 0.0
+except (TypeError, ValueError):
+    bc_search.DECK_RACE_WEIGHT = 0.0
+
 _spent = 0.0
 AGENT_METRICS = {
     "fixed_search_incomplete": 0,

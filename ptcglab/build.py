@@ -99,6 +99,12 @@ def _validate_spec(spec: dict, spec_path: str) -> None:
         for filename in ("policy_params.npz", "policy_vocab.py"):
             if not os.path.isfile(os.path.join(model_dir, filename)):
                 raise ValueError(f"{spec_path}: model asset不足: {model}/{filename}")
+    drw = config.get("deck_race_weight")
+    if drw is not None:
+        if isinstance(drw, bool) or not isinstance(drw, (int, float)) or not 0.0 <= drw <= 0.05:
+            raise ValueError(f"{spec_path}: deck_race_weightは0.0..0.05の数値")
+        if drw and algo != "bcs":
+            raise ValueError(f"{spec_path}: deck_race_weightはalgo=bcs専用(探索の評価関数)")
     opp_model = spec.get("opp_model")
     if opp_model is not None:
         if algo != "bcs":
