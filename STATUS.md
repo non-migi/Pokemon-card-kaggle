@@ -272,9 +272,9 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Claude Code (07-25〜): **対Grim改善レーン**。`build/v4.6a-oppgrim-fixed2` vs
-  `build/wall-grim-top8-bc` 400戦を実行中(fixed-worlds、-j 8、約1時間)。
-  同一壁の基準は `v4.3a-fixed2` **50.0%/400**。
+- Claude Code (07-25〜): **対Grim改善レーン**。`build/v4.3a-fixed2` vs
+  `build/wall-grim-top8-fixed2`(探索付きGrim壁) 400戦を実行中(fixed-worlds、-j 8、両者探索で約2時間)。
+  純BC壁では50.0%だが本番は25.7%。壁をどこまで実物に近づけられるかの測定。
   ⚠️ 完了までCPUを食う重い評価を並走させないこと。
 
 
