@@ -1,0 +1,13 @@
+{
+ "model": "bc_kang",
+ "hid": 128,
+ "trained": "2026-07-25",
+ "feat_dir": "data/bc/feat_kang",
+ "sources": [
+  "pairs_kang.jsonl.gz"
+ ],
+ "epochs": 6,
+ "best_epoch": 3,
+ "holdout_top1": 0.585973,
+ "seed": 0
+}

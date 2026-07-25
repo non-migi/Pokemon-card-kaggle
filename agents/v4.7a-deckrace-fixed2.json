@@ -1,0 +1,1 @@
+{"label":"山札レース評価: canonical Alakazam + bc_v2 + BCS fixed2 + deck_race_weight 0.01。v4.3a-fixed2とはこの1項のみ差分","deck":"decks/meta/snapshot_20260714_alakazam.csv","model":"bc_v2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2,"deck_race_weight":0.01}}
