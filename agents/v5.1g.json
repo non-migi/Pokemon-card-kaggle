@@ -1,0 +1,1 @@
+{"label":"08-02 出荷候補: Grim合意60枚(111チーム中82チームが同一) + bc_grim2(最新7日183万判断/holdout 74.0%) + 純BC(探索なし)。上位帯68.4%オーロンゲ化への乗り換え。探索は同一壁で純BC67.1%に対しfixed2 46.0%と悪化するため外した","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim2","config":{"algo":"bc"}}
