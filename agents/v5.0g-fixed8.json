@@ -1,0 +1,1 @@
+{"label":"v5.0g探索量テスト: Grim合意60枚 + bc_grim2 + BCS fixed8(8世界、production 8sの約10世界に近い)。fixed2で-21ptだった探索が世界数で回復するかを見る","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":8}}
