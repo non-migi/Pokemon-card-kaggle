@@ -44,6 +44,19 @@ T1/T2に進む前に学習設定を見直す。
 - 上記以外は **INCONCLUSIVE**。提出しない。追加条件を後付けしない。
 - 全アームで `failure_count=0` / `fixed_search_incomplete=0` を必須とする。満たさなければ無効。
 
+### T0 結果(診断・判定ゲート外) — **bc_grim2は退化していない。大幅改善**
+
+| 自陣 | 相手 | 勝率 | Wilson95% | n |
+|---|---|---:|---|---:|
+| `v5.0g-bc`(bc_grim2 純BC) | `wall-grim-top8-bc`(bc_grim 純BC) | **67.13%** | 62.4–71.6% | 400 |
+
+席 P0 67.2% / P1 67.0% と**ほぼ完全な席バランス**、`failure_count=0`。
+watchdogは`forced_cleanup_after_payload` 5件のみで、これは既知の良性事象(payload後の終了hang強制回収)。
+
+学習パイプラインが異なる(`bc_grim`=train_bc2.py / `bc_grim2`=train_bc.py)ため
+holdoutの74.0% vs 70.25%は直接比較できないと事前に留保したが、**同一デッキ・同一条件の
+実対戦で67.1%**なので、世代改善は実体がある。T1/T2へ進む。
+
 ### 事前に認めておく限界(結果で言い訳しないため)
 
 - T2の壁は`bc_grim`、自陣は`bc_grim2`。**学習データが一部重なる(07-22)**ため、
