@@ -1,0 +1,25 @@
+{
+ "model": "bc_grim2",
+ "hid": 128,
+ "trained": "2026-08-01",
+ "data": [
+  "data/bc/pairs_grim2.jsonl.gz"
+ ],
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz",
+  "pairs_0727.jsonl.gz",
+  "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz",
+  "pairs_0730.jsonl.gz",
+  "pairs_0731.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "decisions_filtered": 1830508,
+ "samples": 1600066,
+ "winner_teams": 182,
+ "epochs": 6,
+ "holdout_top1": 0.74,
+ "train_script": "scripts/train_bc.py",
+ "notes": "上位帯が68.4%オーロンゲ化したため最新7日で学習。bc_grimは train_bc2.py / 164万判断 / holdout 70.25%(07-01〜07-22)。train_bc.pyは最良epoch復元をしないが、holdoutはepoch4-5で74.0%へ単調到達のため最終=最良。学習パイプラインが異なるためholdoutの直接比較には注意し、実力差はT0(純BCミラー)で確認する"
+}
