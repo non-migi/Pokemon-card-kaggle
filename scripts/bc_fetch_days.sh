@@ -3,7 +3,8 @@
 # 使い方: zsh scripts/bc_fetch_days.sh 2026-07-01 2026-07-02 ...
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WORK="/private/tmp/claude-501/-Users-non-git-Pokemon-card-kaggle/b1969d4e-1f95-4647-9a92-c80a416a00ba/scratchpad/bc/daily"
+# セッション固有のscratchpadは揮発するので固定パスを使う(生データはループ内で毎回消す)
+WORK="/private/tmp/ptcg-bc-daily"
 mkdir -p "$WORK" "$ROOT/data/bc"
 for DATE in "$@"; do
   TAG="${DATE//-/}"
