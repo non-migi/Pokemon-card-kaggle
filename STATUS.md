@@ -277,7 +277,12 @@ v3.0aの失点源は雑多デッキ相手43%(分布外脆弱性)。→ 対策は
 
 ## 作業中(衝突防止欄)
 
-- Claude Code (07-25〜): **山札レース評価レーン**。`deck_race_weight` の事前登録A/B。
+- Claude Code (08-01〜): **アーキタイプ乗り換えレーン(v5.0g)**。上位帯が68.4%オーロンゲ・
+  フーディン3.1%まで変化したため、`bc_grim2`(最新6日で再学習)+ Grim合意60枚へ移行する。
+  BCデータを07-26〜07-31まで更新済み。学習→組立て→対Grim壁A/Bまで。
+  ⚠️ 学習中は重い評価を並走させないこと。
+
+- Claude Code (07-25、完了): **山札レース評価レーン**。`deck_race_weight` の事前登録A/B。
   基準 `build/v4.3a-fixed2`(weight=0) → 候補 `build/v4.7a-deckrace-fixed2`(weight=0.01)、
   どちらも `build/wall-kang-bc`(bc_kang純BC)へ各200戦、fixed-worlds、-j 8。
   **両アームを途中結果に関わらず実行する**。両ビルドは`bc_search.py`が完全同一で設定1項のみ差分。

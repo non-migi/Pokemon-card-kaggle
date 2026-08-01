@@ -1,0 +1,1 @@
+{"label":"v5.0g評価用: Grim合意60枚 + bc_grim2 + BCS fixed2(探索2世界)。基準 v4.3a-fixed2 と同一プロファイル","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2}}
