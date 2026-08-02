@@ -1,0 +1,1 @@
+{"label":"探索修復レーン: 同上で rollout_temperature=1.0(より強い揺らぎ)。基準は同一壁でv5.0g-fixed2(温度0)の46.0%/200","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim2","config":{"algo":"bcs","max_move_sec":8.0,"fixed_search_worlds":2,"rollout_temperature":1.0}}

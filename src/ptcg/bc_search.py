@@ -41,6 +41,18 @@ DECK_RACE_WEIGHT = 0.0
 DECK_RACE_CAP = 0.24
 DECK_RACE_DANGER = 15   # 自分または相手の山札がこの枚数以下の時だけ山札差を評価に入れる
 
+# ロールアウト内の行動をsoftmaxでサンプリングする温度(0で従来どおりargmax=完全no-op)。
+# 背景(2026-08-02): 世界(determinization)がサンプルするのは隠れ情報だけで、相手の行動は
+# argmaxで決まる。つまり世界を1つ決めると終局まで**一本道**で、相手の別ラインを一切探索しない。
+# さらにROLLOUT_MAX=200・value.ENABLED=Falseのため約140手を打ち切りなしで回すので、
+# 74%精度の方策の誤差が複利で積み上がる。決定的なのでworld数を増やしても平均化されない。
+# 実測: 同一壁に対し bc_grim2 は純BC 67.1%/400 に対し BCS fixed2 が 46.0%/200 と**21pt悪化**した
+# (フーディン+bc_v2では同一壁で+14.5ptだったので符号が逆)。
+# Silver & Tesauro "Monte-Carlo Simulation Balancing": シミュレーション方策に要るのは
+# 強さではなく**バランス**。agent_config.jsonの`rollout_temperature`で設定する。
+ROLLOUT_TEMPERATURE = 0.0
+ROLLOUT_TEMPERATURE_MAX = 2.0
+
 
 class FixedSearchIncomplete(RuntimeError):
     """固定計算量を完遂できず、比較用測定に採用できない。"""
@@ -150,7 +162,7 @@ def _record_injected_selection(
         _metric_inc(metrics, f"expert_rule_injected_selected.{rule_id}")
 
 
-def _policy_act(od: dict, my_index: int | None = None) -> list[int]:
+def _policy_act(od: dict, my_index: int | None = None, rng=None) -> list[int]:
     act = None
     if my_index is not None and opp_policy.ENABLED:
         # ロールアウト内で相手が手番のときだけ相手専用モデルで操縦する。
@@ -162,7 +174,9 @@ def _policy_act(od: dict, my_index: int | None = None) -> list[int]:
         if actor is not None and actor != my_index:
             act = opp_policy.choose(od)
     if act is None:
-        act = policy.choose(od)
+        # ROLLOUT_TEMPERATURE=0(既定)なら choose() と完全に同一。
+        act = (policy.choose_sampled(od, ROLLOUT_TEMPERATURE, rng)
+               if ROLLOUT_TEMPERATURE > 0.0 and rng is not None else policy.choose(od))
     if act is not None:
         return act
     try:
@@ -209,12 +223,16 @@ def _deck_race_term(players: list, my_index: int) -> float:
     return max(-DECK_RACE_CAP, min(DECK_RACE_CAP, term))
 
 
-def _rollout(state: dict, my_index: int) -> float:
+def _rollout(state: dict, my_index: int, rng=None) -> float:
     """終局まで(価値網有効時はVALUE_TRUNC手で打ち切り価値網でブートストラップ)。"""
     limit = VALUE_TRUNC if value.ENABLED else ROLLOUT_MAX
     steps = 0
+    # 温度0(既定)では呼び出し形まで従来と完全に同一にする。
+    sampling = ROLLOUT_TEMPERATURE > 0.0 and rng is not None
     while state["observation"]["current"]["result"] < 0 and steps < limit:
-        state = search_step_dict(state["searchId"], _policy_act(state["observation"], my_index))
+        act = (_policy_act(state["observation"], my_index, rng) if sampling
+               else _policy_act(state["observation"], my_index))
+        state = search_step_dict(state["searchId"], act)
         steps += 1
     cur = state["observation"]["current"]
     if cur["result"] >= 0:
@@ -310,7 +328,9 @@ def decide(obs_dict: dict, obs_dc, my_deck: list[int], budget_sec: float,
                     mark_incomplete("candidate_step")
                     continue
                 try:
-                    totals[ci] += _rollout(child, my_index)
+                    totals[ci] += (_rollout(child, my_index, rng)
+                                   if ROLLOUT_TEMPERATURE > 0.0
+                                   else _rollout(child, my_index))
                     counts[ci] += 1
                 except Exception:
                     mark_incomplete("candidate_rollout")

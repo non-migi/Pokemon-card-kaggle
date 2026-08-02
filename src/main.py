@@ -87,6 +87,15 @@ try:
 except (TypeError, ValueError):
     bc_search.DECK_RACE_WEIGHT = 0.0
 
+try:
+    # ロールアウト内の行動をsoftmaxでサンプリングする温度。未指定(0)ならargmaxで従来と完全一致。
+    # 実際に打つ手には影響しない(_policy_actはロールアウトからしか呼ばれない)。
+    _rt = float(CONFIG.get("rollout_temperature", 0.0))
+    bc_search.ROLLOUT_TEMPERATURE = (
+        _rt if 0.0 <= _rt <= bc_search.ROLLOUT_TEMPERATURE_MAX else 0.0)
+except (TypeError, ValueError):
+    bc_search.ROLLOUT_TEMPERATURE = 0.0
+
 _spent = 0.0
 AGENT_METRICS = {
     "fixed_search_incomplete": 0,

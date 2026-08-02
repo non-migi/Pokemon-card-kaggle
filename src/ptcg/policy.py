@@ -95,6 +95,50 @@ def _multi_choose(s: np.ndarray, min_count: int, max_count: int) -> list[int]:
     return chosen
 
 
+def choose_sampled(obs_dict: dict, temp: float, rng) -> list[int] | None:
+    """**ロールアウト専用**: 単数選択をsoftmaxでサンプリングする。
+
+    temp<=0 は choose() と完全に同一(argmax)。実際に打つ手には使わない —
+    決定的なargmaxロールアウトは1世界=一本道になり、相手の別ラインを一切探索しない。
+    Silver & Tesauro "Monte-Carlo Simulation Balancing" の
+    「シミュレーション方策に要るのは強さではなくバランス」に対応する処置。
+    複数選択(maxCount>1)は従来どおり決定的に選ぶ(サンプル対象外)。
+    """
+    if temp <= 0.0:
+        return choose(obs_dict)
+    if not ENABLED:
+        return None
+    sel = obs_dict.get("select")
+    cur = obs_dict.get("current")
+    if not sel or not cur:
+        return None
+    opts = sel.get("option") or []
+    if len(opts) < 2:
+        return None
+    if int(sel.get("maxCount") or 1) > 1:
+        return choose(obs_dict)
+    s = _raw_scores(sel, cur, opts)
+    if s is None:
+        return None
+    try:
+        z = np.asarray(s, np.float64) / float(temp)
+        z -= z.max()                       # 数値安定化
+        p = np.exp(z)
+        tot = float(p.sum())
+        if not np.isfinite(tot) or tot <= 0.0:
+            return [int(np.argmax(s))]     # 異常時はargmaxへフォールバック
+        p /= tot
+        u = rng.random()
+        c = 0.0
+        for i, pi in enumerate(p):
+            c += float(pi)
+            if u <= c:
+                return [i]
+        return [len(p) - 1]
+    except Exception:
+        return [int(np.argmax(s))]
+
+
 def choose(obs_dict: dict) -> list[int] | None:
     """BC方策の最善手。単数=argmax、複数=上位選択。対象外ならNone。"""
     if not ENABLED:
