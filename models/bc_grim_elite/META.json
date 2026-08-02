@@ -1,0 +1,26 @@
+{
+ "model": "bc_grim_elite",
+ "hid": 128,
+ "trained": "2026-08-02",
+ "data": [
+  "data/bc/pairs_grim_elite.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Grimmsnarl --min-team-score 1100 --lb results/lb_20260801.csv",
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz",
+  "pairs_0727.jsonl.gz",
+  "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz",
+  "pairs_0730.jsonl.gz",
+  "pairs_0731.jsonl.gz"
+ ],
+ "decisions_filtered": 607600,
+ "samples": 530723,
+ "winner_teams": 13,
+ "unique_decks": 5,
+ "epochs": 8,
+ "holdout_top1": 0.708,
+ "train_script": "scripts/train_bc.py",
+ "notes": "LB1100+の13チームだけで学習。狙いは方策の天井を上げること — BCは模倣した集団の平均を超えられず、bc_grim2の学習データの重心はLB約1050でTop8境界1133.7に構造的に届かない。⚠️ holdout 70.8%は bc_grim2 の74.0%と**直接比較できない**(評価分布が違う。elite側は1100+のみ)。かつ学習量が530k対160万と3倍差があり、単なるデータ不足の可能性もある。優劣は純BCミラーのA/Bで判定する。epoch6の71.0%が最良だがtrain_bc.pyは最終epochを保存するため70.8%版"
+}
