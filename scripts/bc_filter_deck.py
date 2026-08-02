@@ -37,10 +37,24 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--sources", nargs="*", default=None,
                     help="省略時は data/bc/pairs_0*.jsonl.gz 全部")
+    ap.add_argument("--min-team-score", type=float, default=None,
+                    help="このLBスコア以上のチームの判断だけ残す(--lb が必要)。"
+                         "BCは模倣した集団の平均を超えられないので、天井を上げたい時に使う")
+    ap.add_argument("--lb", help="LeaderboardのCSV(TeamName,Score)")
     args = ap.parse_args()
 
     if os.path.exists(args.out):
         sys.exit(f"既存: {args.out} (上書きしない)")
+
+    scores: dict[str, float] = {}
+    if args.min_team_score is not None:
+        if not args.lb:
+            sys.exit("--min-team-score には --lb が必要")
+        import csv
+        with open(args.lb) as fh:
+            for r in csv.DictReader(fh):
+                scores[r["TeamName"]] = float(r["Score"])
+        print(f"LB {len(scores)}チーム読み込み、{args.min_team_score}以上に絞る")
     sources = args.sources or sorted(glob.glob(os.path.join(ROOT, "data/bc/pairs_0*.jsonl.gz")))
 
     # deck(60枚のカードIDタプル)ごとに判定をキャッシュする
@@ -65,6 +79,10 @@ def main() -> None:
                         verdict[deck] = ok
                     if not verdict[deck]:
                         continue
+                    if args.min_team_score is not None:
+                        # LBに載っていないチームは除外する(強さ不明を混ぜない)
+                        if scores.get(d.get("team"), -1.0) < args.min_team_score:
+                            continue
                     kept += 1
                     decks[deck] += 1
                     teams[d.get("team")] += 1
