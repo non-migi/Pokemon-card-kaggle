@@ -1,0 +1,24 @@
+{
+ "model": "bc_grim3",
+ "hid": 128,
+ "trained": "2026-08-08",
+ "data": [
+  "data/bc/pairs_grim3.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz", "pairs_0727.jsonl.gz", "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz", "pairs_0730.jsonl.gz", "pairs_0731.jsonl.gz",
+  "pairs_0802.jsonl.gz", "pairs_0803.jsonl.gz", "pairs_0804.jsonl.gz",
+  "pairs_0805.jsonl.gz", "pairs_0806.jsonl.gz", "pairs_0807.jsonl.gz"
+ ],
+ "decisions_filtered": 2761132,
+ "samples": 2410169,
+ "winner_teams": 329,
+ "card_vocab": 186,
+ "epochs": 6,
+ "holdout_top1": 0.746,
+ "train_script": "scripts/train_bc.py",
+ "notes": "bc_grim2(7日/183万判断/182チーム/語彙143/holdout 74.0%)の後継。13日分へ拡張し276万判断・329チーム。holdoutは+0.6ptと微増だが本質は**語彙が143→186へ拡張**したこと。bc_grim2では新規43枚(うち41枚がポケモン)が索引0=unknownに潰れており、相手の場のChandelure/Applin/Mega Venusaur ex等を区別できていなかった。これはv5.1gが(other)26戦を11.5%で落としていた機構と対応する(Iono's/Applin/Chandelure/Brambleghast/Team Rocket's系)。⚠️ Mega Lopunny exとTeal Mask Ogerpon exは既にbc_grim2の語彙にあったため、この修正では説明できない(26戦中10戦)。加えて08-02〜08-07はメタ分散後(Grim 41.9%/Alakazam 24.2%/Lopunny 12.4%/Ogerpon 9.1%)のデータなので、現在の相手分布をカバーする"
+}
