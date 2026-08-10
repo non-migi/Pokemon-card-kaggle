@@ -94,6 +94,26 @@ lossは単調減少だがholdoutは**epoch3(74.4%)で頭打ち**し、以降わ�
 - 空の`models/bc_grim5/`が残ったが、`train_bc.py`は出力ディレクトリを起動時に作るため。
   中身ゼロを確認して削除してから再実行した(models/は追加のみのルールに抵触しない)。
 
+## 2026-08-10 ohko_guard(GR001/GR002)実装完了。arena前の再生検証で14手ブロック
+
+敗戦調査(下記エントリ)で特定した悪手パターンへの明示ルールを実装(チーム作業rulesmith担当、
+commit 27a27a6)。`src/ptcg/ohko_guard.py` + main.py配線 + `policy.choose(obs, exclude=())`。
+**既定OFF**(agent_config.jsonの独立キー`ohko_guard`。既存Expert Rules基盤は
+`ptcglab/build.py:129`のalgo=bcs制約とAlakazamゲートで純BCに使えないため独立実装)。
+
+- **GR001**: 昇格/入れ替え(CARD context3/4)で、一撃死圏の候補を「より安い/死なない身代わり」が
+  いるときだけ禁止。BCに残り選択肢から選び直させる(ヒューリスティックに落とさない)
+- **GR002**: アクティブの進化で、進化後が一撃死圏かつprize増(Morgrem→GrimmsnarlEX等)なら禁止
+- 打点モデルはOgerpon(両者アクティブの合計エネ×30+30)とLopunny(ベンチ在席で230)のみ、
+  弱点×2適用、Teal Dance/Punk Upの将来エネは数えない(保守側)。全禁止時はガード自体を無効化、
+  例外は全てフォールバック+カウンタ(`ohko_guard_errors`等で発火の可観測性を確保)
+- 検証: 全テスト168件OK / build 5本両席DONE / **過去のOgerpon/Lopunny対面28試合(24敗4勝)の
+  2,421判断への再生適用で、発火18(0.74%)・実際に打たれた手のブロック14(GR001 8/GR002 6)・
+  ブロックが起きた12試合は全て敗戦・勝ち4試合はブロック0・errors 0**
+- agent定義: `v5.6g-bc`(bc_grim3+両ルール) / `v5.6g-switch-bc` / `v5.6g-evolve-bc`(単独ルール)
+
+arena評価は未実施。評価順序: bc_grim5のA/B(実施中)→ Ogerpon壁の準備 → guard ON/OFFの標的A/B。
+
 ## 2026-08-10 Lopunny/Ogerpon敗戦の機構特定: 「計算可能な一撃死圏への主力コミット」
 
 v5.1g(sub 55172873)の対Lopunny/Ogerpon敗戦をリプレイ精読で調査(チーム作業、losses担当)。
