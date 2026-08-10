@@ -1,0 +1,1 @@
+{"label":"v5.6g評価用: v5.4g-bc(Grim合意60枚 + bc_grim3 + 純BC) + 一撃死コミット回避(GR001昇格/入れ替え + GR002アクティブ進化)。08-10のLopunny/Ogerpon敗戦19局面の悪手を明示ルールで禁止する","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim3","config":{"algo":"bc","ohko_guard":{"enabled":true}}}

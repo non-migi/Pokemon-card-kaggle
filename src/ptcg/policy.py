@@ -139,8 +139,13 @@ def choose_sampled(obs_dict: dict, temp: float, rng) -> list[int] | None:
         return [int(np.argmax(s))]
 
 
-def choose(obs_dict: dict) -> list[int] | None:
-    """BC方策の最善手。単数=argmax、複数=上位選択。対象外ならNone。"""
+def choose(obs_dict: dict, exclude=()) -> list[int] | None:
+    """BC方策の最善手。単数=argmax、複数=上位選択。対象外ならNone。
+
+    exclude: 禁止行動(tupleの集合)。**空(既定)なら従来と完全に同一**。
+    非空のときは単数選択に限り、禁止されていない中でBCの最上位を選ぶ
+    (下段ヒューリスティックへ落とさず、BCに選び直させるため)。
+    """
     if not ENABLED:
         return None
     sel = obs_dict.get("select")
@@ -155,5 +160,10 @@ def choose(obs_dict: dict) -> list[int] | None:
         return None
     max_count = int(sel.get("maxCount") or 1)
     if max_count <= 1:
-        return [int(np.argmax(s))]
+        if not exclude:
+            return [int(np.argmax(s))]
+        for i in np.argsort(-s):
+            if (int(i),) not in exclude:
+                return [int(i)]
+        return None
     return _multi_choose(s, int(sel.get("minCount") or 0), max_count)

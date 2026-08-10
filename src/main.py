@@ -18,6 +18,7 @@ from cg.api import to_observation_class
 from ptcg import bc_search
 from ptcg import expert_rules
 from ptcg import heuristics
+from ptcg import ohko_guard
 from ptcg import policy
 from ptcg import search as ptcg_search
 
@@ -65,6 +66,13 @@ CARD_ENERGY_TYPES = {
     for card_id, card in heuristics.CARDS.items()
 }
 CARD_TRAITS = expert_rules.build_card_traits(heuristics.CARDS)
+
+# ---- 一撃死コミット回避(デフォルト無効。純BC経路でも効く軽量フック) ----
+try:
+    OHKO_GUARD = ohko_guard.from_config(CONFIG)
+except (TypeError, ValueError) as exc:
+    raise RuntimeError(f"ohko_guard設定不良: {exc}") from exc
+CARD_INFO = ohko_guard.build_card_info(heuristics.CARDS) if OHKO_GUARD else {}
 
 # ---- 時間管理(探索使用時のみ意味を持つ) ----
 TOTAL_OVERAGE_SEC = 600.0
@@ -179,6 +187,50 @@ def _reject_forbidden(proposals, forbidden, act):
     return None
 
 
+def _guard_forbidden(obs_dict: dict) -> frozenset:
+    """一撃死圏へ主力を出す行動の禁止集合。無効時は空(=完全なno-op)。"""
+    if OHKO_GUARD is None:
+        return frozenset()
+    try:
+        return ohko_guard.forbidden_actions(
+            OHKO_GUARD, obs_dict, CARD_INFO, AGENT_METRICS,
+        )
+    except Exception:
+        # ルール内のいかなる例外でも試合を壊さない。必ずBC選択へ戻す。
+        _metric_inc("ohko_guard_errors")
+        return frozenset()
+
+
+def _reject_guard(guard, act):
+    if act is None or not guard:
+        return act
+    try:
+        chosen = tuple(act)
+    except TypeError:
+        return act
+    return None if chosen in guard else act
+
+
+def _guard_redirect(obs_dict: dict, guard, act):
+    """BCが禁止手を選んだときだけ、残りの選択肢からBCに選び直させる。"""
+    if act is None or not guard:
+        return act
+    try:
+        if tuple(act) not in guard:
+            return act
+    except TypeError:
+        return act
+    _metric_inc("ohko_guard_blocked")
+    try:
+        alt = policy.choose(obs_dict, exclude=guard)
+    except Exception:
+        return None
+    if alt is None or tuple(alt) in guard:
+        return None
+    _metric_inc("ohko_guard_redirected")
+    return alt
+
+
 def _safe_fallback(obs_dict: dict, forbidden) -> list[int]:
     sel = obs_dict.get("select") or {}
     options = sel.get("option") or []
@@ -207,6 +259,7 @@ def agent(obs_dict: dict) -> list[int]:
     t0 = time.time()
     act = None
     proposals = _rule_proposals(obs_dict)
+    guard = _guard_forbidden(obs_dict)
     forbidden = (
         expert_rules.forbidden_actions(proposals)
         if EXPERT_RULE_MODE == "enforce" else set()
@@ -236,6 +289,7 @@ def agent(obs_dict: dict) -> list[int]:
                     forbidden_actions=forbidden,
                 )
                 act = _reject_forbidden(proposals, forbidden, act)
+                act = _reject_guard(guard, act)
         except bc_search.FixedSearchIncomplete as exc:
             bc_search.record_fixed_search_incomplete(
                 AGENT_METRICS, exc, proposals,
@@ -255,6 +309,7 @@ def agent(obs_dict: dict) -> list[int]:
             if budget > 0:
                 act = ptcg_search.decide(obs, DECK, budget)
                 act = _reject_forbidden(proposals, forbidden, act)
+                act = _reject_guard(guard, act)
         except Exception:
             act = None  # 探索の失敗は必ず下段で救済
         finally:
@@ -264,6 +319,7 @@ def agent(obs_dict: dict) -> list[int]:
         try:
             act = policy.choose(obs_dict)
             act = _reject_forbidden(proposals, forbidden, act)
+            act = _guard_redirect(obs_dict, guard, act)
         except Exception:
             act = None
 
@@ -273,7 +329,8 @@ def agent(obs_dict: dict) -> list[int]:
         except Exception:
             act = None
         act = _reject_forbidden(proposals, forbidden, act)
+        act = _reject_guard(guard, act)
     if act is None:
-        act = _safe_fallback(obs_dict, forbidden)
+        act = _safe_fallback(obs_dict, forbidden | guard)
     _record_rule_choice(proposals, act)
     return act
