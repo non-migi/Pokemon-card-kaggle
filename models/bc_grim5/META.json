@@ -1,0 +1,25 @@
+{
+ "model": "bc_grim5",
+ "hid": 128,
+ "trained": "2026-08-10",
+ "data": [
+  "data/bc/pairs_grim5.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz", "pairs_0727.jsonl.gz", "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz", "pairs_0730.jsonl.gz", "pairs_0731.jsonl.gz",
+  "pairs_0802.jsonl.gz", "pairs_0803.jsonl.gz", "pairs_0804.jsonl.gz",
+  "pairs_0805.jsonl.gz", "pairs_0806.jsonl.gz", "pairs_0807.jsonl.gz",
+  "pairs_0808.jsonl.gz", "pairs_0809.jsonl.gz"
+ ],
+ "decisions_filtered": 3036103,
+ "samples": 2649349,
+ "winner_teams": 370,
+ "card_vocab": 196,
+ "epochs": 6,
+ "holdout_top1": 0.742,
+ "train_script": "scripts/train_bc.py",
+ "notes": "bc_grim3(13日/276万判断/329チーム/語彙186/holdout 74.6%)にBCデータの日次更新分(08-08, 08-09)を足した15日版。フィルタ・ハイパラ・エポック数はbc_grim3と完全に同一で、差はデータ2日分のみ。pairs_0807時点の累計がbc_grim3の2,761,132と一致することでレシピ再現を確認した。語彙は186→196(+10、消失0)で、追加はBouffalant/Dipplin/Galvantula/Snorlax/Hoothoot/Petilil/Harlequin/Psyduck/Joltik/Bronzorの全てポケモン。いずれも語彙順位156〜196の裾で、bc_grim2→bc_grim3の43枚拡張に比べると増分は小さい。⚠️ holdoutは74.2%でbc_grim3の74.6%より-0.4pt。ただし両者はデータが違うのでholdout集合も別物であり、直接比較はできない(モデル間の優劣の証拠として使わないこと)。エポック推移は72.8/73.7/74.1/74.4/74.3/74.2で、epoch3以降は頭打ち。⚠️ 2026-08-10分のDaily Topは未公開のため含まれていない。"
+}
