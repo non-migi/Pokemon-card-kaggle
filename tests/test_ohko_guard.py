@@ -499,7 +499,9 @@ class ConfigTest(MetricsResetMixin, unittest.TestCase):
         self.assertIsNone(guard.from_config({"ohko_guard": {"enabled": False}}))
 
     def test_true_enables_the_default_rules_only(self):
-        # GR003は実測で筋の悪い介入が混ざるため既定から外してある(docstring参照)。
+        # GR003/GR004はどちらも反証済みで恒久的に既定外(docstring参照)。
+        # 特にGR004は壁A/Bで-4.0pt(唯一CIが分離した差)。ここが赤くなったら
+        # 「反証済みruleが既定へ戻された」ということなので、根拠を確認すること。
         for raw in (True, {"enabled": True}):
             cfg = guard.from_config({"ohko_guard": raw})
             self.assertEqual(cfg.rule_ids, guard.DEFAULT_RULE_IDS)
