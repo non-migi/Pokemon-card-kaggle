@@ -41,7 +41,7 @@ def load_model(name: str):
     import importlib
     vocab_mod = importlib.import_module("policy_vocab")
     P = dict(np.load(os.path.join(mdir, "policy_params.npz")))
-    cid2idx = {int(c): i for i, c in enumerate(vocab_mod.CARD_VOCAB)}
+    cid2idx = {int(c): i + 1 for i, c in enumerate(vocab_mod.CARD_VOCAB)}  # 0=UNK (train_bc.py:58と同一)
     return P, cid2idx
 
 
