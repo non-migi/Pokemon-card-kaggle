@@ -4,7 +4,8 @@
 
 - ガード未指定のagent(v5.4g-bc): 禁止集合は空・カウンタは1つも動かず、
   `agent()` の返り値が `policy.choose()` と**完全に一致**する
-- ガード有効のagent(v5.6g-bc): 発火し、BCが選んだ禁止手が別の手へ差し替わる
+- ガード有効のagent(v5.6g-bc=bc_grim3 / v5.8g-bc=bc_grim5): 発火し、
+  BCが選んだ禁止手が別の手へ差し替わる
 
 ことを確認する。build/ はgit管理外なので、未ビルドならskipする
 (`.venv/bin/python -m ptcglab.build v5.6g-bc` などで作れる)。
@@ -64,6 +65,7 @@ act = main.agent(OBS)
 delta = {k: v for k, v in main.AGENT_METRICS.items() if v != before.get(k, 0)}
 print(json.dumps({
     "guard_on": main.OHKO_GUARD is not None,
+    "rules": list(main.OHKO_GUARD.rule_ids) if main.OHKO_GUARD else [],
     "forbidden": sorted(list(a) for a in main._guard_forbidden(OBS)),
     "bc": bc, "act": act, "delta": delta,
 }))
@@ -95,8 +97,17 @@ class AgentWiringTest(unittest.TestCase):
         )
 
     def test_guard_enabled_agent_redirects_the_forbidden_move(self):
-        got = probe("v5.6g-bc")
+        # bc_grim3(v5.6g) / bc_grim5(v5.8g、最終提出の本命候補) の両方で確認する。
+        for name in ("v5.6g-bc", "v5.8g-bc"):
+            with self.subTest(agent=name):
+                self._assert_redirects(probe(name))
+
+    def _assert_redirects(self, got):
         self.assertTrue(got["guard_on"])
+        # 既定ルールはGR001+GR002のみ(GR003は明示指定制)。
+        self.assertEqual(got["rules"], [
+            "GR001_OHKO_COMMIT_AVOID", "GR002_OHKO_EVOLVE_AVOID",
+        ])
         self.assertEqual(got["forbidden"], [[0]])  # エネ5のGrimmsnarl ex
         self.assertEqual(got["bc"], [0], "この局面でBCが禁止手を選ばないと検証にならない")
         self.assertEqual(got["act"], [1])          # 身代わりのSnorunt
