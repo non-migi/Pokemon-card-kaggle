@@ -62,6 +62,10 @@ def analyze(ep_id, team_name="gogogozi migimimi", verbose=True):
                     how = "進化してアクティブへ"
                 elif l.get("type") == "Switch":
                     how = "入れ替えでアクティブへ(自発)"
+                elif l.get("type") == "MoveCard" and l.get("fromArea") == 5 and l.get("toArea") == 4 \
+                        and l.get("cardId") == my_active.get("id"):
+                    # KO後のベンチ→アクティブ昇格もプレイヤーの選択(初期配置=手札2→4は対象外のまま)
+                    how = "KO後ベンチから昇格(選択あり)"
             commits[cur_active_serial] = (turn, how, bench_alive_excl)  # always keep the MOST RECENT transition
         prev_active_serial = cur_active_serial
 
