@@ -1,0 +1,27 @@
+{
+ "model": "bc_ogerpon",
+ "hid": 128,
+ "trained": "2026-08-10",
+ "data": [
+  "data/bc/pairs_ogerpon_core.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Ogerpon --min-copies 4",
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz", "pairs_0727.jsonl.gz", "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz", "pairs_0730.jsonl.gz", "pairs_0731.jsonl.gz",
+  "pairs_0802.jsonl.gz", "pairs_0803.jsonl.gz", "pairs_0804.jsonl.gz",
+  "pairs_0805.jsonl.gz", "pairs_0806.jsonl.gz", "pairs_0807.jsonl.gz",
+  "pairs_0808.jsonl.gz", "pairs_0809.jsonl.gz"
+ ],
+ "decisions_filtered": 391256,
+ "samples": 319790,
+ "winner_teams": 86,
+ "unique_decks": 48,
+ "card_vocab": 176,
+ "epochs": 6,
+ "holdout_top1": 0.692,
+ "train_script": "scripts/train_bc.py",
+ "purpose": "対Ogerpon壁(wall-ogerpon-bc)の操縦用。ohko_guardの標的評価に使う",
+ "notes": "⚠️ `--key Ogerpon` 単独では抽出できない。素の--key Ogerponは15日分で561,570判断/140チーム/107構築になるが、そのうち **Ogerpon 1枚差しグループ(34構築/132,486判断)の89%が Mega Kangaskhan ex + Crustle + Dwebble のmillデッキ** で、Ogerponデッキではない。これで壁を組むと対Ogerpon壁ではなく対Kang壁になる。かといって `--exclude Kangaskhan Crustle` も使えない: **Teal Mask Ogerpon ex x4 + Mega Kangaskhan ex という正規の相棒構築が存在する**ため、本物のOgerpon主軸16構築/149,076判断を巻き込んで落とし、結果は259,640判断/90チームと目標から-33.6%ずれる。そこで bc_filter_deck.py に `--min-copies` を追加し、Ogerponを4枚以上積むデッキだけを残した(391,256判断/86チーム/48構築)。構築の集中度は最頻40.7%(35チーム)、2番手17.4%(15チーム、最頻と53/60枚一致の同系統)で、この2つで58%が実質同一系統。壁のデッキは decks/meta/snapshot_20260809_ogerpon_teal.csv (最頻構築、Teal Mask Ogerpon ex x4 + Basic{G} x18軸)。⚠️ holdout 69.2%はbc_grim5の74.2%より5pt低いが、データ量が約1/8(判断39万 vs 304万)なので当然の差であり、モデルの出来の悪さを意味しない。参考: bc_kang(70.3万判断)はholdout 58.6%だったので、それよりは高い。エポック推移は65.8/67.0/67.8/68.1/68.3/69.2で最終epochが最高値のため、エポックを増やす余地は残っている。"
+}

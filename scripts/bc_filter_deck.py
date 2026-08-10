@@ -34,6 +34,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--key", required=True, help="デッキに含まれるポケモン名の部分一致 (例: Grimmsnarl)")
     ap.add_argument("--exclude", nargs="*", default=[], help="これを含むデッキは除外する")
+    ap.add_argument("--min-copies", type=int, default=None,
+                    help="--key に一致するカードをこの枚数以上積んでいるデッキだけ残す。"
+                         "1枚差し(タッチ)を主軸デッキと区別するために使う。"
+                         "例: --key Ogerpon --min-copies 4 とすると、Kangaskhan-Crustle(mill)が"
+                         "Cornerstone Ogerponを1枚差ししているだけのデッキを落とせる")
     ap.add_argument("--out", required=True)
     ap.add_argument("--sources", nargs="*", default=None,
                     help="省略時は data/bc/pairs_0*.jsonl.gz 全部")
@@ -76,6 +81,9 @@ def main() -> None:
                         names = {card_name(i) for i in set(deck)}
                         ok = any(args.key in n for n in names) and not any(
                             any(x in n for n in names) for x in args.exclude)
+                        if ok and args.min_copies is not None:
+                            # setではなくdeck全体で数える(同名カードの重複を枚数として数えるため)
+                            ok = sum(1 for i in deck if args.key in card_name(i)) >= args.min_copies
                         verdict[deck] = ok
                     if not verdict[deck]:
                         continue

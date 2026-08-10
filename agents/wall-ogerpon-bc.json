@@ -1,0 +1,1 @@
+{"label":"対Ogerpon壁(純BC): bc_ogerpon(15日39万判断/86チーム/語彙176、holdout 69.2%) + Teal Mask Ogerpon主軸の最頻60枚。millデッキ混入を--min-copies 4で排除済み","deck":"decks/meta/snapshot_20260809_ogerpon_teal.csv","model":"bc_ogerpon","config":{"algo":"bc"}}
