@@ -72,7 +72,10 @@ try:
     OHKO_GUARD = ohko_guard.from_config(CONFIG)
 except (TypeError, ValueError) as exc:
     raise RuntimeError(f"ohko_guard設定不良: {exc}") from exc
-CARD_INFO = ohko_guard.build_card_info(heuristics.CARDS) if OHKO_GUARD else {}
+CARD_INFO = (
+    ohko_guard.build_card_info(heuristics.CARDS, heuristics.ATTACKS)
+    if OHKO_GUARD else {}
+)
 
 # ---- 時間管理(探索使用時のみ意味を持つ) ----
 TOTAL_OVERAGE_SEC = 600.0

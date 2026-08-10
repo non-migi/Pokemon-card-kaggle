@@ -1,0 +1,1 @@
+{"label":"v5.6g rule単独A/B用: v5.4g-bc + GR003_OHKO_ALL_DEAD_PREFER_ATTACKER(全候補一撃死圏なら攻撃できる候補を優先)","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim3","config":{"algo":"bc","ohko_guard":{"enabled":true,"rules":["GR003_OHKO_ALL_DEAD_PREFER_ATTACKER"]}}}
