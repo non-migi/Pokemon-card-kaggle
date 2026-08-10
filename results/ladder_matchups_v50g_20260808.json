@@ -1,0 +1,132 @@
+{
+  "submission": "55174905",
+  "games": 158,
+  "wins": 86,
+  "by_opponent_deck": {
+    "(other)": {
+      "wins": 9,
+      "games": 23,
+      "loss_causes": {
+        "サイド取り切られ": 6,
+        "その他(長期戦で失速)": 5,
+        "短期崩壊(80step以内)": 2,
+        "自山切れ": 1
+      }
+    },
+    "Dragapult": {
+      "wins": 10,
+      "games": 15,
+      "loss_causes": {
+        "その他(長期戦で失速)": 4,
+        "サイド取り切られ": 1
+      }
+    },
+    "Alakazam": {
+      "wins": 21,
+      "games": 32,
+      "loss_causes": {
+        "サイド取り切られ": 8,
+        "その他(長期戦で失速)": 3
+      }
+    },
+    "Archaludon+Cinderace": {
+      "wins": 5,
+      "games": 20,
+      "loss_causes": {
+        "その他(長期戦で失速)": 8,
+        "サイド取り切られ": 7
+      }
+    },
+    "Kangaskhan": {
+      "wins": 7,
+      "games": 10,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1,
+        "短期崩壊(80step以内)": 1,
+        "サイド取り切られ": 1
+      }
+    },
+    "Grimmsnarl+Froslass": {
+      "wins": 16,
+      "games": 29,
+      "loss_causes": {
+        "その他(長期戦で失速)": 6,
+        "サイド取り切られ": 7
+      }
+    },
+    "Froslass+Starmie+Cinderace": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Starmie": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "Froslass": {
+      "wins": 3,
+      "games": 3,
+      "loss_causes": {}
+    },
+    "Garchomp": {
+      "wins": 1,
+      "games": 2,
+      "loss_causes": {
+        "サイド取り切られ": 1
+      }
+    },
+    "Lucario": {
+      "wins": 12,
+      "games": 19,
+      "loss_causes": {
+        "サイド取り切られ": 6,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Grimmsnarl": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "サイド取り切られ": 1
+      }
+    },
+    "Kangaskhan+Cinderace": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "サイド取り切られ": 1
+      }
+    },
+    "Great Tusk": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    }
+  },
+  "by_opening_basics": {
+    "2": {
+      "wins": 31,
+      "games": 57
+    },
+    "1": {
+      "wins": 46,
+      "games": 84
+    },
+    "3": {
+      "wins": 7,
+      "games": 14
+    },
+    "4": {
+      "wins": 2,
+      "games": 3
+    }
+  },
+  "overage_used_seconds": {
+    "median": 430.92663400000004,
+    "p90": 485.2730300000002,
+    "max": 525.2847439999999
+  }
+}
