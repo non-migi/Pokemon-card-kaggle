@@ -49,8 +49,22 @@ Impidimp(70)を、Morgrem(100)やMunkidori(110)より優先して昇格させる
 ただし発火は実在し(**400戦あたり blocked 663〜919**)、
 **ミラーでの発火は0=ミラーコストは構造的にゼロ**なので、既定のまま残している。
 
+⚠️ ミラー脅威(MARNIE_GRIMMSNARL)を既定に入れていない理由(2026-08-11、再生検証):
+Grimmsnarl ex / Shadow Bullet(固定180)を脅威に足すと、ミラーでも確かに発火する
+(既定脅威では発火0)。しかし**採用ゲートは不合格**だった:
+1. 敗因調査が特定した5敗8局面(ep 91624482/91605151/91594915/91592145/91590263)で
+   **介入が1件も起きない**。あの8局面は昇格/進化ではなく
+   **MAIN局面の「攻撃するか逃げるか」**(選択肢が `[ATTACK, RETREAT, END]` で ATTACK を選ぶ)で、
+   このモジュールがフックしていない意思決定だから。
+   例: ep 91624482 T9 自分GrimEX 残140 / 相手GrimEX 320・エネ3 → ATTACKを選択(180を通して相打ち)。
+2. ミラー309戦で、昇格選択あたりのブロック率が **敗戦1.43% / 勝利1.62%** と
+   **勝ち試合の方がわずかに高い**(既定ルールは敗戦0.29%/勝利0.02%=14.5倍の集中)。
+   ミラーは双方が固定180を撃ち合うので「自分のGrimmsnarlが一撃死圏で死んだ」は
+   **負けたことの言い換えに近く**、悪手の指標として機能していない可能性が高い。
+→ 実装は残すが有効化は`threats`の明示指定のみ。採否はミラー直接A/Bの結果で判断すること。
+
 保守側(発火しない側)に倒した点:
-- 打点はOgerpon exとMega Lopunny exの2枚だけ。他のカードは脅威0として扱う。
+- 打点は既定でOgerpon exとMega Lopunny exの2枚だけ。他のカードは脅威0として扱う。
 - 相手の次ターンのエネ加速(Teal Dance)や、自分が後からPunk Upで乗せるエネは数えない。
 - 抵抗力・スタジアム・道具・特性による打点補正は無視する。
 - リトリート宣言(OptionType RETREAT)自体は対象にしない。誰が上がるかは
@@ -82,6 +96,17 @@ LOPUNNY = 849             # Mega Lopunny ex
 GALE_THRUST_MOVED = 230   # ベンチ→バトル場へ動いた番だけ 60+170
 SPIKY_HOPPER = 160        # {C}{C}
 GALE_THRUST_BASE = 60     # {C}
+GRIMMSNARL = 648          # Marnie's Grimmsnarl ex(ミラー)
+SHADOW_BULLET = 180       # 固定180(+ベンチ30)。{D}{D}
+SHADOW_BULLET_COST = 2
+
+# 脅威モデル。ミラー(MARNIE_GRIMMSNARL)は提出済みv5.6gとの比較可能性を守るため
+# **既定では数えない**。agent_config.jsonの`threats`で明示有効化する。
+THREAT_OGERPON = "TEAL_OGERPON"
+THREAT_LOPUNNY = "MEGA_LOPUNNY"
+THREAT_GRIMMSNARL = "MARNIE_GRIMMSNARL"
+KNOWN_THREAT_IDS = (THREAT_OGERPON, THREAT_LOPUNNY, THREAT_GRIMMSNARL)
+DEFAULT_THREAT_IDS = (THREAT_OGERPON, THREAT_LOPUNNY)
 
 WEAKNESS_MULTIPLIER = 2
 
@@ -121,6 +146,7 @@ class GuardConfig:
     """agent_config.jsonの`ohko_guard`を正規化したもの。"""
 
     rule_ids: tuple[str, ...]
+    threat_ids: tuple[str, ...] = DEFAULT_THREAT_IDS
 
     def enabled(self, rule_id: str) -> bool:
         return rule_id in self.rule_ids
@@ -131,9 +157,10 @@ def from_config(config: Mapping) -> GuardConfig | None:
 
     受け付ける形:
       未指定 / false            -> None
-      true                      -> 既定ルール(DEFAULT_RULE_IDS)を有効
+      true                      -> 既定ルール/既定脅威
       {"enabled": bool,
-       "rules": ["GR001_..."]}  -> 明示指定(rules省略で既定ルール)
+       "rules": ["GR001_..."],    -> 省略で DEFAULT_RULE_IDS
+       "threats": ["TEAL_..."]}   -> 省略で DEFAULT_THREAT_IDS
     """
     raw = config.get("ohko_guard") if isinstance(config, Mapping) else None
     if raw is None or raw is False:
@@ -144,19 +171,28 @@ def from_config(config: Mapping) -> GuardConfig | None:
         raise ValueError("ohko_guardはbooleanまたはobject")
     if not bool(raw.get("enabled", True)):
         return None
-    rules = raw.get("rules")
-    if rules is None:
-        return GuardConfig(DEFAULT_RULE_IDS)
-    if isinstance(rules, (str, bytes)) or not isinstance(rules, (list, tuple)):
-        raise ValueError("ohko_guard.rulesは文字列の配列")
-    ids = tuple(rules)
+    rules = _id_list(raw.get("rules"), KNOWN_RULE_IDS, DEFAULT_RULE_IDS, "rules")
+    threats = _id_list(
+        raw.get("threats"), KNOWN_THREAT_IDS, DEFAULT_THREAT_IDS, "threats",
+    )
+    return GuardConfig(rules, threats)
+
+
+def _id_list(value, known: tuple[str, ...], default: tuple[str, ...],
+             field: str) -> tuple[str, ...]:
+    """`rules`/`threats`の共通検証。未指定なら既定を返す。"""
+    if value is None:
+        return default
+    if isinstance(value, (str, bytes)) or not isinstance(value, (list, tuple)):
+        raise ValueError(f"ohko_guard.{field}は文字列の配列")
+    ids = tuple(value)
     if (not ids or any(not isinstance(x, str) or not x for x in ids)
             or len(set(ids)) != len(ids)):
-        raise ValueError("ohko_guard.rulesは1件以上・重複なしの非空文字列配列")
-    unknown = set(ids) - set(KNOWN_RULE_IDS)
+        raise ValueError(f"ohko_guard.{field}は1件以上・重複なしの非空文字列配列")
+    unknown = set(ids) - set(known)
     if unknown:
-        raise ValueError(f"未知のohko_guard rule ID: {sorted(unknown)}")
-    return GuardConfig(ids)
+        raise ValueError(f"未知のohko_guard {field}: {sorted(unknown)}")
+    return ids
 
 
 def build_card_info(
@@ -301,13 +337,15 @@ def _apply_weakness(damage: int, defender_weakness, attacker_type: int) -> int:
 
 def max_incoming_damage(
     opponent: Mapping, defender_weakness, defender_energy_count: int,
-    card_info: Mapping[int, dict],
+    card_info: Mapping[int, dict], threats: tuple[str, ...] = DEFAULT_THREAT_IDS,
 ) -> int:
     """相手が次のターンに与えられる、観測から確定計算できる最大打点。
 
     defender_energy_count は「アクティブに立ったときの自分のエネ数」。
     Myriad Leaf Showerは**両者のアクティブ**の合計エネを数えるので、
     どのポケモンを出すかで被ダメが変わる。
+
+    threats に含まれるカードだけを脅威として数える(既定はOgerpon/Lopunny)。
     """
     best = 0
     active = [p for p in (opponent.get("active") or []) if isinstance(p, Mapping)]
@@ -315,13 +353,19 @@ def max_incoming_damage(
     for pokemon, on_bench in [(p, False) for p in active] + [(p, True) for p in bench]:
         card_id = _int(pokemon.get("id"), -1)
         energies = _energy_count(pokemon)
-        if card_id == OGERPON:
+        if card_id == OGERPON and THREAT_OGERPON in threats:
             if energies < OGERPON_ATTACK_COST:
                 continue  # コスト未達。Teal Danceの加速は数えない(保守側)
             damage = OGERPON_BASE + OGERPON_PER_ENERGY * (
                 energies + max(0, defender_energy_count)
             )
-        elif card_id == LOPUNNY:
+        elif card_id == GRIMMSNARL and THREAT_GRIMMSNARL in threats:
+            # Shadow Bulletは固定180。相手ベンチのGrimmsnarl exは、
+            # 上げてくるコストがあるので保守側で数えない。
+            if on_bench or energies < SHADOW_BULLET_COST:
+                continue
+            damage = SHADOW_BULLET
+        elif card_id == LOPUNNY and THREAT_LOPUNNY in threats:
             if on_bench:
                 # ベンチにいる限り、上げてきた番はGale Thrustが230になる。
                 damage = GALE_THRUST_MOVED if energies >= 1 else 0
@@ -401,7 +445,7 @@ def _switch_forbidden(
             return {}  # 語彙外カードは評価しない
         energies = _energy_count(pokemon)
         damage = max_incoming_damage(
-            opponent, info["weakness"], energies, card_info,
+            opponent, info["weakness"], energies, card_info, cfg.threat_ids,
         )
         hp = _int(pokemon.get("hp"), 0)
         dies = hp > 0 and damage >= hp
@@ -431,7 +475,7 @@ def _switch_forbidden(
 
 
 def _evolve_forbidden(
-    sel: Mapping, mine: Mapping, opponent: Mapping,
+    cfg: GuardConfig, sel: Mapping, mine: Mapping, opponent: Mapping,
     card_info: Mapping[int, dict],
 ) -> dict[Action, str]:
     """アクティブを、一撃死圏内のより高いサイド値へ進化させる手を禁止する。"""
@@ -469,7 +513,7 @@ def _evolve_forbidden(
             continue  # サイド枚数が増えないなら進化を止める理由がない
         effective_hp = int(info["max_hp"]) - damage_taken
         damage = max_incoming_damage(
-            opponent, info["weakness"], energies, card_info,
+            opponent, info["weakness"], energies, card_info, cfg.threat_ids,
         )
         if effective_hp > 0 and damage >= effective_hp:
             forbidden[(i,)] = RULE_EVOLVE
@@ -510,7 +554,7 @@ def _forbidden_actions(
         if not cfg.enabled(RULE_EVOLVE):
             return frozenset()
         _inc(metrics, "ohko_guard_scanned.evolve")
-        forbidden = _evolve_forbidden(sel, mine, opponent, card_info)
+        forbidden = _evolve_forbidden(cfg, sel, mine, opponent, card_info)
 
     if not forbidden:
         return frozenset()

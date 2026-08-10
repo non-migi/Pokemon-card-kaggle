@@ -1,0 +1,1 @@
+{"label":"ミラー脅威拡張の検証用: bc_grim3 + GR001/GR002 + 脅威モデルにMarnie's Grimmsnarl ex(Shadow Bullet固定180)を追加。v5.6g-bcとの差はthreats指定のみ。⚠️再生検証のゲートは不合格(指定5敗で介入0、敗戦集中なし)","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim3","config":{"algo":"bc","ohko_guard":{"enabled":true,"threats":["TEAL_OGERPON","MEGA_LOPUNNY","MARNIE_GRIMMSNARL"]}}}

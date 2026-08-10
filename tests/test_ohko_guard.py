@@ -386,6 +386,84 @@ class PreserveLineTest(MetricsResetMixin, unittest.TestCase):
         self.assertLess(len(got), 2)
 
 
+class MirrorThreatTest(MetricsResetMixin, unittest.TestCase):
+    """脅威モデルへのGrimmsnarl ex(Shadow Bullet固定180)追加。既定では数えない。"""
+
+    MIRROR = guard.GuardConfig(guard.DEFAULT_RULE_IDS, guard.KNOWN_THREAT_IDS)
+
+    def test_disabled_by_default(self):
+        self.assertNotIn(guard.THREAT_GRIMMSNARL, guard.DEFAULT_THREAT_IDS)
+        opp = player(active=[pokemon(GRIMMSNARL, energies=2)])
+        self.assertEqual(guard.max_incoming_damage(opp, 1, 0, CARD_INFO), 0)
+
+    def test_active_grimmsnarl_is_fixed_180(self):
+        opp = player(active=[pokemon(GRIMMSNARL, energies=2)])
+        got = guard.max_incoming_damage(
+            opp, 1, 0, CARD_INFO, guard.KNOWN_THREAT_IDS,
+        )
+        self.assertEqual(got, 180)  # 闇->草弱点は無いので等倍
+        # 自分のエネ数では変わらない(Ogerponと違い固定値)
+        self.assertEqual(
+            guard.max_incoming_damage(opp, 1, 5, CARD_INFO, guard.KNOWN_THREAT_IDS),
+            180,
+        )
+
+    def test_darkness_weak_defender_is_doubled(self):
+        # Munkidoriは闇弱点なので180->360。汎用の弱点処理がそのまま効く。
+        opp = player(active=[pokemon(GRIMMSNARL, energies=2)])
+        self.assertEqual(
+            guard.max_incoming_damage(opp, 7, 0, CARD_INFO, guard.KNOWN_THREAT_IDS),
+            360,
+        )
+
+    def test_cost_and_bench_are_conservative(self):
+        low = player(active=[pokemon(GRIMMSNARL, energies=1)])
+        self.assertEqual(
+            guard.max_incoming_damage(low, 1, 0, CARD_INFO, guard.KNOWN_THREAT_IDS), 0,
+        )
+        # ベンチのGrimmsnarl exは上げてくるコストがあるので数えない
+        benched = player(
+            active=[pokemon(MUNKIDORI)], bench=[pokemon(GRIMMSNARL, energies=5)],
+        )
+        self.assertEqual(
+            guard.max_incoming_damage(benched, 1, 0, CARD_INFO,
+                                      guard.KNOWN_THREAT_IDS), 0,
+        )
+
+    def test_guard_fires_in_the_mirror_only_when_enabled(self):
+        # 残140のGrimmsnarl exを昇格させる手。身代わりのSnoruntが居る。
+        mine = player(bench=[pokemon(GRIMMSNARL, hp=140), pokemon(SNORUNT)])
+        opp = player(active=[pokemon(GRIMMSNARL, energies=2)])
+        obs = observation(switch_select(2), mine, opp)
+        self.assertEqual(run(obs, cfg=ALL_RULES_DEFAULT), frozenset())
+        self.assertEqual(run(obs, cfg=self.MIRROR), frozenset({(0,)}))
+
+    def test_full_hp_grimmsnarl_is_not_forbidden(self):
+        # 320は180では落ちない。ミラーで健康な主力を出すのは止めない。
+        mine = player(bench=[pokemon(GRIMMSNARL), pokemon(SNORUNT)])
+        opp = player(active=[pokemon(GRIMMSNARL, energies=2)])
+        self.assertEqual(
+            run(observation(switch_select(2), mine, opp), cfg=self.MIRROR),
+            frozenset(),
+        )
+
+    def test_threat_config_parsing(self):
+        cfg = guard.from_config({"ohko_guard": {
+            "enabled": True, "threats": [guard.THREAT_GRIMMSNARL]}})
+        self.assertEqual(cfg.threat_ids, (guard.THREAT_GRIMMSNARL,))
+        self.assertEqual(cfg.rule_ids, guard.DEFAULT_RULE_IDS)
+        self.assertEqual(
+            guard.from_config({"ohko_guard": True}).threat_ids,
+            guard.DEFAULT_THREAT_IDS,
+        )
+        for bad in ({"ohko_guard": {"threats": "TEAL_OGERPON"}},
+                    {"ohko_guard": {"threats": []}},
+                    {"ohko_guard": {"threats": ["NOPE"]}},
+                    {"ohko_guard": {"threats": [guard.THREAT_OGERPON] * 2}}):
+            with self.assertRaises(ValueError):
+                guard.from_config(bad)
+
+
 class CanAttackTest(unittest.TestCase):
     def test_cost_payment(self):
         # Munkidori Mind Bend {P}{C}
