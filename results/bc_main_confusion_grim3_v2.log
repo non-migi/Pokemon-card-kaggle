@@ -1,0 +1,97 @@
+n=2410169 holdout=241016
+
+MAIN holdout件数=112141 正解=86915 top-1=77.5%
+
+--- 混同行列 上位20セル(誤りのみ、件数降順) ---
+true_type                 pred_type                        n    true内シェア
+PLAY(手札を出す)               ABILITY(特性)                  4,448       10.1%
+ABILITY(特性)               PLAY(手札を出す)                  3,799       12.3%
+ATTACK(ワザ)                PLAY(手札を出す)                  1,917       16.8%
+EVOLVE(進化)                PLAY(手札を出す)                  1,860       16.9%
+ATTACH(エネ付け)              PLAY(手札を出す)                  1,698       16.1%
+ATTACH(エネ付け)              ABILITY(特性)                  1,439       13.6%
+EVOLVE(進化)                ABILITY(特性)                  1,331       12.1%
+ATTACK(ワザ)                ABILITY(特性)                    950        8.3%
+PLAY(手札を出す)               EVOLVE(進化)                     908        2.1%
+PLAY(手札を出す)               ATTACH(エネ付け)                   679        1.5%
+ABILITY(特性)               EVOLVE(進化)                     539        1.7%
+ABILITY(特性)               ATTACH(エネ付け)                   538        1.7%
+PLAY(手札を出す)               ATTACK(ワザ)                     499        1.1%
+RETREAT(にげる)              PLAY(手札を出す)                    466       19.6%
+ATTACH(エネ付け)              EVOLVE(進化)                     408        3.9%
+END(ターン終了)                PLAY(手札を出す)                    396       19.7%
+RETREAT(にげる)              ABILITY(特性)                    326       13.7%
+ATTACK(ワザ)                EVOLVE(進化)                     291        2.5%
+EVOLVE(進化)                ATTACK(ワザ)                     281        2.6%
+ATTACK(ワザ)                ATTACH(エネ付け)                   274        2.4%
+
+--- true_typeごとの件数・正答率 ---
+PLAY(手札を出す)                 43,964     84.7%
+ABILITY(特性)                 30,801     83.4%
+ATTACK(ワザ)                  11,433     68.5%
+EVOLVE(進化)                  11,002     65.6%
+ATTACH(エネ付け)                10,560     63.4%
+RETREAT(にげる)                 2,374     43.2%
+END(ターン終了)                   2,007     60.1%
+
+--- RETREAT/ATTACK/END に関わる全セル(順位に関わらず全件) ---
+ATTACK(ワザ)                PLAY(手札を出す)                  1,917       16.8%
+ATTACK(ワザ)                ABILITY(特性)                    950        8.3%
+PLAY(手札を出す)               ATTACK(ワザ)                     499        1.1%
+RETREAT(にげる)              PLAY(手札を出す)                    466       19.6%
+END(ターン終了)                PLAY(手札を出す)                    396       19.7%
+RETREAT(にげる)              ABILITY(特性)                    326       13.7%
+ATTACK(ワザ)                EVOLVE(進化)                     291        2.5%
+EVOLVE(進化)                ATTACK(ワザ)                     281        2.6%
+ATTACK(ワザ)                ATTACH(エネ付け)                   274        2.4%
+RETREAT(にげる)              ATTACK(ワザ)                     229        9.6%
+ATTACH(エネ付け)              ATTACK(ワザ)                     170        1.6%
+ATTACK(ワザ)                RETREAT(にげる)                   164        1.4%
+ABILITY(特性)               ATTACK(ワザ)                     162        0.5%
+END(ターン終了)                ATTACH(エネ付け)                   158        7.9%
+END(ターン終了)                EVOLVE(進化)                     147        7.3%
+RETREAT(にげる)              END(ターン終了)                     141        5.9%
+PLAY(手札を出す)               RETREAT(にげる)                   129        0.3%
+ATTACH(エネ付け)              END(ターン終了)                     125        1.2%
+RETREAT(にげる)              EVOLVE(進化)                     107        4.5%
+RETREAT(にげる)              ATTACH(エネ付け)                    79        3.3%
+ABILITY(特性)               RETREAT(にげる)                    70        0.2%
+END(ターン終了)                ABILITY(特性)                     55        2.7%
+EVOLVE(進化)                RETREAT(にげる)                    46        0.4%
+PLAY(手札を出す)               END(ターン終了)                      42        0.1%
+EVOLVE(進化)                END(ターン終了)                      39        0.4%
+ATTACH(エネ付け)              RETREAT(にげる)                    29        0.3%
+END(ターン終了)                RETREAT(にげる)                    29        1.4%
+END(ターン終了)                ATTACK(ワザ)                      16        0.8%
+ABILITY(特性)               END(ターン終了)                       9        0.0%
+ATTACK(ワザ)                END(ターン終了)                       4        0.0%
+
+RETREAT->ATTACK(にげるべきなのに攻撃扱い)件数=229
+ATTACK->RETREAT(攻撃すべきなのに退却扱い)件数=164
+
+--- 上位誤りセルの代表例 ---
+
+[PLAY(手札を出す) -> ABILITY(特性)] n=4448
+  turn=5 自分=Marnie's Grimmsnarl ex(hp=310) 相手=Marnie's Impidimp(hp=70) n_opts=11 正解=[PLAY(手札を出す) card=Spikemuth Gym] 予測=[ABILITY(特性) card=Munkidori]
+  turn=8 自分=Marnie's Impidimp(hp=70) 相手=Team Rocket's Spidops(hp=100) n_opts=7 正解=[PLAY(手札を出す) card=Rare Candy] 予測=[ABILITY(特性)]
+  turn=12 自分=Marnie's Grimmsnarl ex(hp=160) 相手=Crustle(hp=170) n_opts=12 正解=[PLAY(手札を出す) card=Poké Pad] 予測=[ABILITY(特性) card=Munkidori]
+
+[ABILITY(特性) -> PLAY(手札を出す)] n=3799
+  turn=13 自分=Marnie's Morgrem(hp=100) 相手=Cynthia's Garchomp ex(hp=130) n_opts=12 正解=[ABILITY(特性)] 予測=[PLAY(手札を出す) card=Rare Candy]
+  turn=9 自分=Marnie's Grimmsnarl ex(hp=230) 相手=Marnie's Grimmsnarl ex(hp=320) n_opts=6 正解=[ABILITY(特性)] 予測=[PLAY(手札を出す) card=Poké Pad]
+  turn=7 自分=Marnie's Grimmsnarl ex(hp=320) 相手=Alakazam(hp=140) n_opts=13 正解=[ABILITY(特性)] 予測=[PLAY(手札を出す) card=Boss’s Orders]
+
+[ATTACK(ワザ) -> PLAY(手札を出す)] n=1917
+  turn=6 自分=Marnie's Grimmsnarl ex(hp=320) 相手=Marnie's Grimmsnarl ex(hp=320) n_opts=4 正解=[ATTACK(ワザ) attack=Shadow Bullet dmg=180] 予測=[PLAY(手札を出す) card=Xerosic’s Machinations]
+  turn=3 自分=Marnie's Grimmsnarl ex(hp=320) 相手=Marnie's Impidimp(hp=70) n_opts=4 正解=[ATTACK(ワザ) attack=Shadow Bullet dmg=180] 予測=[PLAY(手札を出す) card=Boss’s Orders]
+  turn=7 自分=Marnie's Grimmsnarl ex(hp=110) 相手=Marnie's Grimmsnarl ex(hp=140) n_opts=4 正解=[ATTACK(ワザ) attack=Shadow Bullet dmg=180] 予測=[PLAY(手札を出す) card=Boss’s Orders]
+
+[EVOLVE(進化) -> PLAY(手札を出す)] n=1860
+  turn=10 自分=Marnie's Morgrem(hp=100) 相手=Alakazam(hp=140) n_opts=12 正解=[EVOLVE(進化) card=Marnie's Grimmsnarl ex] 予測=[PLAY(手札を出す) card=Unfair Stamp]
+  turn=9 自分=Marnie's Morgrem(hp=100) 相手=Marnie's Grimmsnarl ex(hp=60) n_opts=8 正解=[EVOLVE(進化) card=Marnie's Grimmsnarl ex] 予測=[PLAY(手札を出す) card=Rare Candy]
+  turn=6 自分=Marnie's Morgrem(hp=100) 相手=Marnie's Grimmsnarl ex(hp=310) n_opts=21 正解=[EVOLVE(進化) card=Marnie's Grimmsnarl ex] 予測=[PLAY(手札を出す) card=Night Stretcher]
+
+[ATTACH(エネ付け) -> PLAY(手札を出す)] n=1698
+  turn=5 自分=Marnie's Impidimp(hp=70) 相手=Marnie's Impidimp(hp=70) n_opts=18 正解=[ATTACH(エネ付け) card=Basic {D} Energy] 予測=[PLAY(手札を出す) card=Poké Pad]
+  turn=5 自分=Marnie's Morgrem(hp=100) 相手=Team Rocket's Spidops(hp=90) n_opts=12 正解=[ATTACH(エネ付け) card=Basic {D} Energy] 予測=[PLAY(手札を出す) card=Unfair Stamp]
+  turn=3 自分=Marnie's Impidimp(hp=50) 相手=Staryu(hp=70) n_opts=12 正解=[ATTACH(エネ付け) card=Basic {D} Energy] 予測=[PLAY(手札を出す) card=Lillie's Determination]
