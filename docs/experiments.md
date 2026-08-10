@@ -1,6 +1,24 @@
 # 実験ログ
 
-## 2026-08-10深夜 v5.4gミラー敗因 = 同じ一撃死圏コミット(Shadow Bullet固定180)。現行guardはミラー無力
+## 2026-08-11 【事前登録】中間帯Ogerpon壁でのguard再評価+v5.9g(拡張脅威)のミラーA/B
+
+**結果を見る前に固定する。**
+
+**測定1(中間帯壁、各400戦)**: `wall-ogerpon-mid-bc`(bc_ogerpon_mid、LB650-1000帯54チーム)に対し
+A: `v5.4g-bc`(guardなし) / B: `v5.6g-bc`(GR001/2)。
+- 目的: エリート壁の床効果(勝率1-7%)を回避したguard効果の再測定。
+- 判定: Δ=B−Aが **+5pt以上でguard支持** / **−5pt以下で不支持** / それ以外INCONCLUSIVE。
+  この壁でも両アーム勝率15%未満なら「床効果再発・設計不成立」と記録し判定しない。
+  発火カウンタ(fired/blocked>0)の実在確認は必須条件。
+- 注: アームは567f905ビルド、壁はdae986eビルド。差分はohko_guard.pyのdocstringのみ
+  (AST同一証明済み、fd68ad8)。アーム間は完全同一なのでΔの解釈に影響なし。
+
+**測定2(v5.9g完成後、ミラー直接A/B 400戦)**: `v5.9g-bc`(bc_grim3+GR001/2+拡張脅威
+Grimmsnarl ex/Shadow Bullet 180) vs `v5.4g-bc`。拡張guardはミラーで発火するため直接解像可能。
+- 判定: **55%以上でADOPT(v5.9g提出候補)** / **45%以下でREJECT** / それ以外INCONCLUSIVE
+  (INCONCLUSIVE時は提出しない。既定はv5.6g+アンカー体制の維持)。
+- 補助(判定に使わない): v5.9g-bc vs `wall-grim-top8-bc` 400戦をAの過去値と比較。
+- 両ビルドは同一コミットから(rulesmith緑コミット後の静止窓で組む)。
 
 v5.4g凍結40戦のGrim+Froslassミラー7戦(2勝5敗、28.6%)を精読(チーム作業losses担当)。
 
