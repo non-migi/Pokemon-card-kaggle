@@ -27,6 +27,7 @@ CACHE = os.path.expanduser("~/.cache/ptcg-replays")
 ARCHETYPE_KEYS = (
     "Alakazam", "Grimmsnarl", "Kangaskhan", "Dragapult", "Garchomp",
     "Froslass", "Lucario", "Great Tusk", "Archaludon", "Starmie", "Cinderace",
+    "Lopunny", "Ogerpon",
 )
 
 
