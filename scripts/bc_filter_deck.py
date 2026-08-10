@@ -45,6 +45,10 @@ def main() -> None:
     ap.add_argument("--min-team-score", type=float, default=None,
                     help="このLBスコア以上のチームの判断だけ残す(--lb が必要)。"
                          "BCは模倣した集団の平均を超えられないので、天井を上げたい時に使う")
+    ap.add_argument("--max-team-score", type=float, default=None,
+                    help="このLBスコア以下のチームの判断だけ残す(--lb が必要)。"
+                         "--min-team-score と併用して帯を切る。壁が強すぎて勝率が床に張り付き"
+                         "解像度が出ないとき、実際の対戦相手の帯に合わせた壁を作るために使う")
     ap.add_argument("--lb", help="LeaderboardのCSV(TeamName,Score)")
     args = ap.parse_args()
 
@@ -52,14 +56,17 @@ def main() -> None:
         sys.exit(f"既存: {args.out} (上書きしない)")
 
     scores: dict[str, float] = {}
-    if args.min_team_score is not None:
+    if args.min_team_score is not None or args.max_team_score is not None:
         if not args.lb:
-            sys.exit("--min-team-score には --lb が必要")
+            sys.exit("--min-team-score / --max-team-score には --lb が必要")
         import csv
-        with open(args.lb) as fh:
+        # KaggleのLB CSVはBOM付きなので utf-8-sig で開く(でないと先頭列名が読めない)
+        with open(args.lb, encoding="utf-8-sig") as fh:
             for r in csv.DictReader(fh):
                 scores[r["TeamName"]] = float(r["Score"])
-        print(f"LB {len(scores)}チーム読み込み、{args.min_team_score}以上に絞る")
+        lo = "-inf" if args.min_team_score is None else args.min_team_score
+        hi = "+inf" if args.max_team_score is None else args.max_team_score
+        print(f"LB {len(scores)}チーム読み込み、{lo}〜{hi}の帯に絞る")
     sources = args.sources or sorted(glob.glob(os.path.join(ROOT, "data/bc/pairs_0*.jsonl.gz")))
 
     # deck(60枚のカードIDタプル)ごとに判定をキャッシュする
@@ -87,9 +94,14 @@ def main() -> None:
                         verdict[deck] = ok
                     if not verdict[deck]:
                         continue
-                    if args.min_team_score is not None:
+                    if args.min_team_score is not None or args.max_team_score is not None:
                         # LBに載っていないチームは除外する(強さ不明を混ぜない)
-                        if scores.get(d.get("team"), -1.0) < args.min_team_score:
+                        score = scores.get(d.get("team"))
+                        if score is None:
+                            continue
+                        if args.min_team_score is not None and score < args.min_team_score:
+                            continue
+                        if args.max_team_score is not None and score > args.max_team_score:
                             continue
                     kept += 1
                     decks[deck] += 1

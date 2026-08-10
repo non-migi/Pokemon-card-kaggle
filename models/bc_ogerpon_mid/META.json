@@ -1,0 +1,29 @@
+{
+ "model": "bc_ogerpon_mid",
+ "hid": 128,
+ "trained": "2026-08-11",
+ "data": [
+  "data/bc/pairs_ogerpon_mid650_1000.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Ogerpon --min-copies 4 --min-team-score 650 --max-team-score 1000 --lb results/lb_20260810.csv",
+ "lb_snapshot": "results/lb_20260810.csv (6,706チーム、2026-08-10T14:59:07 UTC取得)",
+ "band": [650, 1000],
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz", "pairs_0727.jsonl.gz", "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz", "pairs_0730.jsonl.gz", "pairs_0731.jsonl.gz",
+  "pairs_0802.jsonl.gz", "pairs_0803.jsonl.gz", "pairs_0804.jsonl.gz",
+  "pairs_0805.jsonl.gz", "pairs_0806.jsonl.gz", "pairs_0807.jsonl.gz",
+  "pairs_0808.jsonl.gz", "pairs_0809.jsonl.gz"
+ ],
+ "decisions_filtered": 137031,
+ "samples": 111257,
+ "winner_teams": 54,
+ "unique_decks": 33,
+ "card_vocab": 155,
+ "epochs": 6,
+ "holdout_top1": 0.740,
+ "train_script": "scripts/train_bc.py",
+ "purpose": "対Ogerpon壁の『中間帯』版(wall-ogerpon-mid-bc)。エリート壁(bc_ogerpon)が強すぎて全アーム1〜7%の床に張り付き、guardの効果を±5ptで解像できなかったことへの対策",
+ "notes": "⚠️ **holdout 74.0%はbc_ogerpon(69.2%)より高いが、これは『強い』という意味ではない**。データ量は1/3(13.7万 vs 39.1万判断)、チーム数も54 vs 86と少ないのに精度が上がったのは、中間帯の打ち方が**均質で模倣しやすい**ためと解釈すべき。holdoutは模倣忠実度であって強さではない(STATUS最重要3と同じ論点)。壁として弱いかどうかは実際の対戦勝率で確かめること。要求帯は当初700〜950だったが63,587判断(35チーム)しかなく10万の基準に届かないため、**最小限の拡張で650〜1000**とした(137,031判断/54チーム)。参考: 600-1000=137,305 / 600-1050=169,763 / 550-1100=215,869 / 帯無し(LB掲載のみ)=335,797。⚠️ LBスナップショットは08-10時点の値だが、学習データの判断は07-22〜08-09のもの。チームのスコアは期間中に変動するので、帯の切り方は近似である(既存の`bc_grim_elite`が08-01のLBで同じ近似をしているのと同様)。またOgerpon主軸391,256判断のうち55,459判断(14.2%)は**LBに載っていないチーム**のもので、帯フィルタ使用時は仕様どおり全て除外される。デッキは既存の合意60枚 decks/meta/snapshot_20260809_ogerpon_teal.csv をそのまま使う。"
+}
