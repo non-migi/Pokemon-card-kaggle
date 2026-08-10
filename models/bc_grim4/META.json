@@ -1,0 +1,9 @@
+{
+ "model": "bc_grim4",
+ "trained": "2026-08-10",
+ "data": [
+  "data/bc/pairs_grim4.jsonl.gz"
+ ],
+ "samples": 3001253,
+ "epochs": 6
+}
