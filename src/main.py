@@ -129,6 +129,11 @@ def read_deck_csv() -> list[int]:
 
 
 DECK = read_deck_csv()
+# GR004が温存する進化ライン基点(自デッキから決まるので起動時に一度だけ求める)。
+LINE_BASES = (
+    ohko_guard.build_line_bases(DECK, heuristics.CARDS)
+    if OHKO_GUARD else frozenset()
+)
 
 
 def _budget(obs_dict) -> float:
@@ -196,7 +201,7 @@ def _guard_forbidden(obs_dict: dict) -> frozenset:
         return frozenset()
     try:
         return ohko_guard.forbidden_actions(
-            OHKO_GUARD, obs_dict, CARD_INFO, AGENT_METRICS,
+            OHKO_GUARD, obs_dict, CARD_INFO, AGENT_METRICS, LINE_BASES,
         )
     except Exception:
         # ルール内のいかなる例外でも試合を壊さない。必ずBC選択へ戻す。

@@ -27,6 +27,7 @@ SNORUNT, MUNKIDORI = 860, 112
 OGERPON, LOPUNNY = 96, 849
 
 ALL_RULES = guard.GuardConfig(guard.KNOWN_RULE_IDS)
+ALL_RULES_DEFAULT = guard.GuardConfig(guard.DEFAULT_RULE_IDS)
 
 
 def pokemon(card_id, hp=None, energies=0, max_hp=None, energy_type=7):
@@ -284,6 +285,105 @@ class AllDeadAttackerTest(MetricsResetMixin, unittest.TestCase):
         opp = player(active=[pokemon(OGERPON, energies=3, energy_type=1)])
         got = run(observation(switch_select(3), mine, opp))
         self.assertEqual(got, frozenset({(0,), (1,)}))
+
+
+GRIM_DECK = [int(line) for line in open(
+    os.path.join(ROOT, "decks/meta/snapshot_20260723_grim_top8.csv"),
+) if line.strip()][:60]
+GRIM_LINE_BASES = guard.build_line_bases(GRIM_DECK, heuristics.CARDS)
+
+
+class LineBaseTest(unittest.TestCase):
+    def test_grim_deck_line_bases(self):
+        # Morgrem/Grimmsnarl exの進化元と、Froslassの進化元だけが基点。
+        self.assertEqual(sorted(GRIM_LINE_BASES), [IMPIDIMP, MORGREM, SNORUNT])
+        self.assertNotIn(MUNKIDORI, GRIM_LINE_BASES)   # 余り駒
+        self.assertNotIn(GRIMMSNARL, GRIM_LINE_BASES)  # 進化先が無い
+
+    def test_alakazam_deck_line_bases(self):
+        deck = [741] * 4 + [742] * 4 + [743] * 4 + [305] * 24 + [66] * 24
+        self.assertEqual(
+            sorted(guard.build_line_bases(deck, heuristics.CARDS)),
+            [305, 741, 742],
+        )
+
+    def test_bad_deck_is_empty(self):
+        self.assertEqual(guard.build_line_bases([], heuristics.CARDS), frozenset())
+        self.assertEqual(
+            guard.build_line_bases(["x"], heuristics.CARDS), frozenset(),
+        )
+
+
+class PreserveLineTest(MetricsResetMixin, unittest.TestCase):
+    """GR004: 全候補が一撃死圏・サイド同値なら、ライン基点ではなく余り駒を出す。"""
+
+    ONLY_LINE = guard.GuardConfig((guard.RULE_LINE,))
+
+    def _run(self, obs, cfg=None):
+        return guard.forbidden_actions(
+            cfg or self.ONLY_LINE, obs, CARD_INFO, None, GRIM_LINE_BASES,
+        )
+
+    def _board(self, munkidori_hp=110):
+        # ep 90471729 相当: 相手はエネ2のMega Lopunny ex(Spiky Hopper 160)。
+        mine = player(bench=[
+            pokemon(IMPIDIMP), pokemon(MUNKIDORI, hp=munkidori_hp),
+        ])
+        opp = player(active=[pokemon(LOPUNNY, energies=2, energy_type=0)])
+        return observation(switch_select(2), mine, opp)
+
+    def test_forbids_the_line_base_when_a_spare_exists(self):
+        # Impidimp 70 も Munkidori 110 も 160 で落ちる。サイドはどちらも1枚。
+        self.assertEqual(self._run(self._board()), frozenset({(0,)}))
+
+    def test_no_fire_when_nobody_dies(self):
+        mine = player(bench=[pokemon(IMPIDIMP), pokemon(MUNKIDORI)])
+        opp = player(active=[pokemon(LOPUNNY, energies=1, energy_type=0)])
+        self.assertEqual(self._run(observation(switch_select(2), mine, opp)),
+                         frozenset())
+
+    def test_no_fire_when_every_candidate_is_a_line_base(self):
+        mine = player(bench=[pokemon(IMPIDIMP), pokemon(SNORUNT)])
+        opp = player(active=[pokemon(LOPUNNY, energies=2, energy_type=0)])
+        self.assertEqual(self._run(observation(switch_select(2), mine, opp)),
+                         frozenset())
+
+    def test_disabled_by_default(self):
+        self.assertNotIn(guard.RULE_LINE, guard.DEFAULT_RULE_IDS)
+        self.assertEqual(self._run(self._board(), cfg=ALL_RULES_DEFAULT),
+                         frozenset())
+
+    def test_line_bases_must_be_supplied(self):
+        # main.py が LINE_BASES を渡し忘れたら発火しない(誤爆しない側に倒す)。
+        self.assertEqual(
+            guard.forbidden_actions(self.ONLY_LINE, self._board(), CARD_INFO),
+            frozenset(),
+        )
+
+    def test_prize_takes_priority_over_line_preservation(self):
+        # サイド2枚のGrimmsnarl exが死ぬなら、ライン基点のImpidimpを差し出す。
+        mine = player(bench=[
+            pokemon(GRIMMSNARL, hp=150), pokemon(IMPIDIMP),
+        ])
+        opp = player(active=[pokemon(LOPUNNY, energies=2, energy_type=0)])
+        obs = observation(switch_select(2), mine, opp)
+        both = guard.GuardConfig((guard.RULE_SWITCH, guard.RULE_LINE))
+        self.assertEqual(self._run(obs, cfg=both), frozenset({(0,)}))
+
+    def test_line_and_attacker_rules_do_not_deadlock(self):
+        # ライン基点だが攻撃できるImpidimp vs 余り駒だが攻撃できないMunkidori。
+        # 別々の比較なら相互に禁止し合って全滅するが、辞書式キーなので
+        # 「ライン温存」が優先され、Munkidoriだけが残る。
+        mine = player(bench=[
+            pokemon(IMPIDIMP, energies=1),
+            pokemon(MUNKIDORI, energies=2, energy_type=7),
+        ])
+        opp = player(active=[pokemon(LOPUNNY, energies=2, energy_type=0)])
+        obs = observation(switch_select(2), mine, opp)
+        both = guard.GuardConfig((guard.RULE_LINE, guard.RULE_ATTACKER))
+        got = self._run(obs, cfg=both)
+        self.assertEqual(got, frozenset({(0,)}))
+        self.assertLess(len(got), 2)
 
 
 class CanAttackTest(unittest.TestCase):

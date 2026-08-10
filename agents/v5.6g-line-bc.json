@@ -1,0 +1,1 @@
+{"label":"GR004単独A/B用: v5.4g-bc(bc_grim3 + 純BC) + GR004_PRESERVE_EVOLUTION_LINEのみ","deck":"decks/meta/snapshot_20260723_grim_top8.csv","model":"bc_grim3","config":{"algo":"bc","ohko_guard":{"enabled":true,"rules":["GR004_PRESERVE_EVOLUTION_LINE"]}}}

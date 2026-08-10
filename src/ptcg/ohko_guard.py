@@ -14,8 +14,15 @@ agent_config.jsonの`ohko_guard`が無ければ完全なno-op(既存agentは一�
 ルールは2段構え:
 - 1段目(GR001/GR002、**既定で有効**): 主力が一撃死圏で、
   より安い身代わりがあるなら主力を出さない。
-- 2段目(GR003、**既定では無効。明示指定でのみ有効**): **どの候補も一撃死圏**なら、
-  どうせ死ぬので「攻撃できる候補」を優先する。
+- 2段目(GR003 / GR004、**既定では無効。明示指定でのみ有効**):
+  サイド枚数で差がつかず**どの候補も一撃死圏**のときの選び方。
+  GR004 = まだ進化させたいライン基点(Impidimp/Morgrem/Snorunt)を温存し、
+  余り駒(Munkidori等)を先に差し出す。
+  GR003 = 攻撃できる候補を優先する。
+
+2段目は「サイド枚数 → ライン温存 → 攻撃可否」の1本の辞書式キーで表現している。
+別々の比較にすると、複数ruleを同時に有効化したときに
+「AはBより良い / BはAより良い」で全選択肢が潰れうるため。
 
 ⚠️ GR003を既定から外している理由(2026-08-10、過去リプレイ2,503判断での実測):
 GR001/GR002が止めた手は12試合すべて敗戦だったのに対し、GR003が止めた手には
@@ -69,7 +76,8 @@ WILDCARD_ENERGY = frozenset({10, 11})  # RAINBOW / TEAM_ROCKET
 RULE_SWITCH = "GR001_OHKO_COMMIT_AVOID"
 RULE_EVOLVE = "GR002_OHKO_EVOLVE_AVOID"
 RULE_ATTACKER = "GR003_OHKO_ALL_DEAD_PREFER_ATTACKER"
-KNOWN_RULE_IDS = (RULE_SWITCH, RULE_EVOLVE, RULE_ATTACKER)
+RULE_LINE = "GR004_PRESERVE_EVOLUTION_LINE"
+KNOWN_RULE_IDS = (RULE_SWITCH, RULE_EVOLVE, RULE_ATTACKER, RULE_LINE)
 # `true` や rules 省略で有効になるのはここだけ。GR003は上記の理由で明示指定制。
 DEFAULT_RULE_IDS = (RULE_SWITCH, RULE_EVOLVE)
 
@@ -230,6 +238,30 @@ def can_attack(pokemon: Mapping, info: Mapping) -> bool:
     return any(_can_pay(attached, cost) for cost in costs)
 
 
+def build_line_bases(
+    deck: Iterable[int], cards: Mapping[int, object],
+) -> frozenset[int]:
+    """自デッキ内に「そこから進化する札」があるカードIDの集合。
+
+    GR004が温存したいライン基点(Grim合意60枚ならImpidimp/Morgrem/Snorunt)。
+    `evolvesFrom` はIDではなくカード名なので、名前で突き合わせる。
+    """
+    try:
+        deck_ids = {int(cid) for cid in deck}
+    except (TypeError, ValueError):
+        return frozenset()
+    sources = set()
+    for card_id in deck_ids:
+        card = cards.get(card_id)
+        origin = getattr(card, "evolvesFrom", None) if card is not None else None
+        if origin:
+            sources.add(str(origin))
+    return frozenset(
+        card_id for card_id in deck_ids
+        if str(getattr(cards.get(card_id), "name", "") or "") in sources
+    )
+
+
 def _int(value, default: int = 0) -> int:
     try:
         return int(value)
@@ -304,15 +336,30 @@ def _players(obs_dict: Mapping) -> tuple[dict, dict, int] | None:
     return mine, opponent, your_index
 
 
+# 昇格候補の優先順位キー。左から順に効く辞書式で、各段は担当ruleが有効なときだけ
+# 意味を持つ(無効なら常に0=無差別)。「厳密により良い候補があるときだけ禁止する」
+# 最小介入の原則は全段で共通。
+#   0: 取られるサイド枚数            -> GR001
+#   1: その場で一撃死するか          -> GR001
+#   2: まだ進化させたいライン基点か  -> GR004
+#   3: 今すぐ攻撃できないか          -> GR003
+_KEY_RULES = (RULE_SWITCH, RULE_SWITCH, RULE_LINE, RULE_ATTACKER)
+
+
 def _switch_forbidden(
     cfg: GuardConfig, sel: Mapping, mine: Mapping, opponent: Mapping,
     your_index: int, card_info: Mapping[int, dict],
+    line_bases: frozenset[int],
 ) -> dict[Action, str]:
-    """昇格(KO後を含む)/入れ替えの候補選択を2段構えで絞る。
+    """昇格(KO後を含む)/入れ替えの候補選択を段階的に絞る。
 
-    1段目 GR001: 死ぬ主力を、より安い身代わりがあるのに出す手を禁止する。
-    2段目 GR003: 全候補が死ぬなら、同じサイド枚数の中で
-                 攻撃できない候補(攻撃できる候補があるとき)を禁止する。
+    GR001: 死ぬ主力を、より安い身代わりがあるのに出す手を禁止する。
+    GR004: サイド同値で全員死ぬなら、進化ライン基点ではなく余り駒を差し出す。
+    GR003: それも同じなら、攻撃できる候補を出す(既定では無効)。
+
+    1本の辞書式キーで表現しているのは、複数ruleを同時に有効にしたとき
+    「AはBより良い・BはAより良い」で全選択肢が潰れるのを避けるため。
+    キー最小の候補は構造上どのruleからも禁止されない。
     """
     options = sel.get("option") or []
     bench = mine.get("bench") or []
@@ -329,7 +376,8 @@ def _switch_forbidden(
             return {}
         if not isinstance(pokemon, Mapping):
             return {}
-        info = card_info.get(_int(pokemon.get("id"), -1))
+        card_id = _int(pokemon.get("id"), -1)
+        info = card_info.get(card_id)
         if info is None:
             return {}  # 語彙外カードは評価しない
         energies = _energy_count(pokemon)
@@ -337,33 +385,29 @@ def _switch_forbidden(
             opponent, info["weakness"], energies, card_info,
         )
         hp = _int(pokemon.get("hp"), 0)
-        entries.append((
-            i, int(info["prize"]), hp > 0 and damage >= hp,
-            can_attack(pokemon, info),
-        ))
+        dies = hp > 0 and damage >= hp
+        key = (
+            int(info["prize"]),
+            1 if dies else 0,
+            1 if (cfg.enabled(RULE_LINE) and card_id in line_bases) else 0,
+            0 if (not cfg.enabled(RULE_ATTACKER)
+                  or can_attack(pokemon, info)) else 1,
+        )
+        entries.append((i, key, dies))
     if not entries:
         return {}
-    all_dead = all(dies for _, _, dies, _ in entries)
+    best = min(key for _, key, _ in entries)
     forbidden: dict[Action, str] = {}
-    for i, prize, dies, attacks_now in entries:
-        if not dies:
+    for i, key, dies in entries:
+        if not dies or key == best:
             continue
-        # 1段目: 「より安い身代わり」= 取られるサイドが少ない、または
-        # 同値以下で生き残る候補。これがあるときだけ禁止する(最小介入)。
-        if cfg.enabled(RULE_SWITCH) and any(
-            j != i and (other_prize < prize
-                        or (not other_dies and other_prize <= prize))
-            for j, other_prize, other_dies, _ in entries
-        ):
-            forbidden[(i,)] = RULE_SWITCH
-            continue
-        # 2段目: どうせ全員死ぬなら、同じサイド枚数で攻撃できる方を出す。
-        if (cfg.enabled(RULE_ATTACKER) and all_dead and not attacks_now
-                and any(
-                    j != i and other_prize == prize and other_attacks
-                    for j, other_prize, _, other_attacks in entries
-                )):
-            forbidden[(i,)] = RULE_ATTACKER
+        # 最善キーとの最初の差が、この禁止を説明するrule。
+        rule_id = next(
+            (_KEY_RULES[n] for n in range(len(key)) if key[n] != best[n]), None,
+        )
+        # 担当ruleが無効なら禁止しない(GR001を切ったのにサイド差で禁止しない等)。
+        if rule_id is not None and cfg.enabled(rule_id):
+            forbidden[(i,)] = rule_id
     return forbidden
 
 
@@ -414,8 +458,8 @@ def _evolve_forbidden(
 
 
 def _forbidden_actions(
-    cfg: GuardConfig, obs_dict: Mapping,
-    card_info: Mapping[int, dict], metrics: dict | None,
+    cfg: GuardConfig, obs_dict: Mapping, card_info: Mapping[int, dict],
+    metrics: dict | None, line_bases: frozenset[int],
 ) -> frozenset[Action]:
     sel = obs_dict.get("select")
     if not isinstance(sel, Mapping):
@@ -435,11 +479,12 @@ def _forbidden_actions(
     context = sel.get("context")
     forbidden: dict[Action, str] = {}
     if select_type == ST_CARD and context in (CTX_SWITCH, CTX_TO_ACTIVE):
-        if not (cfg.enabled(RULE_SWITCH) or cfg.enabled(RULE_ATTACKER)):
+        if not any(cfg.enabled(r)
+                   for r in (RULE_SWITCH, RULE_ATTACKER, RULE_LINE)):
             return frozenset()
         _inc(metrics, "ohko_guard_scanned.switch")
         forbidden = _switch_forbidden(
-            cfg, sel, mine, opponent, your_index, card_info,
+            cfg, sel, mine, opponent, your_index, card_info, line_bases,
         )
     elif ((select_type == ST_MAIN and context == 0)
             or (select_type == ST_EVOLVE and context == CTX_EVOLVE)):
@@ -464,6 +509,7 @@ def _forbidden_actions(
 def forbidden_actions(
     cfg: GuardConfig | None, obs_dict: Mapping,
     card_info: Mapping[int, dict], metrics: dict | None = None,
+    line_bases: frozenset[int] = frozenset(),
 ) -> frozenset[Action]:
     """現在の選択で禁止する行動集合。無効/対象外なら空集合。
 
@@ -475,7 +521,7 @@ def forbidden_actions(
         return frozenset()
     _inc(metrics, "ohko_guard_calls")
     try:
-        return _forbidden_actions(cfg, obs_dict, card_info, metrics)
+        return _forbidden_actions(cfg, obs_dict, card_info, metrics, line_bases)
     except Exception:
         _inc(metrics, "ohko_guard_errors")
         return frozenset()
