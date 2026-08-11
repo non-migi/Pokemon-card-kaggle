@@ -1,0 +1,26 @@
+{
+ "model": "bc_grim6",
+ "hid": 128,
+ "trained": "2026-08-11",
+ "data": [
+  "data/bc/pairs_grim6.jsonl.gz"
+ ],
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "sources": [
+  "pairs_0722.jsonl.gz",
+  "pairs_0726.jsonl.gz", "pairs_0727.jsonl.gz", "pairs_0728.jsonl.gz",
+  "pairs_0729.jsonl.gz", "pairs_0730.jsonl.gz", "pairs_0731.jsonl.gz",
+  "pairs_0802.jsonl.gz", "pairs_0803.jsonl.gz", "pairs_0804.jsonl.gz",
+  "pairs_0805.jsonl.gz", "pairs_0806.jsonl.gz", "pairs_0807.jsonl.gz",
+  "pairs_0808.jsonl.gz", "pairs_0809.jsonl.gz", "pairs_0810.jsonl.gz"
+ ],
+ "decisions_filtered": 3159324,
+ "samples": 2756770,
+ "winner_teams": 394,
+ "unique_decks": 52,
+ "card_vocab": 203,
+ "epochs": 6,
+ "holdout_top1": 0.747,
+ "train_script": "scripts/train_bc.py",
+ "notes": "bc_grim5(15日/303万判断/370チーム/語彙196/holdout 74.2%)に08-10分を足した16日版。フィルタ・ハイパラ・エポック数はbc_grim3から一貫して同一で、差はデータのみ。レシピ再現を2点で検算済み: 累計がpairs_0807時点で2,761,132(=bc_grim3)、pairs_0809時点で3,036,103(=bc_grim5)と完全一致した。語彙は196→203(+7、消失0)で、追加はTauros/Bouffalant(233)/Paldean Tauros/Pikachu ex/Joltik(586)/Bloodmoon Ursaluna ex/Xerneasの全てポケモン、語彙順位157〜190の裾。⚠️ Bouffalant(233)とJoltik(586)はbc_grim5に入っていたBouffalant(175)/Joltik(160)とは別カードID(別セット)である。holdout 74.7%はbc_grim5の74.2%・bc_grim3の74.6%より高いが、⚠️ **3モデルはデータが違うのでholdout集合も別物であり、直接比較して優劣を語ってはいけない**。エポック推移は73.0/73.8/74.0/74.4/74.5/74.7で、bc_grim5(epoch3で頭打ち)と違い最終epochが最高値のまま単調上昇している。データが増えた分だけ学習余地が残っている可能性はあるが、エポックを増やす実験は未実施。"
+}
