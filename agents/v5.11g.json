@@ -1,0 +1,1 @@
+{"label": "ラダー試験候補: Grim合意60枚 + bc_grim6_e12(epochs12、holdout 75.2%) + 純BC + 一撃死コミット回避(GR001+GR002)。v5.10gとの差はmodel参照のみ", "deck": "decks/meta/snapshot_20260723_grim_top8.csv", "model": "bc_grim6_e12", "config": {"algo": "bc", "ohko_guard": {"enabled": true}}}
