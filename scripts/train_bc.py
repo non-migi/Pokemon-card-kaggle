@@ -37,8 +37,13 @@ def _iter_lines(paths):
             yield from f
 
 
-def load_decisions(paths, limit=None):
-    """jsonl.gz(複数可) → (state_feats, [opt_feats], [card_vocab_idx], label)。2パス: 語彙→特徴量。"""
+def load_decisions(paths, limit=None, scores=None, weight_min_score=None, weight_factor=1.0):
+    """jsonl.gz(複数可) → (state_feats, [opt_feats], [card_vocab_idx], label, weight)。2パス: 語彙→特徴量。
+
+    scores/weight_min_score/weight_factor を渡すと、LBスコアがweight_min_score以上のチームの
+    判断だけ損失の重みをweight_factor倍にする(エリート加重)。既定は全サンプル重み1.0で完全no-op。
+    holdoutの精度計算では重みを使わないので、加重ありと無しのholdoutは同じ土俵で比較できる。
+    """
     print(f"pass1: カード語彙を構築... ({len(paths)}ファイル)")
     card_count = Counter()
     n = 0
@@ -59,8 +64,8 @@ def load_decisions(paths, limit=None):
     print(f"  対象決定数={n} 語彙={len(vocab)}")
 
     print("pass2: 特徴量を構築...")
-    S, O, C, Y, NOPT = [], [], [], [], []
-    n = 0
+    S, O, C, Y, NOPT, W = [], [], [], [], [], []
+    n = n_weighted = 0
     for line in _iter_lines(paths):
         d = json.loads(line)
         sel, cur, act = d["sel"], d["cur"], d["act"]
@@ -76,24 +81,34 @@ def load_decisions(paths, limit=None):
             feats, cid = PF.option_features(sel, cur, opt)
             of.append(feats)
             ci.append(cid2idx.get(cid, 0))
+        w = 1.0
+        if scores is not None and weight_min_score is not None:
+            # LBに載っていないチームは加重しない(強さ不明を持ち上げない)
+            if scores.get(d.get("team"), -1.0) >= weight_min_score:
+                w = float(weight_factor)
+                n_weighted += 1
         S.append(sf)
         O.append(of)
         C.append(ci)
         Y.append(label)
         NOPT.append(len(of))
+        W.append(w)
         n += 1
         if limit and n >= limit:
             break
     print(f"  学習サンプル={n}")
-    return S, O, C, Y, NOPT, vocab
+    if scores is not None and weight_min_score is not None:
+        print(f"  エリート加重: {n_weighted:,d}/{n:,d} サンプル "
+              f"({100 * n_weighted / max(1, n):.1f}%) を {weight_factor}倍")
+    return S, O, C, Y, NOPT, W, vocab
 
 
 class TwoTower(nn.Module):
-    def __init__(self, n_vocab):
+    def __init__(self, n_vocab, hid: int = HID):
         super().__init__()
         self.emb = nn.Embedding(n_vocab + 1, EMB_DIM)
-        self.state = nn.Sequential(nn.Linear(PF.N_STATE, HID), nn.ReLU(), nn.Linear(HID, OUT))
-        self.option = nn.Sequential(nn.Linear(PF.N_OPTION + EMB_DIM, HID), nn.ReLU(), nn.Linear(HID, OUT))
+        self.state = nn.Sequential(nn.Linear(PF.N_STATE, hid), nn.ReLU(), nn.Linear(hid, OUT))
+        self.option = nn.Sequential(nn.Linear(PF.N_OPTION + EMB_DIM, hid), nn.ReLU(), nn.Linear(hid, OUT))
 
     def forward(self, s, o, c, mask):
         sv = self.state(s)                              # (B, OUT)
@@ -108,6 +123,21 @@ def main():
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--bs", type=int, default=512)
+    ap.add_argument("--hid", type=int, default=HID,
+                    help=f"隠れ層の幅(既定 {HID})。推論側(ptcg/policy.py)は行列形状に依存しないので"
+                         "この値を変えても既存の読み込み経路はそのまま動く")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="乱数シード。指定するとバッチシャッフル(numpy大域RNG)と重み初期化(torch)を"
+                         "固定でき、実行間のholdoutのぶれを抑えられる。"
+                         "省略時は従来どおり固定しない(=実行ごとに±1pt程度ぶれる)。"
+                         "なおholdoutの分割自体は元から default_rng(0) で固定されており、シードに依らない")
+    ap.add_argument("--lb", help="LeaderboardのCSV(TeamName,Score)。--weight-min-score に必要")
+    ap.add_argument("--weight-min-score", type=float, default=None,
+                    help="このLBスコア以上のチームの判断だけ損失の重みを --weight-factor 倍にする"
+                         "(エリート加重)。BCは模倣した集団の平均を超えられないので、"
+                         "強いチームの打ち方へ寄せたいときに使う。省略時は完全no-op")
+    ap.add_argument("--weight-factor", type=float, default=1.0,
+                    help="--weight-min-score に該当するサンプルの重み倍率(既定1.0=no-op)")
     ap.add_argument("--name", required=True, help="モデル名(models/<name>/ に出力。上書き禁止)")
     args = ap.parse_args()
 
@@ -116,7 +146,23 @@ def main():
         raise SystemExit(f"models/{args.name} は既に存在する(上書き禁止 — 別名を使う)")
     os.makedirs(out_dir)
 
-    S, O, C, Y, NOPT, vocab = load_decisions(args.data, args.limit)
+    if args.seed is not None:
+        np.random.seed(args.seed)      # バッチシャッフル(np.random.permutation)用
+        torch.manual_seed(args.seed)   # 重み初期化用
+        print(f"シード固定: {args.seed}")
+
+    scores = None
+    if args.weight_min_score is not None:
+        if not args.lb:
+            sys.exit("--weight-min-score には --lb が必要")
+        import csv
+        # KaggleのLB CSVはBOM付きなので utf-8-sig で開く
+        with open(args.lb, encoding="utf-8-sig") as fh:
+            scores = {r["TeamName"]: float(r["Score"]) for r in csv.DictReader(fh)}
+        print(f"LB {len(scores)}チーム読み込み、{args.weight_min_score}以上を{args.weight_factor}倍に加重")
+
+    S, O, C, Y, NOPT, WGT, vocab = load_decisions(
+        args.data, args.limit, scores, args.weight_min_score, args.weight_factor)
     n = len(Y)
     M = MAX_OPTS
     s = np.zeros((n, PF.N_STATE), np.float32)
@@ -124,6 +170,7 @@ def main():
     c = np.zeros((n, M), np.int64)
     mask = np.zeros((n, M), bool)
     y = np.array(Y, np.int64)
+    wt = np.array(WGT, np.float32)
     for i in range(n):
         s[i] = S[i]
         k = NOPT[i]
@@ -132,9 +179,10 @@ def main():
         mask[i, :k] = True
 
     dev = "mps" if torch.backends.mps.is_available() else "cpu"
-    model = TwoTower(len(vocab)).to(dev)
+    model = TwoTower(len(vocab), args.hid).to(dev)
     optim = torch.optim.Adam(model.parameters(), lr=1e-3)
-    ts = torch.tensor(s), torch.tensor(o), torch.tensor(c), torch.tensor(mask), torch.tensor(y)
+    ts = (torch.tensor(s), torch.tensor(o), torch.tensor(c), torch.tensor(mask),
+          torch.tensor(y), torch.tensor(wt))
 
     n_hold = n // 10
     perm = np.random.default_rng(0).permutation(n)
@@ -150,9 +198,10 @@ def main():
     for ep in range(args.epochs):
         model.train()
         tot = cnt = 0
-        for sb, ob, cb, mb, yb in batches(tr_idx, args.bs):
+        for sb, ob, cb, mb, yb, wb in batches(tr_idx, args.bs):
             logits = model(sb, ob, cb, mb)
-            loss = F.cross_entropy(logits, yb)
+            # 重み1.0のみのとき(既定)は従来の平均クロスエントロピーと数値的に一致する
+            loss = (F.cross_entropy(logits, yb, reduction="none") * wb).sum() / wb.sum()
             optim.zero_grad()
             loss.backward()
             optim.step()
@@ -162,7 +211,8 @@ def main():
         model.eval()
         correct = htot = 0
         with torch.no_grad():
-            for sb, ob, cb, mb, yb in batches(hold_idx, 2048, shuffle=False):
+            # holdoutは重みを使わない(加重あり/なしのholdoutを同じ土俵で比較するため)
+            for sb, ob, cb, mb, yb, _wb in batches(hold_idx, 2048, shuffle=False):
                 pred = model(sb, ob, cb, mb).argmax(-1)
                 correct += (pred == yb).sum().item()
                 htot += len(yb)
@@ -192,6 +242,11 @@ def main():
             "data": args.data,
             "samples": n,
             "epochs": args.epochs,
+            "hid": args.hid,
+            "seed": args.seed,
+            "weight_min_score": args.weight_min_score,
+            "weight_factor": args.weight_factor,
+            "lb": args.lb,
         }, f, ensure_ascii=False, indent=1)
     print(f"exported -> models/{args.name}/ (policy_params.npz, policy_vocab.py, META.json)")
 

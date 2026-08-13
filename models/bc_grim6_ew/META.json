@@ -1,0 +1,27 @@
+{
+ "model": "bc_grim6_ew",
+ "hid": 128,
+ "trained": "2026-08-13",
+ "data": [
+  "data/bc/pairs_grim6.jsonl.gz"
+ ],
+ "base_model": "bc_grim6",
+ "experiment": "忠実度プッシュ 軸3: エリート加重(LB1050+のチームの判断を損失で3倍)",
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "lb_snapshot": "results/lb_20260810.csv (6,706チーム)",
+ "weight_min_score": 1050.0,
+ "weight_factor": 3.0,
+ "weighted_samples": 776238,
+ "weighted_share": 0.282,
+ "effective_share_after_weighting": 0.540,
+ "decisions_filtered": 3159324,
+ "samples": 2756770,
+ "winner_teams": 394,
+ "card_vocab": 203,
+ "epochs": 6,
+ "seed": 42,
+ "holdout_top1": 0.744,
+ "holdout_by_epoch": [0.725, 0.736, 0.741, 0.745, 0.745, 0.744],
+ "train_script": "scripts/train_bc.py",
+ "notes": "bc_grim6と**同一データ・同一ハイパラで、損失の重みだけを変えた**比較(サンプル複製ではない)。LB1050+のチームの判断776,238件(28.2%)を3倍に加重し、実効シェアを54.0%へ引き上げた。⚠️ **総合holdout 74.4%はbc_grim6(74.7%)より-0.3pt低いが、これは失敗を意味しない**。総合holdoutは『平均的なチームの手をどれだけ当てるか』の指標であり、エリートに寄せたモデルは定義上ここが下がりうる。加重の効果は**加重対象の帯に限定したtop-1**で見なければならない(scripts/bc_holdout_by_band.py で算出)。⚠️ lossの絶対値(0.7849)は他モデルと比較できない: 加重後の分母(重みの総和)で割っているため尺度が違う。holdoutの計算では重みを使っていないので、holdout同士は同じ土俵で比較できる。エポック推移は72.5/73.6/74.1/74.5/74.5/74.4で、epoch3-4がピーク。seed 42固定。"
+}
