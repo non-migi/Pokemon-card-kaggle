@@ -1,5 +1,21 @@
 # 実験ログ
 
+## 2026-08-13 外部情報スキャン(X・Kaggle公開ノート): 有用な乗り換え先なし
+
+ユーザー依頼でX・Kaggle記事を調査(kaggle kernels list/pull + Web検索)。
+
+- **「Pokemon TCG AI Battle - 1084.5 Baseline」(makthanithin、08-09更新)はクリックベイトと確定**。
+  Mega Lucario exルールベース(既知の950+系の更新版、Crustle対策入り)だが、
+  作者チームの実LBは**3055位/644.1**(08-13 11:07スナップショットで照合)。1084台は無関係の他チーム。
+- 「Grimmsnarl ex Damage-Transfer Control」(tetsutani、150票): 中身の85万文字がbase64埋め込みの
+  提出ビルダーで戦略の読解不能。タイトルからMunkidoriのダメージ移動テク(我々のBCが既に模倣
+  している勝者行動)と推測。乗り換え価値なし。
+- メタ分析系ノート(myso1987のScore Band別メタ/premaananda108の日次勝率)は**出力なしのツール**で、
+  我々の既存パイプライン(meta_matrix/Daily Top集計)と同等機能。新情報なし。
+- X/note.comは概要記事のみ。cabt-viewer(対戦ログ可視化)の言及あり=我々のreplay_log_trace相当。
+- **結論: 公開領域に銀圏へのショートカット(コピー可能な強レシピ)は存在しない**。
+  現体制(v5.6g+v5.10g収束待ち)を維持。
+
 ## 2026-08-13 v5.6gの80戦判定: 総合58.5%は良好だがguard固有の効果は証明されず
 
 v5.6g(bc_grim3+GR001/2)82戦の対面別正式判定(チーム作業ladder担当)。
