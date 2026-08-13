@@ -1,0 +1,14 @@
+{
+ "model": "bc_grim6_e12_s101",
+ "trained": "2026-08-13",
+ "data": [
+  "data/bc/pairs_grim6.jsonl.gz"
+ ],
+ "samples": 2756770,
+ "epochs": 12,
+ "hid": 128,
+ "seed": 101,
+ "weight_min_score": null,
+ "weight_factor": 1.0,
+ "lb": null
+}

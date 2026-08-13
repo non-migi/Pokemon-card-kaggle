@@ -1,0 +1,123 @@
+{
+  "submission": "55435709",
+  "games": 66,
+  "wins": 36,
+  "by_opponent_deck": {
+    "Alakazam": {
+      "wins": 6,
+      "games": 11,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1,
+        "サイド取り切られ": 4
+      }
+    },
+    "Grimmsnarl+Froslass": {
+      "wins": 5,
+      "games": 12,
+      "loss_causes": {
+        "サイド取り切られ": 4,
+        "その他(長期戦で失速)": 3
+      }
+    },
+    "Ogerpon": {
+      "wins": 1,
+      "games": 3,
+      "loss_causes": {
+        "サイド取り切られ": 1,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Archaludon+Cinderace": {
+      "wins": 4,
+      "games": 7,
+      "loss_causes": {
+        "サイド取り切られ": 2,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Kangaskhan+Ogerpon": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "自山切れ": 1
+      }
+    },
+    "Dragapult": {
+      "wins": 2,
+      "games": 3,
+      "loss_causes": {
+        "サイド取り切られ": 1
+      }
+    },
+    "Garchomp": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "Lucario": {
+      "wins": 8,
+      "games": 12,
+      "loss_causes": {
+        "サイド取り切られ": 2,
+        "その他(長期戦で失速)": 2
+      }
+    },
+    "Kangaskhan+Lopunny+Ogerpon": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "(other)": {
+      "wins": 7,
+      "games": 11,
+      "loss_causes": {
+        "サイド取り切られ": 3,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Kangaskhan": {
+      "wins": 1,
+      "games": 2,
+      "loss_causes": {
+        "サイド取り切られ": 1
+      }
+    },
+    "Great Tusk": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Dragapult+Starmie": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1
+      }
+    }
+  },
+  "by_opening_basics": {
+    "2": {
+      "wins": 13,
+      "games": 22
+    },
+    "1": {
+      "wins": 19,
+      "games": 37
+    },
+    "4": {
+      "wins": 1,
+      "games": 1
+    },
+    "3": {
+      "wins": 3,
+      "games": 6
+    }
+  },
+  "overage_used_seconds": {
+    "median": 3.553519999999935,
+    "p90": 4.579394999999636,
+    "max": 5.852331999999819
+  }
+}
