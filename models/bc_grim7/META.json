@@ -1,0 +1,47 @@
+{
+ "model": "bc_grim7",
+ "trained": "2026-08-16",
+ "data": [
+  "data/bc/pairs_grim7.jsonl.gz"
+ ],
+ "samples": 3026075,
+ "epochs": 12,
+ "hid": 128,
+ "seed": 42,
+ "weight_min_score": null,
+ "weight_factor": 1.0,
+ "lb": null,
+ "lr_halve_after": 7,
+ "export_best": true,
+ "exported_epoch": 11,
+ "base_model": "bc_grim6",
+ "experiment": "最終モデル。確定レシピ(epochs12 + ep8以降LR半減 + export-best)を20日分データに適用",
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "sources": [
+  "pairs_0722",
+  "pairs_0726-0731",
+  "pairs_0802-0814 (計20日)"
+ ],
+ "decisions_filtered": 3470036,
+ "winner_teams": 470,
+ "unique_decks": 62,
+ "card_vocab": 211,
+ "holdout_top1": 0.756,
+ "holdout_by_epoch": [
+  0.727,
+  0.74,
+  0.745,
+  0.746,
+  0.749,
+  0.748,
+  0.749,
+  0.751,
+  0.753,
+  0.754,
+  0.755,
+  0.756
+ ],
+ "export_best_epoch": 11,
+ "train_script": "scripts/train_bc.py",
+ "notes": "⚠️ 08-15分のDaily Topは締切当日朝の時点で**未公開**だった(UTC 08-15がまだ終わっていなかった)ため、runbookの『21日分』ではなく**20日分(0810〜0814まで)**で構築した。リード承認済み。レシピ再現は2点で検算済み: 累計がpairs_0807時点で2,761,132(=bc_grim3)、pairs_0809時点で3,036,103(=bc_grim5)と完全一致。語彙は203→211(+8)。**holdout 75.6%は当リポジトリの最高値**(bc_grim6 74.7% / bc_grim6_e12 75.2%)。確定レシピのLR半減がep8から発動し(1e-3→5e-4→2.5e-4→1.25e-4→6.25e-5)、ep7の75.1%からep11の75.6%へ**+0.5pt伸びた**。e12で観察された『ep7以降は0.4pt幅で振動するだけ』という頭打ちが減衰で解消している。export-bestは最終epoch11を選択したので、結果的に従来の保存と同じ重み。ミラー退化検査(v5.12g-bc vs v5.4g-bc, 400戦)は**56.87% [52.0-61.6]**で、227勝1分172敗・failure 0・両席50%超。⚠️ **同レシピ+データ増のミラーで50%を明確に上回ったのは初めて**(grim4 48.75 / grim5 46.12 / grim6 47.13%)。データ増だけでなく確定レシピ(LR減衰)の寄与が大きいと考えられる。"
+}
