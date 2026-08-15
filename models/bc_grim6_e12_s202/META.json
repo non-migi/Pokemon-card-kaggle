@@ -10,5 +10,14 @@
  "seed": 202,
  "weight_min_score": null,
  "weight_factor": 1.0,
- "lb": null
+ "lb": null,
+ "base_model": "bc_grim6",
+ "experiment": "忠実度プッシュ 軸1の独立再実行(202): bc_grim6_e12(75.2%)が事前登録の[75.2,75.7)帯に入ったため、規則により独立再実行2回を要求された",
+ "filter": "bc_filter_deck.py --key Grimmsnarl",
+ "decisions_filtered": 3159324,
+ "winner_teams": 394,
+ "card_vocab": 203,
+ "holdout_top1": 0.752,
+ "train_script": "scripts/train_bc.py",
+ "notes": "bc_grim6_e12と同一データ・同一ハイパラ(HID128/12ep)で**シードだけ変えた**独立再実行。元のbc_grim6_e12は--seed実装前の起動でシード無しだったため、厳密な同条件反復ではなくシードを変えた独立試行として実施した(規則が要求する独立性にはむしろ適う)。3試行(シード無し/101/202)すべて75.2%で一致しており、**この設定のholdoutは再現性が高く、75.2%はノイズではなく実力値**と判断できる。ただし基準のbc_grim6(74.7%)との差は+0.5ptに留まる。"
 }
