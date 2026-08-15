@@ -1,0 +1,1 @@
+{"label": "アーキタイプ転換の試験: Teal Mask Ogerpon主軸の最頻60枚 + bc_ogerpon(39万判断/86チーム/holdout 69.2%) + 純BC(guardなし=guardはGrim系統専用のため)。壁として我々の歴代最強Grim agent群に90-99%で勝った実績。ラダー全体での強さの実測用", "deck": "decks/meta/snapshot_20260809_ogerpon_teal.csv", "model": "bc_ogerpon", "config": {"algo": "bc"}}
