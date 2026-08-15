@@ -1,0 +1,1 @@
+{"label": "評価用: Grim合意60枚 + bc_grim7(21日分・最終レシピ epochs12+LR半減+export-best) + 純BC(guardなし)。退化検査(vs v5.4g-bc)用", "deck": "decks/meta/snapshot_20260723_grim_top8.csv", "model": "bc_grim7", "config": {"algo": "bc"}}
