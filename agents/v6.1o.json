@@ -1,0 +1,1 @@
+{"label": "強化版Ogerpon試験: Teal Mask Ogerpon主軸の最頻60枚 + bc_ogerpon2(20日52.0万判断/137チーム/語彙193/holdout 68.3%、確定レシピ epochs12+LR半減+export-best) + 純BC(guardなし)。v6.0oとの差はmodel参照のみ", "deck": "decks/meta/snapshot_20260809_ogerpon_teal.csv", "model": "bc_ogerpon2", "config": {"algo": "bc"}}

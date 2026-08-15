@@ -1,0 +1,17 @@
+{
+ "model": "bc_ogerpon2",
+ "trained": "2026-08-15",
+ "data": [
+  "data/bc/pairs_ogerpon2.jsonl.gz"
+ ],
+ "samples": 516659,
+ "epochs": 12,
+ "hid": 128,
+ "seed": 42,
+ "weight_min_score": null,
+ "weight_factor": 1.0,
+ "lb": null,
+ "lr_halve_after": 7,
+ "export_best": true,
+ "exported_epoch": 11
+}
