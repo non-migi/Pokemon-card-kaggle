@@ -138,6 +138,12 @@ def main():
                          "強いチームの打ち方へ寄せたいときに使う。省略時は完全no-op")
     ap.add_argument("--weight-factor", type=float, default=1.0,
                     help="--weight-min-score に該当するサンプルの重み倍率(既定1.0=no-op)")
+    ap.add_argument("--lr-halve-after", type=int, default=None,
+                    help="このエポック以降、毎エポック学習率を半減する(既定None=従来どおり固定LR)。"
+                         "例: --epochs 12 --lr-halve-after 7 でep8以降 5e-4, 2.5e-4, ...")
+    ap.add_argument("--export-best", action="store_true",
+                    help="最終エポックではなく、holdout精度が最良だったエポックの重みを保存する"
+                         "(既定off=従来どおり最終エポックを保存)。METAに保存エポックを記録する")
     ap.add_argument("--name", required=True, help="モデル名(models/<name>/ に出力。上書き禁止)")
     args = ap.parse_args()
 
@@ -195,7 +201,12 @@ def main():
             j = idx[i:i + bs]
             yield tuple(t[j].to(dev) for t in ts)
 
+    best_acc, best_ep, best_sd = -1.0, None, None
     for ep in range(args.epochs):
+        if args.lr_halve_after is not None and ep > args.lr_halve_after:
+            for g in optim.param_groups:
+                g["lr"] *= 0.5
+            print(f"  lr -> {optim.param_groups[0]['lr']:.2e}")
         model.train()
         tot = cnt = 0
         for sb, ob, cb, mb, yb, wb in batches(tr_idx, args.bs):
@@ -216,7 +227,15 @@ def main():
                 pred = model(sb, ob, cb, mb).argmax(-1)
                 correct += (pred == yb).sum().item()
                 htot += len(yb)
-        print(f"epoch {ep}: loss={tot / cnt:.4f} holdout_top1={correct / htot * 100:.1f}%")
+        acc = correct / htot
+        print(f"epoch {ep}: loss={tot / cnt:.4f} holdout_top1={acc * 100:.1f}%")
+        if args.export_best and acc > best_acc:
+            best_acc, best_ep = acc, ep
+            best_sd = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+
+    if args.export_best and best_sd is not None:
+        print(f"export-best: epoch {best_ep} (holdout {best_acc * 100:.1f}%) の重みを保存する")
+        model.load_state_dict(best_sd)
 
     # エクスポート(numpy推論用) → モデルレジストリ(ビルド時に ptcg/ へ注入される)
     import datetime
@@ -247,6 +266,9 @@ def main():
             "weight_min_score": args.weight_min_score,
             "weight_factor": args.weight_factor,
             "lb": args.lb,
+            "lr_halve_after": args.lr_halve_after,
+            "export_best": bool(args.export_best),
+            "exported_epoch": best_ep if (args.export_best and best_sd is not None) else args.epochs - 1,
         }, f, ensure_ascii=False, indent=1)
     print(f"exported -> models/{args.name}/ (policy_params.npz, policy_vocab.py, META.json)")
 

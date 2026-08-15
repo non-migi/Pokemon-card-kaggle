@@ -1,0 +1,6 @@
+{
+ "model": "bc_grim6_soup",
+ "trained": "2026-08-15",
+ "method": "weight average (model soup) of bc_grim6_e12 + _s101 + _s202 (equal 1/3)",
+ "note": "vocab identical across the 3 (sha 60cc0d3d). Deterministic; no training."
+}
