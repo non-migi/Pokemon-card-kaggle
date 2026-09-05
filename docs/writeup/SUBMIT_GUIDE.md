@@ -5,7 +5,7 @@
 ## 事前に揃っているもの(このディレクトリ)
 - `writeup_en.md` — 本文(英語)。Kaggleエディタに貼る。**見出し・本文のみ貼る**(冒頭の Subtitle/Track 行と末尾の語数メモは貼らない)
 - `writeup_ja.md` — 日本語対訳(レビュー用。提出しない)
-- `figures/fig1..fig9*.png` — Media Gallery に添付する図(9点)
+- `figures/fig1..fig10*.png` — Media Gallery に添付する図(10点)
 - `deck_ogerpon.csv` / `deck_grimmsnarl.csv` — デッキリスト(添付。語数外)
 
 ## 手順
@@ -16,7 +16,7 @@
 5. **Track を選択**(必須。選択しないと Submit できない)
 6. 本文: `writeup_en.md` の `## 1. What this report claims` 以降を貼り付け。Markdown対応。図は本文中に画像として挿入するか、
    Media Gallery に添付して本文で "Fig. N" と参照する(どちらでも可。両方やるのが安全)
-7. Media Gallery: `figures/` の9枚を fig1→fig9 の順で追加。各図のキャプションは本文の図番号に合わせる
+7. Media Gallery: `figures/` の10枚を fig1→fig10 の順で追加。各図のキャプションは本文の図番号に合わせる
 8. 添付(Attachments / Links):
    - GitHub: https://github.com/non-migi/Pokemon-card-kaggle (公開済み、MIT)
    - デッキCSV 2本(Kaggle Dataset として上げる場合は Public で作る。Private だと締切後に自動公開される)
@@ -24,6 +24,6 @@
 10. 提出後、ページに "Submitted" 表示があることを確認し、URLを `docs/versions.md` に記録
 
 ## 注意
-- 語数: 本文2,000語以下(現状 約1,680語、余裕は約300語)。図表内の文字・デッキリスト・Galleryは語数外
+- 語数: 本文2,000語以下(現状 約1751語)。図表内の文字・デッキリスト・Galleryは語数外
 - 画像: 自作グラフのみ使用。カード画像を使う場合は配布物の画像をそのまま(改変不可)
 - 一度 Submit しても締切前なら編集可。ただし編集後に再度 Submit 状態になっているか必ず確認
