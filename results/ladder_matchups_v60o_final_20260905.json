@@ -1,0 +1,210 @@
+{
+  "submission": "55565273",
+  "games": 1000,
+  "wins": 556,
+  "by_opponent_deck": {
+    "(other)": {
+      "wins": 30,
+      "games": 51,
+      "loss_causes": {
+        "短期崩壊(80step以内)": 3,
+        "その他(長期戦で失速)": 15,
+        "自山切れ": 3
+      }
+    },
+    "Ogerpon": {
+      "wins": 37,
+      "games": 96,
+      "loss_causes": {
+        "その他(長期戦で失速)": 49,
+        "短期崩壊(80step以内)": 8,
+        "自山切れ": 2
+      }
+    },
+    "Grimmsnarl+Froslass": {
+      "wins": 353,
+      "games": 394,
+      "loss_causes": {
+        "その他(長期戦で失速)": 34,
+        "短期崩壊(80step以内)": 7
+      }
+    },
+    "Alakazam": {
+      "wins": 46,
+      "games": 153,
+      "loss_causes": {
+        "その他(長期戦で失速)": 87,
+        "短期崩壊(80step以内)": 17,
+        "自山切れ": 3
+      }
+    },
+    "Froslass+Lopunny": {
+      "wins": 6,
+      "games": 50,
+      "loss_causes": {
+        "短期崩壊(80step以内)": 7,
+        "その他(長期戦で失速)": 37
+      }
+    },
+    "Lucario": {
+      "wins": 20,
+      "games": 42,
+      "loss_causes": {
+        "その他(長期戦で失速)": 22
+      }
+    },
+    "Dragapult": {
+      "wins": 25,
+      "games": 72,
+      "loss_causes": {
+        "その他(長期戦で失速)": 45,
+        "短期崩壊(80step以内)": 2
+      }
+    },
+    "Kangaskhan": {
+      "wins": 4,
+      "games": 47,
+      "loss_causes": {
+        "自山切れ": 23,
+        "サイド取り切られ": 1,
+        "その他(長期戦で失速)": 17,
+        "短期崩壊(80step以内)": 2
+      }
+    },
+    "Kangaskhan+Ogerpon": {
+      "wins": 1,
+      "games": 31,
+      "loss_causes": {
+        "その他(長期戦で失速)": 10,
+        "自山切れ": 18,
+        "短期崩壊(80step以内)": 2
+      }
+    },
+    "Garchomp": {
+      "wins": 16,
+      "games": 21,
+      "loss_causes": {
+        "その他(長期戦で失速)": 4,
+        "短期崩壊(80step以内)": 1
+      }
+    },
+    "Starmie+Cinderace": {
+      "wins": 2,
+      "games": 3,
+      "loss_causes": {
+        "短期崩壊(80step以内)": 1
+      }
+    },
+    "Grimmsnarl": {
+      "wins": 5,
+      "games": 5,
+      "loss_causes": {}
+    },
+    "Kangaskhan+Starmie+Ogerpon": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "Lucario+Lopunny": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "Froslass+Starmie+Cinderace": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Lopunny": {
+      "wins": 1,
+      "games": 4,
+      "loss_causes": {
+        "その他(長期戦で失速)": 3
+      }
+    },
+    "Lucario+Ogerpon": {
+      "wins": 0,
+      "games": 3,
+      "loss_causes": {
+        "その他(長期戦で失速)": 3
+      }
+    },
+    "Archaludon+Cinderace": {
+      "wins": 5,
+      "games": 14,
+      "loss_causes": {
+        "その他(長期戦で失速)": 8,
+        "短期崩壊(80step以内)": 1
+      }
+    },
+    "Garchomp+Ogerpon": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "自山切れ": 1
+      }
+    },
+    "Froslass+Starmie": {
+      "wins": 2,
+      "games": 5,
+      "loss_causes": {
+        "短期崩壊(80step以内)": 2,
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Froslass+Starmie+Cinderace+Ogerpon": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "自山切れ": 1
+      }
+    },
+    "Alakazam+Froslass": {
+      "wins": 1,
+      "games": 1,
+      "loss_causes": {}
+    },
+    "Kangaskhan+Cinderace+Ogerpon": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "自山切れ": 1
+      }
+    },
+    "Lopunny+Ogerpon": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "その他(長期戦で失速)": 1
+      }
+    },
+    "Great Tusk": {
+      "wins": 0,
+      "games": 1,
+      "loss_causes": {
+        "自山切れ": 1
+      }
+    }
+  },
+  "by_opening_basics": {
+    "1": {
+      "wins": 466,
+      "games": 855
+    },
+    "2": {
+      "wins": 85,
+      "games": 138
+    },
+    "3": {
+      "wins": 5,
+      "games": 7
+    }
+  },
+  "overage_used_seconds": {
+    "median": 2.673796000000152,
+    "p90": 3.690217999999959,
+    "max": 5.48819200000014
+  }
+}

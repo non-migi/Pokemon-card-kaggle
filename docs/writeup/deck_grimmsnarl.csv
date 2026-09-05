@@ -1,0 +1,20 @@
+count,card_name,card_id,group,stage_or_type
+4,Marnie's Impidimp,646,Pokémon,Basic Pokémon
+4,Munkidori,112,Pokémon,Basic Pokémon
+2,Snorunt,860,Pokémon,Basic Pokémon
+3,Marnie's Morgrem,647,Pokémon,Stage 1 Pokémon
+2,Froslass,104,Pokémon,Stage 1 Pokémon
+3,Marnie's Grimmsnarl ex,648,Pokémon,Stage 2 Pokémon
+4,Buddy-Buddy Poffin,1086,Trainer,Item
+4,Poké Pad,1152,Trainer,Item
+3,Night Stretcher,1097,Trainer,Item
+3,Rare Candy,1079,Trainer,Item
+1,Pokégear 3.0,1122,Trainer,Item
+1,Tool Scrapper,1137,Trainer,Item
+1,Unfair Stamp,1080,Trainer,Item
+4,Lillie's Determination,1227,Trainer,Supporter
+4,Team Rocket's Petrel,1219,Trainer,Supporter
+2,Boss’s Orders,1182,Trainer,Supporter
+1,Dawn,1231,Trainer,Supporter
+4,Spikemuth Gym,1259,Trainer,Stadium
+10,Basic {D} Energy,7,Energy,Basic Energy

@@ -3,7 +3,10 @@
 > どのAIエージェント(Claude Code / Codex)も、**作業の開始時にこれを読み、終了時に更新する**。
 > 作業中の衝突防止: 大きな作業を始めるときは下の「作業中」欄に記入してcommit+pushする。
 
-最終更新: 2026-09-05 15:00 JST (Claude Code) — 🏁 **Simulationトラック最終結果確定: 429位 / 6,807チーム、905.8点(銅メダル圏)**。残るはStrategy Writeup(締切09-13)のみ。
+最終更新: 2026-09-05 21:30 JST (Claude Code) — 🏁 **Simulationトラック最終結果確定: 429位 / 6,807チーム、905.8点(銅メダル圏)**。
+**Strategy Writeup(締切09-13 23:59 UTC)の初稿・図8点・デッキCSV・提出手順書を `docs/writeup/` に作成済み。**
+次: ユーザーレビュー → 09-09 図/語数の最終化 → 09-10 Web UIで作成 → **09-11 Submit**(手順: docs/writeup/SUBMIT_GUIDE.md)。
+ルール要約は docs/writeup-rules.md。リポジトリは公開済み(MIT)。
 
 ## 🏁 最終結果(2026-09-05 確認、公式LB CSV = results/lb_final_20260905.csv)
 

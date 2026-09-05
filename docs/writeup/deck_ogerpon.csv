@@ -1,0 +1,19 @@
+count,card_name,card_id,group,stage_or_type
+4,Teal Mask Ogerpon ex,96,Pokémon,Basic Pokémon
+4,Bug Catching Set,1094,Trainer,Item
+4,Energy Search,1119,Trainer,Item
+3,Pokégear 3.0,1122,Trainer,Item
+2,Energy Retrieval,1118,Trainer,Item
+2,Jumbo Ice Cream,1147,Trainer,Item
+2,Tera Orb,1127,Trainer,Item
+1,Tool Scrapper,1137,Trainer,Item
+1,Hero’s Cape,1159,Trainer,Pokémon Tool
+4,Judge,1213,Trainer,Supporter
+4,Lillie's Determination,1227,Trainer,Supporter
+3,Boss’s Orders,1182,Trainer,Supporter
+2,Harlequin,1223,Trainer,Supporter
+1,Briar,1201,Trainer,Supporter
+1,N's Plan,1221,Trainer,Supporter
+2,Lively Stadium,1251,Trainer,Stadium
+18,Basic {G} Energy,1,Energy,Basic Energy
+2,Grow Grass Energy,18,Energy,Special Energy
