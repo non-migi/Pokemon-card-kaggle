@@ -1,0 +1,523 @@
+{
+ "Grimmsnarl": {
+  "games": 1000,
+  "matched_to_lb": 997,
+  "by_band": {
+   "<700": {
+    "n": 116,
+    "win_rate": 0.707,
+    "arch_share": {
+     "other": 0.293,
+     "Lucario": 0.181,
+     "Dragapult": 0.138,
+     "Alakazam": 0.129,
+     "Archaludon": 0.112,
+     "Grimmsnarl": 0.043,
+     "Ogerpon": 0.043,
+     "Kangaskhan": 0.043,
+     "Garchomp": 0.009,
+     "Lopunny": 0.009
+    }
+   },
+   "700-800": {
+    "n": 279,
+    "win_rate": 0.627,
+    "arch_share": {
+     "Alakazam": 0.43,
+     "Grimmsnarl": 0.179,
+     "Archaludon": 0.151,
+     "other": 0.108,
+     "Kangaskhan": 0.043,
+     "Lucario": 0.032,
+     "Garchomp": 0.022,
+     "Dragapult": 0.022,
+     "Ogerpon": 0.011,
+     "Lopunny": 0.004
+    }
+   },
+   "800-900": {
+    "n": 500,
+    "win_rate": 0.494,
+    "arch_share": {
+     "Grimmsnarl": 0.64,
+     "Alakazam": 0.146,
+     "other": 0.054,
+     "Kangaskhan": 0.05,
+     "Dragapult": 0.03,
+     "Ogerpon": 0.022,
+     "Lucario": 0.018,
+     "Garchomp": 0.018,
+     "Lopunny": 0.016,
+     "Archaludon": 0.006
+    }
+   },
+   "900-1000": {
+    "n": 98,
+    "win_rate": 0.276,
+    "arch_share": {
+     "Grimmsnarl": 0.327,
+     "Alakazam": 0.153,
+     "Ogerpon": 0.133,
+     "Kangaskhan": 0.112,
+     "other": 0.092,
+     "Dragapult": 0.071,
+     "Lopunny": 0.051,
+     "Lucario": 0.041,
+     "Garchomp": 0.02
+    }
+   },
+   "1000+": {
+    "n": 4,
+    "win_rate": 0.0,
+    "arch_share": {
+     "Ogerpon": 0.25,
+     "Lopunny": 0.25,
+     "Kangaskhan": 0.25,
+     "Dragapult": 0.25
+    }
+   }
+  },
+  "by_band_major": {
+   "800-900|Alakazam": {
+    "n": 73,
+    "win_rate": 0.507
+   },
+   "800-900|Grimmsnarl": {
+    "n": 320,
+    "win_rate": 0.503
+   },
+   "700-800|Kangaskhan": {
+    "n": 12,
+    "win_rate": 0.167
+   },
+   "900-1000|Ogerpon": {
+    "n": 13,
+    "win_rate": 0.077
+   },
+   "700-800|Archaludon": {
+    "n": 42,
+    "win_rate": 0.786
+   },
+   "800-900|Lucario": {
+    "n": 9,
+    "win_rate": 0.222
+   },
+   "800-900|other": {
+    "n": 27,
+    "win_rate": 0.519
+   },
+   "800-900|Kangaskhan": {
+    "n": 25,
+    "win_rate": 0.48
+   },
+   "700-800|Alakazam": {
+    "n": 120,
+    "win_rate": 0.667
+   },
+   "900-1000|Alakazam": {
+    "n": 15,
+    "win_rate": 0.333
+   },
+   "700-800|Grimmsnarl": {
+    "n": 50,
+    "win_rate": 0.62
+   },
+   "700-800|Lucario": {
+    "n": 9,
+    "win_rate": 0.333
+   },
+   "900-1000|Grimmsnarl": {
+    "n": 32,
+    "win_rate": 0.312
+   },
+   "<700|Alakazam": {
+    "n": 15,
+    "win_rate": 0.733
+   },
+   "700-800|other": {
+    "n": 30,
+    "win_rate": 0.533
+   },
+   "<700|Lucario": {
+    "n": 21,
+    "win_rate": 0.524
+   },
+   "900-1000|other": {
+    "n": 9,
+    "win_rate": 0.556
+   },
+   "<700|other": {
+    "n": 34,
+    "win_rate": 0.706
+   },
+   "800-900|Dragapult": {
+    "n": 15,
+    "win_rate": 0.6
+   },
+   "<700|Archaludon": {
+    "n": 13,
+    "win_rate": 0.538
+   },
+   "800-900|Lopunny": {
+    "n": 8,
+    "win_rate": 0.75
+   },
+   "800-900|Garchomp": {
+    "n": 9,
+    "win_rate": 0.444
+   },
+   "<700|Dragapult": {
+    "n": 16,
+    "win_rate": 0.938
+   },
+   "700-800|Garchomp": {
+    "n": 6,
+    "win_rate": 0.667
+   },
+   "700-800|Dragapult": {
+    "n": 6,
+    "win_rate": 0.667
+   },
+   "900-1000|Lopunny": {
+    "n": 5,
+    "win_rate": 0.2
+   },
+   "<700|Grimmsnarl": {
+    "n": 5,
+    "win_rate": 1.0
+   },
+   "700-800|Ogerpon": {
+    "n": 3,
+    "win_rate": 0.333
+   },
+   "800-900|Ogerpon": {
+    "n": 11,
+    "win_rate": 0.0
+   },
+   "<700|Ogerpon": {
+    "n": 5,
+    "win_rate": 0.4
+   },
+   "800-900|Archaludon": {
+    "n": 3,
+    "win_rate": 0.667
+   },
+   "<700|Kangaskhan": {
+    "n": 5,
+    "win_rate": 1.0
+   },
+   "<700|Garchomp": {
+    "n": 1,
+    "win_rate": 1.0
+   },
+   "900-1000|Dragapult": {
+    "n": 7,
+    "win_rate": 0.286
+   },
+   "<700|Lopunny": {
+    "n": 1,
+    "win_rate": 1.0
+   },
+   "700-800|Lopunny": {
+    "n": 1,
+    "win_rate": 1.0
+   },
+   "1000+|Ogerpon": {
+    "n": 1,
+    "win_rate": 0.0
+   },
+   "900-1000|Kangaskhan": {
+    "n": 11,
+    "win_rate": 0.182
+   },
+   "900-1000|Garchomp": {
+    "n": 2,
+    "win_rate": 0.0
+   },
+   "1000+|Lopunny": {
+    "n": 1,
+    "win_rate": 0.0
+   },
+   "1000+|Kangaskhan": {
+    "n": 1,
+    "win_rate": 0.0
+   },
+   "900-1000|Lucario": {
+    "n": 4,
+    "win_rate": 0.25
+   },
+   "1000+|Dragapult": {
+    "n": 1,
+    "win_rate": 0.0
+   }
+  }
+ },
+ "Ogerpon": {
+  "games": 1000,
+  "matched_to_lb": 986,
+  "by_band": {
+   "<700": {
+    "n": 63,
+    "win_rate": 0.794,
+    "arch_share": {
+     "other": 0.349,
+     "Lucario": 0.302,
+     "Dragapult": 0.079,
+     "Archaludon": 0.079,
+     "Alakazam": 0.063,
+     "Grimmsnarl": 0.032,
+     "Ogerpon": 0.032,
+     "Kangaskhan": 0.032,
+     "Garchomp": 0.016,
+     "Lopunny": 0.016
+    }
+   },
+   "700-800": {
+    "n": 87,
+    "win_rate": 0.609,
+    "arch_share": {
+     "Grimmsnarl": 0.345,
+     "Alakazam": 0.322,
+     "Lucario": 0.08,
+     "Archaludon": 0.069,
+     "Kangaskhan": 0.046,
+     "other": 0.046,
+     "Dragapult": 0.046,
+     "Garchomp": 0.023,
+     "Lopunny": 0.023
+    }
+   },
+   "800-900": {
+    "n": 440,
+    "win_rate": 0.698,
+    "arch_share": {
+     "Grimmsnarl": 0.586,
+     "Alakazam": 0.143,
+     "Ogerpon": 0.073,
+     "other": 0.052,
+     "Garchomp": 0.036,
+     "Kangaskhan": 0.036,
+     "Dragapult": 0.032,
+     "Lopunny": 0.023,
+     "Lucario": 0.011,
+     "Archaludon": 0.007
+    }
+   },
+   "900-1000": {
+    "n": 366,
+    "win_rate": 0.369,
+    "arch_share": {
+     "Grimmsnarl": 0.276,
+     "Ogerpon": 0.158,
+     "Alakazam": 0.137,
+     "Kangaskhan": 0.134,
+     "Dragapult": 0.104,
+     "Lopunny": 0.101,
+     "other": 0.057,
+     "Lucario": 0.027,
+     "Garchomp": 0.005
+    }
+   },
+   "1000+": {
+    "n": 30,
+    "win_rate": 0.2,
+    "arch_share": {
+     "Dragapult": 0.3,
+     "Kangaskhan": 0.233,
+     "Alakazam": 0.2,
+     "Lopunny": 0.1,
+     "Ogerpon": 0.067,
+     "other": 0.033,
+     "Lucario": 0.033,
+     "Grimmsnarl": 0.033
+    }
+   }
+  },
+  "by_band_major": {
+   "<700|other": {
+    "n": 22,
+    "win_rate": 0.864
+   },
+   "900-1000|Ogerpon": {
+    "n": 58,
+    "win_rate": 0.31
+   },
+   "800-900|Grimmsnarl": {
+    "n": 258,
+    "win_rate": 0.926
+   },
+   "900-1000|Grimmsnarl": {
+    "n": 101,
+    "win_rate": 0.822
+   },
+   "900-1000|other": {
+    "n": 21,
+    "win_rate": 0.381
+   },
+   "<700|Alakazam": {
+    "n": 4,
+    "win_rate": 0.75
+   },
+   "800-900|Ogerpon": {
+    "n": 32,
+    "win_rate": 0.531
+   },
+   "700-800|Grimmsnarl": {
+    "n": 30,
+    "win_rate": 0.933
+   },
+   "800-900|Alakazam": {
+    "n": 63,
+    "win_rate": 0.317
+   },
+   "900-1000|Alakazam": {
+    "n": 50,
+    "win_rate": 0.18
+   },
+   "900-1000|Lopunny": {
+    "n": 37,
+    "win_rate": 0.108
+   },
+   "800-900|Lucario": {
+    "n": 5,
+    "win_rate": 0.2
+   },
+   "900-1000|Dragapult": {
+    "n": 38,
+    "win_rate": 0.263
+   },
+   "800-900|Dragapult": {
+    "n": 14,
+    "win_rate": 0.429
+   },
+   "900-1000|Kangaskhan": {
+    "n": 49,
+    "win_rate": 0.0
+   },
+   "700-800|Lucario": {
+    "n": 7,
+    "win_rate": 0.571
+   },
+   "800-900|Garchomp": {
+    "n": 16,
+    "win_rate": 0.688
+   },
+   "700-800|Garchomp": {
+    "n": 2,
+    "win_rate": 1.0
+   },
+   "800-900|Lopunny": {
+    "n": 10,
+    "win_rate": 0.2
+   },
+   "700-800|Alakazam": {
+    "n": 28,
+    "win_rate": 0.464
+   },
+   "1000+|Dragapult": {
+    "n": 9,
+    "win_rate": 0.222
+   },
+   "<700|Lucario": {
+    "n": 19,
+    "win_rate": 0.737
+   },
+   "900-1000|Lucario": {
+    "n": 10,
+    "win_rate": 0.1
+   },
+   "800-900|other": {
+    "n": 23,
+    "win_rate": 0.304
+   },
+   "1000+|Kangaskhan": {
+    "n": 7,
+    "win_rate": 0.143
+   },
+   "800-900|Kangaskhan": {
+    "n": 16,
+    "win_rate": 0.188
+   },
+   "1000+|Alakazam": {
+    "n": 6,
+    "win_rate": 0.167
+   },
+   "1000+|other": {
+    "n": 1,
+    "win_rate": 1.0
+   },
+   "<700|Dragapult": {
+    "n": 5,
+    "win_rate": 1.0
+   },
+   "1000+|Lopunny": {
+    "n": 3,
+    "win_rate": 0.0
+   },
+   "<700|Garchomp": {
+    "n": 1,
+    "win_rate": 1.0
+   },
+   "<700|Grimmsnarl": {
+    "n": 2,
+    "win_rate": 1.0
+   },
+   "700-800|Archaludon": {
+    "n": 6,
+    "win_rate": 0.167
+   },
+   "<700|Archaludon": {
+    "n": 5,
+    "win_rate": 0.6
+   },
+   "700-800|Kangaskhan": {
+    "n": 4,
+    "win_rate": 0.0
+   },
+   "700-800|Lopunny": {
+    "n": 2,
+    "win_rate": 0.5
+   },
+   "700-800|other": {
+    "n": 4,
+    "win_rate": 0.5
+   },
+   "700-800|Dragapult": {
+    "n": 4,
+    "win_rate": 0.5
+   },
+   "<700|Lopunny": {
+    "n": 1,
+    "win_rate": 0.0
+   },
+   "800-900|Archaludon": {
+    "n": 3,
+    "win_rate": 0.333
+   },
+   "1000+|Lucario": {
+    "n": 1,
+    "win_rate": 0.0
+   },
+   "900-1000|Garchomp": {
+    "n": 2,
+    "win_rate": 1.0
+   },
+   "1000+|Ogerpon": {
+    "n": 2,
+    "win_rate": 0.0
+   },
+   "<700|Ogerpon": {
+    "n": 2,
+    "win_rate": 1.0
+   },
+   "1000+|Grimmsnarl": {
+    "n": 1,
+    "win_rate": 1.0
+   },
+   "<700|Kangaskhan": {
+    "n": 2,
+    "win_rate": 0.5
+   }
+  }
+ }
+}

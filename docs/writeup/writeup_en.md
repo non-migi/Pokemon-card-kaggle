@@ -1,88 +1,69 @@
-# Imitate the Winners of the Deck You Play: Deck–Policy Co-adaptation for the PTCG AI Battle Challenge
+# The Ladder Is an Ecosystem: Deck–Policy Co-adaptation and a Two-Slot Portfolio for the PTCG AI Battle Challenge
 
-**Subtitle:** How a solo participant working with AI coding agents, and with little Pokémon TCG experience, reached rank 429 / 6,807 (rating 905.8) with a 150 KB behaviour-cloning policy, and what 1,000 post-deadline games per submission say about it.
+**Subtitle:** Five measured, non-obvious facts about this ladder (rating-band ecology, search that hurts, an invisible long tail, one-deck policies, a max-of-two portfolio) and how a 150 KB imitation policy used them to reach rank 429 / 6,807 (905.8) with little Pokémon TCG experience.
 
-**Track:** Strategy Category · Simulation result: rank 429 of 6,807 teams, final rating 905.8 (bronze zone; silver line 924.0)
+**Track:** Strategy Category · Simulation result: rank 429 of 6,807 teams, final rating 905.8 (silver line 924.0, bronze 853.7)
 
 ---
 
-## 1. Summary
+## 1. What this report claims
 
-Our final agent plays a Teal Mask Ogerpon ex deck with a pure behaviour-cloning (BC) policy trained only on the winner's decisions in official "Daily Top" replays of teams that played that same deck. Inference is a numpy two-tower ranker that scores each legal option in under a millisecond; median thinking time per game was 3 s out of a 600 s budget. The second final slot held a Grimmsnarl ex agent built the same way.
+Most of what we learned contradicts a reasonable prior. We state the five claims up front; each is backed by a production ladder experiment or a pre-registered A/B test, and the two final submissions were followed for 1,000 post-deadline games each so that every number below is measured, not projected.
 
-Three findings drove the design, each established with a pre-registered A/B test or a production ladder experiment:
+1. **The ladder is stratified by archetype (Fig. 9).** Grimmsnarl is 59–64% of opponents in the 800–900 band but only 28–33% in 900–1000, where Ogerpon, Kangaskhan and Dragapult take over. An agent's equilibrium rating is set by whom it meets *one band above*, not by its average win rate.
+2. **A behaviour-cloned policy is a policy for one deck.** The same deck scored 751 with a policy cloned from Alakazam players and 840 with one cloned from Grimmsnarl players.
+3. **Search on top of imitation hurt by 88 rating points** in a same-deck, same-weights production A/B (Fig. 4).
+4. **Rating is lost in the long tail, and the tail was literally invisible**: 43 opposing cards were mapped to the "unknown" token. Daily data refresh, not a better model, fixed it.
+5. **Because the team score is max(two submissions), a specialist plus a generalist beats two safe copies.** The specialist (Ogerpon, 89.6% vs Grimmsnarl) won the team score; the generalist (Grimmsnarl) covered the specialist's holes.
 
-1. **A BC policy is only strong on the deck it was trained on.** Deck and policy must be selected as a pair.
-2. **Determinized search on top of BC hurt in production** (−88 rating points, same deck, same model).
-3. **The long tail of out-of-distribution opponents, not the main matchups, is where rating is lost**, and it is fixed by refreshing training data daily so that new cards enter the vocabulary.
+## 2. Method in one paragraph (Fig. 6)
 
-Post-deadline convergence over ~1,000 games per submission (Fig. 1) and independent re-runs of identical builds (905.8 / 902.8 for Ogerpon; 843.6 / 834.6 for Grimmsnarl) show the ratings are reproducible, not lucky draws.
+For each archetype we play, we download the official Daily Top replays, keep only the **winning side's** `(observation, chosen option)` pairs from teams whose deck has ≥4 copies of the key card, and train a two-tower ranker: a 94-feature state tower and a 48-feature option tower with a 16-d learned card embedding, 128 hidden units each, dot-product logits, softmax over the legal options, cross-entropy. The exported numpy weights are 150 KB, one decision takes under a millisecond, and the agent used a median of 3 s (max 9 s) of its 600 s per game with zero time-outs. The deck we ship is the modal 60-card list of those same winners, so deck and policy are one artefact. Fidelity, not capacity, was the lever: holdout top-1 rose 70.3% → 75.6% (Fig. 5) through more days of data, a larger card vocabulary and a 12-epoch schedule with learning-rate halving after epoch 7, while capacity growth (+0.2 pt), elite-only data (47.9% / 400) and weight averaging (44.4% / 400) were refuted and are off.
 
-## 2. Problem framing
+## 3. The five claims, with evidence
 
-Three properties of the environment shaped everything else.
+### 3.1 Rating-band ecology (Claim 1)
 
-- **Hidden information and long horizons.** A game has ~140 decisions per side (median 10 turns); one move is chosen from a variable set of typed legal options (play, attach, evolve, ability, attack, retreat, multi-select searches).
-- **Ratings converge.** The ladder is a Gaussian rating system starting at 600 with self-similar matchmaking. Early scores are noise: our first Alakazam agent read 920.7 after 78 games and 795.7 after 315. We therefore never judged a submission before 80–100 games, and we measured how ratings behave after the deadline (Fig. 1).
-- **The team score is the max over the two latest submissions.** This makes an uncorrelated pair (a specialist plus a generalist) worth more than two copies of the safest agent.
+We joined the 2,000 final games to opponents' final leaderboard ratings (Fig. 9). Opponent composition is not stationary across bands: below 700 it is a zoo of rare decks and Lucario; 700–800 is Alakazam-heavy (43%); 800–900 is a Grimmsnarl monoculture (59–64%); 900–1000 diversifies into Ogerpon (13–16%), Kangaskhan (11–13%), Dragapult and Alakazam, with Grimmsnarl down to ~30%.
 
-## 3. Approach and how it evolved
+This explains both final ratings quantitatively. The Ogerpon agent wins 70% in 800–900 (where it beats Grimmsnarl 93% of the time, n=258) and 37% in 900–1000 (where it still beats Grimmsnarl 82%, n=101, but goes 0/49 against Kangaskhan mill, 18% against Alakazam and 31% in its own mirror). Its rating therefore oscillated in the 875–909 band for two weeks and froze at 905.8: the exact altitude where the Grimmsnarl supply thins out. The Grimmsnarl agent wins 63% in 700–800 and 49% in 800–900, pinning it near 835. **The practical rule:** to rise from band B you must beat the composition of band B+1, so deck choice should be made against the *next* band's metagame, not the current one.
 
-### 3.1 From search to imitation
+### 3.2 One deck, one policy (Claim 2)
 
-We started with a hand-written heuristic agent and a determinized flat Monte-Carlo search (sample hidden cards, roll out with the heuristic). It plateaued around 750. The breakthrough was behaviour cloning from official replays: extract every `(observation, chosen option)` pair of the **winning side** of Daily Top episodes and train a ranker.
+Our first Grimmsnarl submission, steered by an Alakazam-trained policy, froze at 751; a Grimmsnarl deck steered by a Grimmsnarl-trained policy reached 840. Locally, an Alakazam policy piloting foreign decks beat a weak sparring wall 88.9% yet lost 74.3% of real games against the same archetype. Every "wall" we built afterwards was a (deck, policy) pair trained on winners of that deck, and no card was ever changed without retraining.
 
-**Model** (Fig. 6). A state tower (94 features: both players' hand, bench, prizes, energies, deck and discard sizes, prompt type and turn context) and an option tower (48 features: option type, area, card type, attack cost/damage, target HP, plus a 16-dimensional learned card embedding) each map to a 128-unit hidden layer; the dot product gives a logit and a softmax over the legal options is trained with cross-entropy. Multi-select prompts use top-N. The exported weights are 150 KB and run in numpy, so the agent is immune to time-outs.
+### 3.3 Search hurt (Claim 3)
 
-**Fidelity is the constraint.** Holdout top-1 accuracy rose from 70.3% to 75.6% across the model family (Fig. 5) as we added days of data, expanded the card vocabulary and adopted a 12-epoch schedule with learning-rate halving after epoch 7. The final Grimmsnarl model beat its 13-day predecessor 56.9% / 400 [52.0–61.6] in a same-deck mirror, the first daily refresh whose confidence interval cleared 50%.
+Two submissions shared deck and `bc_grim2` weights and differed only in an 8-second determinized search that re-ranked the BC top-5 by rollouts. After 210 and 158 games: pure BC 840.0, search 751.6 (Fig. 4), same sign as the local wall (67.1% vs 46.0% / 400 and 200 games). Mechanism: sampled worlds varied only hidden cards while the opponent model was a deterministic argmax, so each world was one line to the end of the game, and 140-step rollouts without a value function compound policy error. Stochastic rollouts made it worse (temperature 0.5 / 1.0 → 50.0% / 34.3%) and a value network with AUC 0.851 still lost its A/B (47.8% / 400). We shipped pure imitation and treat "search helps" as a claim that must be re-earned with a real opponent model.
 
-### 3.2 Deck × policy co-adaptation (the central claim)
+### 3.4 The invisible tail (Claim 4)
 
-Our first Grimmsnarl submission, steered by an Alakazam-trained policy, froze at 751; a Grimmsnarl deck steered by a Grimmsnarl-trained policy reached 840. Locally, an Alakazam policy piloting other decks won 88.9% against a weak wall but 25.7% against real opponents. The lesson generalised: **a BC policy is a policy for one deck**, so every sparring "wall" we built was a (deck, policy) pair trained on winners of that deck, and deck choice was made by asking "which archetype's winners can we imitate best, and whom does it beat in the band we will be matched in?"
+At 210 games our Grimmsnarl agent won its main matchups (mirror 55.7%, Alakazam 58.5%) but sat at 50% because 26 games against a dozen rare decks went 3–23. The cause was mechanical: the 143-card vocabulary mapped 43 opposing cards, 41 of them Pokémon, to index 0, so the policy could not distinguish them. Rebuilding on 20 days of replays (vocabulary 211) lifted the rare-deck bucket to 65% (Fig. 2, right). Data refresh is therefore a correctness requirement: **stop it and new decks become invisible.**
 
-### 3.3 Search hurts: a production A/B test
+### 3.5 Portfolio under max-of-two (Claim 5)
 
-Two submissions with identical deck and identical `bc_grim2` weights differed only in whether an 8-second determinized search re-ranked the BC top-5. After 210 and 158 games the pure-BC agent sat at 840.0 and the search agent at 751.6 (Fig. 4), matching the sign of the local wall result (67.1% vs 46.0%). Diagnosis: worlds sampled only hidden cards while the opponent model was a deterministic argmax, so each world was a single line to game end; with no value network, 140-step rollouts compound policy error. Softmax-temperature rollouts (0.5 / 1.0) made it worse (50.0% / 34.3%), and a value network with AUC 0.851 still lost its A/B (47.8% / 400). We shipped pure BC.
+The final pair is deliberately anti-correlated (Fig. 2): the Ogerpon specialist is 89.6% vs Grimmsnarl (n=394), 76% vs Garchomp, 59% vs rare decks, but 30% vs Alakazam, 12% vs Lopunny, 9% vs Kangaskhan; the Grimmsnarl generalist is 60% Alakazam, 72% Archaludon, 67% Dragapult, 65% rare, 51% mirror, with a single hole at Ogerpon (12%). Each covers the other's worst matchup, and the max operator lets the volatile specialist carry the score while the generalist bounds the downside. Identical builds re-submitted from a fresh 600 converged to the same neighbourhood (905.8 / 902.8 and 843.6 / 834.6), so the split is reproducible.
 
-### 3.4 The long tail is where rating is lost
+We also disclose the one decision the process got wrong: a pre-registered "swap if below 650 at the checkpoint" rule fired on a 31-game sample in which the Ogerpon agent had met **zero** Grimmsnarl opponents; the human overrode it, and that build finished at 905.8. Under band ecology a specialist's early games are not a sample of its equilibrium pool.
 
-At 210 games our Grimmsnarl agent won its main matchups (mirror 55.7%, Alakazam 58.5%) yet sat at 50% overall because 26 games against a dozen rare decks went 3–23. Cause: the 143-card vocabulary mapped 43 opposing cards (41 of them Pokémon) to the "unknown" index, so the policy literally could not see them. Rebuilding with 20 days of replays raised the vocabulary to 211 and the same bucket recovered to 65% (Fig. 2, right). Daily data refresh is therefore not a nicety; **stopping it makes new decks invisible.**
+### 3.6 What did not work, briefly
 
-### 3.5 An explicit guard, and why it stayed switched on
+An explicit one-hit-KO guard (veto promotions/evolutions into a computable KO range, found in 12 of 13 losses vs Lopunny/Ogerpon) survived only as harmless: the same pattern occurred at equal rates in won games and its effect was inconclusive (Δ +0.25 / −1.50 / −4.25 pt). Two further hand rules were refuted (−4.0 pt). The remaining weakness is Kangaskhan mill (we decked out in 23 of 43 losses): the imitated winners rarely faced it, so the policy never learned to ration draws.
 
-Reading every loss against Lopunny and Ogerpon showed that in 12 of 13 losses our agent promoted or evolved a key Pokémon into a one-hit-KO range computable from the opponent's visible energy. We added two rules (GR001 promotion/switch, GR002 evolution) that veto such options before the BC argmax. Pre-registered tests were inconclusive (Δ +0.25 / −1.50 / −4.25 pt under a floor effect; intervention rate 0.022%), and the same pattern occurred at equal rates in won games, so we report it as a hypothesis that survived only as harmless. Two further rules (attacker priority, evolution-line preservation) were refuted (−4.0 pt) and are off.
+## 4. Deck concept (Fig. 8, CSVs attached)
 
-### 3.6 Archetype switch
+**Deck A — Teal Mask Ogerpon ex (final slot 1, 905.8).** The modal 60 of the 86 winning teams running four Ogerpon: 4 Ogerpon ex, 18 Basic Grass, 2 Grow Grass Energy, Bug Catching Set ×4, Energy Search ×4, Energy Retrieval ×2, Judge ×4, Lillie's Determination ×4, Boss's Orders ×3, Lively Stadium ×2. Ogerpon's ability attaches a Grass energy from hand each turn and draws; Myriad Leaf Shower does 30 plus 30 per energy on **both** Active Pokémon. Every trainer therefore finds energy, recovers energy or disrupts the opponent's hand while we accelerate. The matchup logic is structural: Grimmsnarl ex's Punk Up loads up to five Darkness energies at once, and each energy on their Active adds 30 to our attack, so a 210-HP Basic punishes exactly the acceleration that makes the Stage-2 deck strong. That is the 89.6%. The "≥4 copies" filter was essential: a naive "contains Ogerpon" query pulled in Kangaskhan/Crustle mill lists splashing one Ogerpon and would have trained a mill policy.
 
-Tracking the official Daily Top (Fig. 7), Grimmsnarl's share of winning teams went 33.6% → 62.7% → 41.9%, while Teal Mask Ogerpon appeared at 0% and rose to ~9–12%. We trained `bc_ogerpon` on 391k winner decisions from 86 teams as a *sparring wall*, and it beat our strongest Grimmsnarl agents 90–99% over six 400-game arms. We submitted it as a ladder trial on Aug 15, where it went 35–19 (64.8%) and reached our best rating to date. It became the final slot 1.
+**Deck B — Marnie's Grimmsnarl ex / Froslass (final slot 2, 834.6).** The consensus list of the Jul-23 Top-8 Grimmsnarl teams (82 of 111 Grimmsnarl teams ran the identical 60): 4-3-3 Impidimp/Morgrem/Grimmsnarl ex, 4 Munkidori, 2-2 Snorunt/Froslass, Spikemuth Gym ×4, Rare Candy ×3, Buddy-Buddy Poffin ×4, Poké Pad ×4, Petrel ×4. Rare Candy into Punk Up for five energies, Froslass's Freezing Shroud to spread counters and Munkidori to move them, Shadow Bullet (180 + 30 bench) from a 320-HP body. No bad matchup except a faster energy-scaling attacker, hence the flat profile.
 
-## 4. Evidence of consistency and robustness
+**Selection rule.** Not card intuition, which we lack, but (a) share of winning teams in the band we need to beat next (Fig. 7, 9), (b) volume of clean winner data for that exact list, (c) wall results against our own strongest agents. The Ogerpon policy beat our best Grimmsnarl agents 90–99% over six 400-game arms five days before we submitted it; the lesson is that **a sparring partner that beats you is a candidate, not a wall.**
 
-**Repeatability.** Identical builds re-submitted from a fresh 600 rating converged to the same neighbourhood: Ogerpon 905.8 and 902.8; Grimmsnarl 843.6 and 834.6. Fig. 1 shows both final submissions over 15 days of post-deadline play: swings of ±100 inside the first 50 games, then a band of roughly 70 points as the opponent pool itself re-sorted, and a stable ordering between the two agents throughout.
+## 5. Process and what we would change
 
-**Matchup profile, disclosed honestly** (Fig. 2, 1,000 games each). The Ogerpon agent is a specialist: 89.6% against Grimmsnarl (n=394, 39% of its games), 76% against Garchomp, 59% against rare decks, but 30% against Alakazam, 12% against Lopunny and 9% against Kangaskhan mill. The Grimmsnarl agent is a generalist: 60% Alakazam, 72% Archaludon, 67% Dragapult, 65% rare decks, 51% mirror, with a single hole at Ogerpon (12%). The pair is deliberately anti-correlated: each covers the other's worst matchup.
+The project was run by one participant directing AI coding agents, with every decision pre-registered in a shared status file (threshold fixed before results, 400-game A/Bs with a "reject only ≤45%" rule) and all results appended to a ledger. This discipline kept five plausible improvements out of the final build. Its cost was scope: imitation cannot exceed its teachers (training centroid ≈ 1,050; gold required 1,131), and we spent the final days raising fidelity by 1.6 pt inside that ceiling instead of finishing the expert-iteration loop (59k distilled decisions, stopped). The band-ecology result suggests the better path: pick the archetype that beats the 1,000+ composition (Dragapult/Kangaskhan/Alakazam-heavy), clone its winners, and only then invest in search with a learned opponent model.
 
-**Why the specialist scored higher.** The rating band around 850–950 was ~40% Grimmsnarl in our sample, so a 90% edge on that slice outweighs sub-40% results elsewhere. This is a metagame bet, not a claim of universal strength, and it is exactly why we kept the generalist in the other slot. The Kangaskhan mill matchup (we decked out in 23 of 43 losses) is the clearest remaining target: the imitated winners rarely faced it, so the policy never learned to ration draws.
+## 6. Reproducibility
 
-**Stability under time and failure.** Median 3 s and maximum 9 s of the 600 s budget per game across the 2,000 final games, no time-outs, and every layer of the runtime falls back to the next on exception (Fig. 6).
+Code, agent definitions, the model registry with training metadata, every A/B result (`results/arena.jsonl`), the per-game band analysis (`results/ladder_band_final_20260906.csv`) and the full experiment log are public under MIT at the linked repository. `python -m ptcglab.build v6.0o` rebuilds the exact submission; `bc_extract.py → bc_filter_deck.py --key Ogerpon --min-copies 4 → train_bc.py` reproduces the model. Competition-provided data and the simulator are not redistributed.
 
-## 5. Deck concept (Fig. 8, CSVs attached)
-
-**Deck A — Teal Mask Ogerpon ex (final slot 1).** The modal 60 of the 86 winning teams that ran four copies of Ogerpon: 4 Ogerpon ex, 18 Basic Grass Energy, 2 Grow Grass Energy, and an engine of Bug Catching Set ×4, Energy Search ×4, Energy Retrieval ×2, Judge ×4, Lillie's Determination ×4, Boss's Orders ×3, Lively Stadium ×2. The plan is single-minded: Ogerpon's ability attaches a Grass energy from hand each turn and draws a card, and Myriad Leaf Shower does 30 plus 30 per energy on both Active Pokémon, so every trainer either finds energy, recovers energy, or disrupts the opponent's hand while we accelerate. A "≥4 copies" filter mattered: a naive "contains Ogerpon" query pulled in Kangaskhan/Crustle mill lists that splash one Ogerpon, which would have trained the wrong policy. Against Grimmsnarl the matchup is structural: Grimmsnarl ex's Punk Up loads up to five Darkness energies onto the board, and every energy on their Active Pokémon adds 30 to our attack, so a Basic 210-HP attacker punishes exactly the acceleration that makes the Stage-2 deck strong. The 89.6% figure reflects that.
-
-**Deck B — Marnie's Grimmsnarl ex / Froslass (final slot 2).** The consensus list of the Top-8 Grimmsnarl teams on Jul 23 (82 of 111 Grimmsnarl teams ran the identical 60): 4-3-3 Impidimp/Morgrem/Grimmsnarl ex, 4 Munkidori, 2-2 Snorunt/Froslass, Spikemuth Gym ×4, Rare Candy ×3, Buddy-Buddy Poffin ×4, Poké Pad ×4, Petrel ×4. Its game plan: evolve early with Rare Candy, let Punk Up fetch five Darkness energies at once, spread damage counters with Froslass's Freezing Shroud and relocate them with Munkidori, and close with Shadow Bullet (180 plus 30 to the bench) from a 320-HP body. The plan has no bad matchup except a faster energy-scaling attacker, which explains the broad but unspectacular profile.
-
-**How decks were chosen.** Not by our card knowledge, which is thin, but by (a) share of winning teams in the target band, (b) how much clean training data exists for that exact list, and (c) local wall results against our own strongest agents. Deck lists were frozen together with the policy; we never edited a card without re-training.
-
-## 6. What we would do differently
-
-- **BC has a ceiling at its teachers' level.** The training centroid was rating ~1,050 and gold required 1,131; we spent the last days raising fidelity by 1.6 pt inside that ceiling. Expert iteration or self-play (we reached 59k distilled decisions before stopping) was the route above it.
-- **A wall that beats you is a candidate, not a wall.** The Ogerpon policy dominated our best agents five days before we submitted it.
-- **Do not act on 31 games.** A pre-registered "swap if below 650" rule fired on 31 games and would have removed the eventual best agent; the human overrode it, and the build later reached 905.8.
-- **Measure only what the design can resolve.** 400-game A/Bs have ±5 pt intervals; we ran too many experiments that could not distinguish 2-pt effects.
-
-## 7. Reproducibility
-
-Code, agent definitions, model registry with training metadata, every A/B result (`results/arena.jsonl`) and the full experiment log are public under MIT at the linked repository. `python -m ptcglab.build v6.0o` rebuilds the exact submission; `scripts/bc_extract.py → bc_filter_deck.py --key Ogerpon --min-copies 4 → train_bc.py` reproduces the model. Competition-provided data and the simulator are not redistributed.
-
-*Word count target: ≤ 1,950 (body only; figures, tables and deck lists excluded per host guidance).*
+*Body ≤ 2,000 words; figures, tables and deck lists excluded per host guidance.*
