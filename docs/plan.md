@@ -187,3 +187,22 @@ Alakazam上位2者は既知Hammer4と一致する。公開標本なので採用�
 - **公式engine drift**: PyPI版とKaggle配布native binaryの更新日は一致しないことがある →
   search評価・build前に`scripts/sync_cg_engine.py`をread-only実行し、差分時だけ`--apply`後に全buildを作り直す
 - **提出事故**: 500エラー/認証失効の経験あり → 最終提出は8/14までのバッファ運用
+
+## Strategy Writeup 計画(2026-09-05 更新、締切 09-13 23:59 UTC = 09-14 08:59 JST)
+
+ルールと配点は docs/writeup-rules.md。言語は英語、ユーザーレビュー用に日本語対訳を併作。
+リポジトリは公開(MIT、LICENSE追加済み)。Kaggle Web UIでの作成・添付・Submitは**APIに無い**ので
+ユーザーが行う(こちらはMarkdown本文・図・デッキCSVを `docs/writeup/` に用意する)。
+
+| 日 | 作業 |
+|---|---|
+| 09-05〜06 | 素材確定: 最終2提出の対面別勝率(`scripts/replay_fetch_slow.py`で取得中)、図8点の生成、英語アウトラインと語数配分 |
+| 09-07〜08 | 英語初稿(≤1,950語)+日本語対訳 → ユーザーレビュー |
+| 09-09 | 図の最終化・語数調整・デッキリスト画像/CSV |
+| 09-10 | Kaggle Web UIでWriteup作成・Media Gallery添付・Track選択・保存(ユーザー) |
+| **09-11** | **Submit(締切2日前をバッファ)**。以後は誤字修正のみ、Submitted状態を維持 |
+
+構成(本文≈1,950語): 1 Summary 150 / 2 Problem framing 200 / 3 Approach evolution 500 /
+4 Consistency & robustness evidence 400 / 5 Deck concept 350 / 6 What we'd do differently 200 /
+7 Reproducibility 150。図: 収束曲線・対面別ヒートマップ・LB分布・探索A/B・データ日数×holdout表・
+判断カスケード図・メタ時系列・デッキリスト。画像は自作グラフと公式ビジュアライザのスクショのみ。
