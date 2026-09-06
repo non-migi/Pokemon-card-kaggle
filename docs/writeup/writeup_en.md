@@ -1,6 +1,10 @@
-# The Ladder Is an Ecosystem: Deck–Policy Co-adaptation and a Two-Slot Portfolio for the PTCG AI Battle Challenge
+# The Ladder Is an Ecosystem: Deck-Policy Co-adaptation and a Two-Slot Portfolio
 
-**Subtitle:** Five measured, non-obvious facts about this ladder (rating-band ecology, search that hurts, an invisible long tail, one-deck policies, a max-of-two portfolio) and how a 150 KB imitation policy used them to reach rank 429 / 6,807 (905.8) with little Pokémon TCG experience.
+*(Title: 78 characters. Kaggle limit is 80.)*
+
+**Subtitle (short, 135 chars, use this if the field is limited):** Five measured, non-obvious facts about the PTCG ladder, and how a 150 KB imitation policy used them to reach rank 429 / 6,807 (905.8).
+
+**Subtitle (long, 272 chars):** Five measured, non-obvious facts about this ladder (rating-band ecology, search that hurts, an invisible long tail, one-deck policies, a max-of-two portfolio) and how a 150 KB imitation policy used them to reach rank 429 / 6,807 (905.8) with little Pokémon TCG experience.
 
 **Track:** Strategy Category · Simulation result: rank 429 of 6,807 teams, final rating 905.8 (silver line 924.0, bronze 853.7)
 

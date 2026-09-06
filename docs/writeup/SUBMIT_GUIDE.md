@@ -11,8 +11,8 @@
 ## 手順
 1. https://www.kaggle.com/competitions/pokemon-tcg-ai-battle-challenge-strategy/projects を開く
 2. **New Writeup** をクリック
-3. Title: `The Ladder Is an Ecosystem: Deck–Policy Co-adaptation and a Two-Slot Portfolio for the PTCG AI Battle Challenge`
-4. Subtitle: `writeup_en.md` 冒頭の Subtitle 行の文
+3. Title(**80文字制限**、現行78文字): `The Ladder Is an Ecosystem: Deck-Policy Co-adaptation and a Two-Slot Portfolio`
+4. Subtitle: `writeup_en.md` 冒頭の短い版(135文字)を貼る。文字数制限に余裕があれば長い版(272文字)でもよい
 5. **Track を選択**(必須。選択しないと Submit できない)
 6. 本文: `writeup_en.md` の `## 1. What this report claims` 以降を貼り付け。Markdown対応。図は本文中に画像として挿入するか、
    Media Gallery に添付して本文で "Fig. N" と参照する(どちらでも可。両方やるのが安全)
