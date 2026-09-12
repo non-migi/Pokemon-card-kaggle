@@ -17,6 +17,20 @@ case "${1:-}" in
   captions) copy 04_captions.txt ;;
   repo)     copy 05_repo_link.txt ;;
   "")
+    if [[ ! -t 0 ]]; then
+      # 対話端末でない(Claude Code の ! 実行など)。read で止まるのでステップ表示に切り替える
+      print -r -- "対話モードは使えない環境です。以下を1つずつ実行してください。"
+      print -r -- ""
+      print -r -- "  open '$URL' ; open '$FIGS'      # Kaggleと図フォルダを開く"
+      print -r -- "  zsh scripts/writeup_clip.sh title      # 1. Title を Cmd+V"
+      print -r -- "  zsh scripts/writeup_clip.sh subtitle   # 2. Subtitle を Cmd+V"
+      print -r -- "  zsh scripts/writeup_clip.sh body       # 3. 本文を Cmd+V"
+      print -r -- "  zsh scripts/writeup_clip.sh captions   # 4. 図10枚をD&D後、キャプションを貼る"
+      print -r -- "  zsh scripts/writeup_clip.sh repo       # 5. GitHubリンクを Links 欄へ"
+      print -r -- ""
+      print -r -- "最後に Save → Submit。ページに Submitted と出れば完了。"
+      exit 0
+    fi
     print -r -- "Kaggle Writeup 提出ウィザード"
     print -r -- "各ステップで Enter を押すと次の文字列がクリップボードに入ります。Kaggle 側で Cmd+V。"
     print -r -- ""
