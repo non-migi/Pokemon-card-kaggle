@@ -8,7 +8,18 @@
 - `figures/fig1..fig10*.png` — Media Gallery に添付する図(10点)
 - `deck_ogerpon.csv` / `deck_grimmsnarl.csv` — デッキリスト(添付。語数外)
 
-## 手順
+## いちばん簡単な方法: ウィザード
+
+```bash
+zsh scripts/writeup_clip.sh
+```
+
+Kaggleのページと図フォルダを開き、Enterを押すたびに次の貼り付け文字列(Title → Subtitle → 本文 →
+キャプション → GitHubリンク)をクリップボードへ入れる。Kaggle側は Cmd+V を押すだけでよい。
+個別に取りたいときは `zsh scripts/writeup_clip.sh body` のようにパーツ名を渡す。
+貼り付け用のテキストは `docs/writeup/paste/` にそのまま置いてある。
+
+## 手順(手動でやる場合)
 1. https://www.kaggle.com/competitions/pokemon-tcg-ai-battle-challenge-strategy/projects を開く
 2. **New Writeup** をクリック
 3. Title(**80文字制限**、現行78文字): `The Ladder Is an Ecosystem: Deck-Policy Co-adaptation and a Two-Slot Portfolio`

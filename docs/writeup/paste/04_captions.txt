@@ -1,0 +1,10 @@
+Fig. 1  Post-deadline rating trajectories of the two final submissions (Aug 17 - Sep 5).
+Fig. 2  Per-opponent-archetype win rates, 1,000 ladder games per agent, Wilson 95% CI.
+Fig. 3  Final leaderboard distribution (6,807 teams) with medal lines and our rank.
+Fig. 4  Same deck, same weights: pure imitation vs imitation + determinized search.
+Fig. 5  Behaviour-cloning model family: data, vocabulary, holdout accuracy, key evidence.
+Fig. 6  Pipeline: winner-side imitation, deck and policy shipped together, runtime fallbacks.
+Fig. 7  Metagame drift in the official Daily Top during the competition.
+Fig. 8  Final 60-card deck lists (card IDs in the attached CSVs).
+Fig. 9  Rating-band ecology: opponent composition and our win rate by the opponent's final rating band.
+Fig. 10 Band composition x per-archetype win rate reproduces each agent's win rate per band.
