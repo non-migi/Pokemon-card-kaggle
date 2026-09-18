@@ -5,8 +5,11 @@
 
 最終更新: 2026-09-05 21:30 JST (Claude Code) — 🏁 **Simulationトラック最終結果確定: 429位 / 6,807チーム、905.8点(銅メダル圏)**。
 **Strategy Writeup(締切09-13 23:59 UTC)の初稿・図8点・デッキCSV・提出手順書を `docs/writeup/` に作成済み。**
-09-06: ユーザー方針「メダル無しなので記念作成、目標100位前後」。本文を「レート帯の生態」軸に改稿済み(英約1,750語、図10点)。
-次: 09-10までにユーザーがWeb UIで作成・添付 → **09-11 Submit**(手順: docs/writeup/SUBMIT_GUIDE.md)。以後は誤字修正のみ。
+Strategy Writeup(締切09-13)は原稿・図10点・デッキCSV・提出手順を `docs/writeup/` に用意済み。
+⚠️ **提出完了の確認が取れていない**(writeupはAPIから照会できないため、Kaggleの画面で Submitted 表示を要確認)。
+審査期間は 09-14〜10-11、結果発表はTBD。
+**上位解法の調査を `docs/top-solutions.md` に記録**(1位は2.24MパラのTransformer×PPO自己対戦、
+3.6億対局/590億サンプル、646デッキ台帳。我々のBC路線の天井の外側にいた)。
 ルール要約は docs/writeup-rules.md。リポジトリは公開済み(MIT)。
 
 ## 🏁 最終結果(2026-09-05 確認、公式LB CSV = results/lb_final_20260905.csv)
