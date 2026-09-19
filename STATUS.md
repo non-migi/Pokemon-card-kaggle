@@ -8,7 +8,7 @@
 Strategy Writeup(締切09-13)は原稿・図10点・デッキCSV・提出手順を `docs/writeup/` に用意済み。
 ⚠️ **提出完了の確認が取れていない**(writeupはAPIから照会できないため、Kaggleの画面で Submitted 表示を要確認)。
 審査期間は 09-14〜10-11、結果発表はTBD。
-**上位解法の調査を `docs/top-solutions.md` に記録**(1位は2.24MパラのTransformer×PPO自己対戦、
+**総括は `docs/playbook.md`(次回への攻略ノート)、上位解法の実測値は `docs/top-solutions.md`**(1位は2.24MパラのTransformer×PPO自己対戦、
 3.6億対局/590億サンプル、646デッキ台帳。我々のBC路線の天井の外側にいた)。
 ルール要約は docs/writeup-rules.md。リポジトリは公開済み(MIT)。
 

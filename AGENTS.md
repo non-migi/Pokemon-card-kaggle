@@ -5,6 +5,7 @@
 
 ## まず読むもの(順に)
 
+0. `docs/playbook.md` — **次回への攻略ノート**(コンペ終了後の総括。新しく始めるならまずこれ)
 1. `STATUS.md` — 今の状態と次のアクション(**作業を終えるたび必ず更新**)
 2. `docs/plan.md` — 締切までの計画と判断ゲート
 3. `docs/versions.md` — 提出履歴 / `docs/experiments.md` — 実験ログ(採用も棄却も記録)
@@ -20,7 +21,7 @@ ptcglab/        オフライン共通ライブラリ(arena=対戦評価の唯一
 scripts/        薄いCLI・分析ツール
 results/        測定台帳(arena.jsonlに全A/B結果が自動追記される)。過去の測定はまずここを検索
 decks/          デッキCSV(sample.csv, meta/=メタスナップショット, 候補)
-docs/           ドキュメント一式
+docs/           ドキュメント一式(playbook.md=攻略ノート / top-solutions.md=上位解法の実測値)
 ```
 
 ## 主要コマンド
