@@ -1,5 +1,10 @@
 # ARC-AGI-3 詳細ブリーフ(2026-09-19 調査)
 
+> ⚠️ **09-21 追記**: ARC-AGI-2 を同じ深さで調べた結果、**メダル狙いなら ARC-AGI-2 が明確に上**
+> と結論した。理由は `docs/arc-agi-2.md` §5。要点は、ARC-AGI-2 は金が公開ベースライン+5タスクの
+> 距離にあり、ローカル評価が本番と一致し、分散が小さく、LBが安定していること。
+> ARC-AGI-3 は金が中央値の24倍、同一コードで±40%振れ、銅圏は毎月総入れ替えになっている。
+
 出典: Kaggleコンペページ全文(`kaggle competitions pages arc-prize-2026-arc-agi-3 --content`)、
 docs.arcprize.org の Scoring Methodology、公式リポジトリ arcprize/ARC-AGI-3-Agents(★326)、
 公開リーダーボード(3,159チーム、2026-09-19時点)。
